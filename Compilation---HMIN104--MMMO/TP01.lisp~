@@ -1,0 +1,65 @@
+(defun f (x) (+ 3 x)) 
+
+(defun g (v) (* 5 (f (+ v 2)))) 
+
+(defun facto (n)
+    (if (< n 1)
+ 	       1
+    	   (* n (fact (- n 1)))))    	   
+  	   
+(defun fibona (n)
+    (if (< n 2)
+			1
+			(+ (fibo (- n 1)) (fibo (- n 2)))))
+			
+(defun mymember (x l)
+	(if (atom l)
+		l
+		(if (eq (car l) x)
+			l
+			(mymember x (cdr l)))))
+
+(defun mylength (l)
+	(if (atom l)
+		0
+		(+ 1 (mylength (cdr l)))))
+		
+(defun last (l)
+	(if (atom l)
+		l
+		(if (atom (cdr l))
+			(car l)
+			(last (cdr l)))))
+
+(defun makelist (n)
+	(if (< n 0)
+		()
+		(cons n (makelist (- n 1)))))    	   
+		
+(defun copylist (l)
+	(if (atom l)
+		l
+		(if (atom (cdr l))
+			(cdr l)
+			(cons (car l) (copylist (cdr l))))))
+			
+(defun removeOcc (x l)
+	(if (atom l)
+		l
+		(if (= x (car l))
+			(remove x (cdr l))
+			(cons (car l) (remove x (cdr l))))))
+			
+(defun removeLOcc (x l)
+	(if (atom l)
+		l
+		(if (= x (car l))
+			(cdr l)
+			(cons (car l) (remove x (cdr l))))))	
+			
+(defun myappend (l1 l2)
+	(if (atom l1)
+		l2
+		if (atom l2)
+			l1
+			(cons (car l1) (append (cdr l1) l2))))						

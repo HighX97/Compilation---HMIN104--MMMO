@@ -1,0 +1,293 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+</head>
+<body>
+<h1>TD de LISP num&eacute;ro 1 et 2</h1>
+<hr>
+<ol>
+  <li> <b>lambda-expressions</b><br>
+&eacute;valuer les expressions suivantes en pr&eacute;cisant les
+environnements au cours de
+l'&eacute;valuation
+    <ul>
+      <tt><li>((lambda (x) (+ (* 2 x) 3)) 4) </li>
+      <li>((lambda (x y) (* (+ x 2) (+ y 6))) 7 8) </li>
+      <li>((lambda (v) ((lambda (x) (* 3 x)) (+ v 2))) 8) </li>
+      <li>((lambda (v) ((lambda (x) (* v x)) (+ v 2))) 8) </li>
+      <li>((lambda (v) ((lambda (v) (* 3 v)) (+ v 2))) 8) </li>
+      <li>((lambda (x y z) (+ (* x y) (* y z))) 2 3 4) </li>
+      <li>((lambda (x y) (* x x y y)) 4) </li>
+      <li>((lambda (x) (* x x 2)) 4 5) </li>
+      <li>(lambda (x) (* x x 2))<br>
+        <br>
+      </li>
+      </tt>
+    </ul>
+  </li>
+  <hr> <li><b> fonctions globales</b>
+    <ul>
+      <li> <tt>(defun f (x) (+ 3 x)) <br>
+(defun g (v) (* 5 (f (+ v 2))))</tt> <br>
+&eacute;valuer <tt>(g 8)</tt>
+        <p>qu'est ce que cela donne si f est d&eacute;finie par <br>
+        <tt>(defun f (x) (+ v x))</tt> <br>
+Comparer avec la lambda-expression correspondante qui
+pr&eacute;c&egrave;de. </p>
+      </li>
+      <li> d&eacute;finir quelques fonctions num&eacute;riques
+courantes
+        <ul>
+          <li><span style="font-family: monospace;">(fact n)</span> :
+factorielle d'un entier n </li>
+          <li><span style="font-family: monospace;">(fibo n)</span> :
+fibonacci (suite d&eacute;finie par <tt>u(0)=u(1)=1</tt>
+et <tt>u(n)=u(n-1)+u(n-2)</tt> )<br>
+donner une approximation de la complexit&eacute; de votre
+d&eacute;finition<br>
+sur la base du temps mis pour calculer <tt>(fibo 15)</tt>,
+d&eacute;duire une
+estimation du temps pour <tt>(fibo 50)</tt>.<br>
+            <br>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <hr> <li><b>les listes et les cellules</b>
+    <ul>
+      <li>comparer () et (()) et ((())) :
+        <ul>
+          <li>comparer les <tt>CAR</tt> et <tt>CDR</tt> de ces listes
+          </li>
+          <li>comparer leurs repr&eacute;sentations en doublets </li>
+          <li>et leurs repr&eacute;sentations compl&egrave;tement
+point&eacute;es </li>
+          <li>que donne leur comparaison par les pr&eacute;dicats <tt>eq</tt>
+et <tt>equal</tt> ?<br>
+et avec <tt>=</tt> ?</li>
+        </ul>
+      </li>
+      <li>de combien de cellules sont faites les listes : <br>
+      </li>
+      <ul>
+        <li><span style="font-family: monospace;"></span>(1 2 3 4) <br>
+        </li>
+        <li><span style="font-family: monospace;"></span>(1 (2 3) 4) <br>
+        </li>
+        <li><span style="font-family: monospace;"></span>(1 (2) (3) 4)
+          <ul>
+            <tt> </tt>
+          </ul>
+donner leur repr&eacute;sentation par doublets et
+&eacute;crire leur repr&eacute;sentation en notation
+compl&egrave;tement point&eacute;e </li>
+      </ul>
+      <li>qu'obtenez-vous avec les exemples pr&eacute;c&eacute;dents si
+vous inversez partout les <span style="font-family: monospace;">CAR</span>
+et les <span style="font-family: monospace;">CDR</span> ?<br>
+      </li>
+      <li>repr&eacute;sentation par doublets pour les
+d&eacute;finitions des fonctions <tt>f</tt> et <tt>g</tt> qui
+pr&eacute;c&egrave;dent.<br>
+        <br>
+      </li>
+    </ul>
+  </li>
+  <hr> <li><b>fonctions sur les listes plates</b><br>
+    <span style="font-style: italic;">Attention ! Beaucoup de ces
+fonctions existent d&eacute;j&agrave; dans la biblioth&egrave;que
+Common Lisp et Common Lisp interdit de le red&eacute;finir : changez
+donc leur nom et utilisez des noms diff&eacute;rents suivant les
+versions.</span><br>
+On ne consid&egrave;re que les &eacute;l&eacute;ments de la liste,
+c'est-&agrave;-dire les <span style="font-family: monospace;">CAR</span>
+des cellules de premier niveau.<br>
+Ecrire les fonctions suivantes :
+    <ul>
+      <li><tt>(member x l)</tt> qui retourne la sous-liste de la liste <tt>l</tt>
+commen&ccedil;ant par l'&eacute;l&eacute;ment <tt>x</tt>. </li>
+      <li><tt>(length l)</tt> qui retourne la longueur d'une liste
+plate, c'est-&agrave;-dire le nombre
+de cellules au premier niveau ; </li>
+      <li><tt>(last l)</tt> qui retourne la derni&egrave;re cellule
+d'une liste plate
+(au premier niveau) ;<br>
+faites une version qui assure qu'un seul test est effectu&eacute;
+&agrave;
+chaque pas de la r&eacute;cursion ;</li>
+      <li><span style="font-family: monospace;">(makelist n)</span> qui
+cr&eacute;e une liste de longueur n, contenant les entiers de 1
+&agrave; n, en ordre d&eacute;croissant ;<br>
+et en ordre croissant ?<br>
+      </li>
+      <li><span style="font-family: monospace;">(copylist l)</span> qui
+retourne une copie au premier niveau de la liste <span
+ style="font-family: monospace;">l</span> ;<br>
+      </li>
+      <li><tt>(remove x l)</tt> qui retourne une copie de la liste <span
+ style="font-family: monospace;">l </span>priv&eacute;e
+des
+occurrences de <span style="font-family: monospace;">x</span> ;<br>
+faire la m&ecirc;me chose en n'enlevant que la premi&egrave;re
+occurrence de x ;<br>
+      </li>
+      <li><tt>(append l1 l2)</tt> qui concat&egrave;ne 2 listes ;</li>
+      <li><span style="font-family: monospace;">(adjoin x l)</span> qui
+"ajoute" <span style="font-family: monospace;">x</span> &agrave; la
+liste <span style="font-family: monospace;">l</span> si <span
+ style="font-family: monospace;">x</span> n'y est pas
+d&eacute;j&agrave; ;<br>
+dans la fonction appelante, que devient <span
+ style="font-family: monospace;">l</span> ?</li>
+      <li><span style="font-family: monospace;">(match-list l1 l2)</span>
+fonction qui apparie 2 listes, <span style="font-family: monospace;">l1</span>
+et <span style="font-family: monospace;">l2</span>, et retourne la
+liste des paires de ses &eacute;l&eacute;ments, 2 &agrave; 2:<br>
+        <span style="font-family: monospace;">(match-list '(a b c) '(1
+2 3))</span> retourne <span style="font-family: monospace;">((a . 1)
+(b . 2) (c . 3))<br>
+        </span>Comment peut-on g&eacute;rer le cas o&ugrave; les 2
+listes sont de longueur in&eacute;gale ?<br>
+        <br>
+      </li>
+    </ul>
+  </li>
+  <hr> <li><span style="font-weight: bold;">fonctions sur les arbres
+binaires<br>
+    </span>On consid&egrave;re que chaque cellule est un noeud dont les
+    <span style="font-family: monospace;">CAR</span> et <span
+ style="font-family: monospace;">CDR</span> sont les successeurs. Les
+feuilles sont les atomes, y compris ().<span style="font-weight: bold;"><br>
+    </span></li>
+  <ul>
+    <li><tt>(size tree)</tt> qui retourne la taille d'un arbre,
+c'est-&agrave;-dire son nombre de
+cellules total, &agrave; tous les niveaux ;<br>
+alternativement, d&eacute;finir la fonction de fa&ccedil;on &agrave;
+calculer
+le nombre de feuilles, ou le nombre de feuilles non <span
+ style="font-family: monospace;">NIL</span>.</li>
+    <li><tt>(copytree tree)</tt> qui copie un arbre ; </li>
+    <li><tt>(subst x y tree)</tt> qui substitue dans l'arbre <span
+ style="font-family: monospace;">tree</span>
+toutes les occurrences de x
+par y ;</li>
+    <li><span style="font-family: monospace;">(tree-leaves tree)</span>
+qui retourne la liste des feuilles de l'arbre ;<br>
+examiner l'ordre des feuilles suivant la fa&ccedil;on dont on
+&eacute;crit la fonction ;<br>
+    </li>
+    <li><span style="font-family: monospace;">(miroir tree)</span> qui
+produit une copie d'un arbre en inversant les <span
+ style="font-family: monospace;">car </span>et<span
+ style="font-family: monospace;"> cdr</span> (cf. fin de question 3) ;</li>
+    <li><span style="font-family: monospace;">(depth tree)</span> qui
+calcule la profondeur maximale d'un arbre ;</li>
+    <li><span style="font-family: monospace;">(match-tree t1 t2)</span>
+fonction qui apparie 2 arbres, <span style="font-family: monospace;">t1</span>
+et <span style="font-family: monospace;">t2</span>, et retourne la
+liste des paires de ses feuilles, 2 &agrave; 2:<br>
+      <span style="font-family: monospace;">(match-tree '(a (b . d) c)
+'(1 (2 . 4) 3))</span> retourne <span style="font-family: monospace;">((a
+. 1) (b . 2) (c . 3) (d . 4) (()))<br>
+      </span>d'o&ugrave; vient ce <span style="font-family: monospace;">((()))
+?<br>
+comment peut-on g&eacute;rer le cas o&ugrave; les arbres ont une
+structure diff&eacute;rente ?<br>
+      </span></li>
+    <li><span style="font-family: monospace;">(dot-print tree)</span>
+qui fait une impression de l'arbre en notation point&eacute;e</li>
+    <ul>
+      <li>faire 2 versions en notation compl&egrave;tement
+point&eacute;e et en notation point&eacute;e minimale</li>
+      <li>on utilisera les fonctions d'impression suivantes : <span
+ style="font-family: monospace;"><br>
+prin1</span> pour imprimer un atome, <span
+ style="font-family: monospace;">terpri</span> pour passer &agrave; la
+ligne et <span style="font-family: monospace;">write-char</span> pour
+imprimer un caract&egrave;re<br>
+(voir ces fonctions dans CLtL)<br>
+      </li>
+      <li>la syntaxe pour les caract&egrave;res lit&eacute;raux est : <span
+ style="font-family: monospace;">#\a</span>, <span
+ style="font-family: monospace;">#\b</span>, <span
+ style="font-family: monospace;">#\c</span>, ...,&nbsp; <span
+ style="font-family: monospace;">#\z</span>, <span
+ style="font-family: monospace;">#\(</span>, <span
+ style="font-family: monospace;">#\)</span>, <span
+ style="font-family: monospace;">#\space</span>, etc.<br>
+(voir le type <span style="font-family: monospace;">character</span>
+dans CLtL, chapitre 2).<br>
+      </li>
+    </ul>
+  </ul>
+  <hr style="width: 100%; height: 2px;"><li><b>tests
+d'&eacute;galit&eacute;</b>
+    <ul>
+      <li>effectuer les comparaisons suivantes avec <span
+ style="font-family: monospace;">eq</span> ou <span
+ style="font-family: monospace;">equal</span> :</li>
+      <ul>
+        <li style="font-family: monospace;">(&lt;test&gt; (cons 1 2)
+(cons 1 2))</li>
+        <li style="font-family: monospace;">(&lt;test&gt; '(1 . 2)
+(cons 1 2))</li>
+        <li style="font-family: monospace;">(&lt;test&gt; '(1 . 2) '(1
+. 2))</li>
+        <li style="font-family: monospace;">((lambda (x) (&lt;test&gt;
+x x)) (cons 1 2))<br>
+        </li>
+      </ul>
+      <li>comparer les diff&eacute;rentes fonctions de tests
+d'&eacute;galit&eacute;
+(<tt>=</tt>, <tt>eq</tt>, <tt>eql</tt>, <tt>equal</tt>) sur les
+nombres, en
+faisant varier l'ordre de grandeur de <tt>n</tt> dans <tt>(= (fact n)
+(fact n))</tt>. </li>
+      <li>proposer une d&eacute;finition de <tt>equal</tt>
+et de <span style="font-family: monospace;">eql</span> correspondant
+aux sp&eacute;cifications.<br>
+        <br>
+      </li>
+    </ul>
+    <hr> </li>
+  <li><b>r&eacute;cursion terminale et envelopp&eacute;e</b>
+    <ul>
+      <li>Les diverses fonctions de la question 4 sont-elles
+en
+r&eacute;cursion terminale ou envelopp&eacute;e ? </li>
+      <li>Dans ce dernier cas, en donner une version en
+r&eacute;cursion
+terminale, par exemple en appliquant la transformation du cours ?</li>
+      <li>dans le cas de <span style="font-family: monospace;">copylist
+        </span>et<span style="font-family: monospace;"> makelist,</span>
+que calculent leurs versions r&eacute;cursives terminales ?</li>
+      <li>appliqu&eacute;e aux r&eacute;cursions doubles (question 5),
+la
+transformation du cours ne donne pas une r&eacute;cursion terminale sur
+les deux appels r&eacute;cursifs, mais seulement une r&eacute;cursion
+semi-terminale, terminale sur l'un des appels et envelopp&eacute;e sur
+l'autre : appliquer &agrave; <span style="font-family: monospace;">size</span>
+;</li>
+      <li>pour les autres r&eacute;cursions doubles (fonctions sur les
+arbres par ex.) la transformation du cours donne une r&eacute;cursion
+partiellement terminale. <br>
+qu'est-ce que cela donne pour <tt>copytree</tt>, <span
+ style="font-family: monospace;">match-tree</span> et <span
+ style="font-family: monospace;">tree-leaves</span> ?</li>
+      <li>dans le cas de <span style="font-family: monospace;">depth</span>,
+la transformation du cours ne marche pas non plus directement : trouver
+une version semi-terminale<br>
+      </li>
+      <li>trouver une solution purement terminale pour <span
+ style="font-family: monospace;">fibonacci</span> ; quelle est la
+complexit&eacute; de cette nouvelle
+d&eacute;finition ? <br>
+      </li>
+      <br>
+    </ul>
+    <hr></li>
+</ol>
+</body>
+</html>

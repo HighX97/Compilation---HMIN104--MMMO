@@ -1,0 +1,90 @@
+1)
+(defun membre (x l &key (test 'eql)) (if (atom l) NIL (if (apply test x (car l) '()) l (membre x (cdr l) :test test))))
+(defun association (x l &key (test 'eql)) (if (atom l) NIL (if (apply test x (car (car l)) '()) (car l) (association x (cdr l) :test test))))
+
+(defun membre (x l &key (test 'eql) (key (lambda (x) x))) (if (atom l) NIL (if (apply test x (apply key (car l) '()) '()) l (membre x (cdr l) :test test :key key))))
+(defun association (x l &key (test 'eql) (key (lambda (x) x))) (if (atom l) NIL (if (apply test x (apply key (car (car l)) '()) '()) (car l) (association x (cdr l) :test test :key key))))
+
+(defun membre (x l &key (test 'eql)) (if (atom l) NIL (if (apply test x (car l) '()) l (membre x (cdr l) :test test))))
+//on definit une lambda fonction (lambda (x y) (comp x y)) qui renvoie un booléen dans "test". on effectue dans y la fonction que l'on souhaite.
+ex : 
+(membre 2 '((1 2) (2 3) (3 3)) :test #'(lambda (x y) (< x (car y))))
+
+
+2)
+(defun ajoutEnFinApply (l &rest ll) (if (null ll) l (if (null l) (apply #'ajoutEnFinApply ll) (cons (car l) (apply #'ajoutEnFinApply (cdr l) ll)))))
+
+(defun ajoutEnFinApply (&rest elem) (if (null (cdr elem)) (car elem) (if (null (car elem)) (apply #'ajoutEnFinApply (cdr elem)) (cons (car (car elem)) (apply #'ajoutEnFinApply (cons (cdr (cdr elem)) (cdr elem)))))))
+
+(defun ajoutEnFin (&rest elem) (labels ((concatenation (l1 l2) (if (atom l1) (if (atom l2) NIL (cons (car l2) (concatenation l1 (cdr l2)))) (cons (car l1) (concatenation (cdr l1) l2))))) (concatenation (car elem) (cdr elem))))
+
+(defun liste (&rest elem) (labels ((concatenation (l) (if (atom l) l (cons (car l) (concatenation (cdr l)))))) (concatenation elem)))
+
+3)
+
+(defun nconc2 (l &rest liste) 
+	(
+		if (null liste)
+			l
+		(
+			if (null l)
+			(
+				apply #'nconc2 liste
+			)
+			(
+				progn (setf (cdr l) (apply #'nconc2 (cdr l) liste))
+				l
+			)
+		)
+	)
+)
+
+(defun delete2 (x liste)
+	(
+		if (null liste)
+			liste
+		(
+			if (eql (car (cdr liste)) x)
+			(
+				progn (setf (cdr l) (cdr (cdr l)))
+				(delete2 
+				// A finir	
+			
+
+4)
+
+// A faire
+
+6)
+(defun calcArith (exp)
+	(if (atom exp) 
+		exp
+		(if (atom (car exp))
+			(if (atom (cdr exp))
+				(car exp)
+				(if (eql (car exp) '+)
+					(	
+						progn (setf res (car (cdr exp))) (loop for x in  (cdr (cdr exp)) do (setf res (+ res (calcArith x)))) res
+					)	
+					(if (eql (car exp) '*)
+						(	
+							progn (setf res (car (cdr exp))) (loop for x in (cdr (cdr exp)) do (setf res (* res (calcArith x)))) res
+						)
+						(if (eql (car exp) '/)
+							(	
+								progn (setf res (car (cdr exp))) (loop for x in (cdr (cdr exp)) do (setf res (/ res (calcArith x)))) res
+							)
+							(if (eql (car exp) '-)
+								(	
+									progn (setf res (car (cdr exp))) (loop for x in (cdr (cdr exp)) do (setf res (- res (calcArith x)))) res
+								)
+								(car exp)
+							)
+						)
+					)
+				)
+			)
+			(calcArith (cdr exp))
+		)
+	)
+)
