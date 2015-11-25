@@ -71,8 +71,7 @@
        ((eq 'cond fun) 
 					;On concatène :if et on fait un MAPLISP2LI des arguments avec 
 					;l'environnement pour faire le LI de l'expression et des cas 
-	(warn "cas cond");
-    (cons :if (MAPLISP2LI args env)))
+	(LISP2LI (macroexpend-1 (third fun)) env))
 	;(cons :cond (MAPLISP2LI args env)))	
        				;-----Cas Macro-----
        	((eq 'macro-function fun)

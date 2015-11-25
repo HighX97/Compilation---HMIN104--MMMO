@@ -21,39 +21,47 @@
 (defun eval-LI (expr env)
 	(ecase (car expr)
 																								;(:LIT . 1)
-		(:LIT (cdr expr))
+		(:LIT 
+			(cdr expr))
 																								;(:VAR )
-		(:VAR (aref env (cdr expr)))
+		(:VAR 
+			(aref env (cdr expr)))
 																								;(:SETVAR )
-		(:SETAR (setf (aref env (cdr expr) (eval-LI (cddr expr) env ))))
+		(:SETVAR 
+			(setf (aref env (cdr expr)) 
+				(eval-LI (cddr expr) env)))
 																								;(:IF)
-		(:IF (if (eval li (second expr) env) (eval-LI (thrd expr) env)(eval-LI (cdddr expr) env)))
+		(:IF 
+			(if (eval-LI (second expr) env) 
+				(eval-LI (thrd expr) env)
+				(eval-LI (cdddr expr) env)))
 																								;(:CALL + (:LIT . 1)(:LIT . 2))
 		(:CALL (apply (second expr)
 			(map-eval-li (cddr expr) env)))
 																								;(:MCALL FIBO (:LIT . 30))
 																								;fun :
 																								;args
-		(:MCALL (let ((fun (get-defun (second expr))))
+		(:MCALL 
+			(let ((fun (get-defun (second expr))))
 			(args (map-eval-li (cddr expr))))
 																								;(thrid de fun) : corp de la fonction
-																								;(second fun) : 
+																								;(second fun) : parametres
 																								;(get-defun 'fibo') : 
 			(eval-LI (thrid de fun)
-				(make-env-eval-LI (second fun) (get-defun 'fibo')
-					args))
-		)
+				(make-env-eval-LI (second fun) args)))
 																								;(:PROGN )
-		(:PROGN (map-eval-LI-progn PROGN (cdr expr)))
+		(:PROGN 
+			(map-eval-LI-progn PROGN (cdr expr)))
 																						;(:UNKNOWN (FIBO (- n 1))) . (n))
-		(:UNKNOWN (let ((nexpr (lisp2li (seond expr) (cddr expr))))
+		(:UNKNOWN 
+			(let (
+				(nexpr (lisp2li (seond expr) (cddr expr))))
 			(if (eq (car expr) :UNKNOWN)
 				(error "eval-LI: ~s" expr)
-				(eval-LI (displace expr nexpr) env))))
-		))
+				(eval-LI (displace expr nexpr) env))))))
 																								; expr [ | ]{:UNKNWOWN     |     ((fibo (- n 1)) . (n)))}
 																								; (defun displace (cell1 cell2)
-																								;			(set-f 	(car cell2) (car cell1)
+																								;			(set-f (car cell2) (car cell1)
 																								;				(cdr cell2) (car cell1)
 																								;			cell2)			
 																								;
@@ -130,7 +138,14 @@
 																								;
 																								;																																																																																																																								
 (defun map-eval-LI (expr env)
-	)
+	
+						;Si c'est un atome 
+  (if (atom expr) 
+					;On ne fait rien 
+      NIL 
+					;Sinon on transcrit en LI le premier élément 
+					;et on réalise une récursion sur le reste 
+    (cons (eval-LI (first expr) env) (map-eval-LI (rest expr) env))))
 																								;
 																								;
 																								;
@@ -138,20 +153,36 @@
 																								;
 																								;																																																																																																																								
 (defun map-eval-LI-progn (expr env)
-	)
+						;Si c'est un atome 
+  (if (atom expr) 
+					;On ne fait rien 
+	NIL 
+					;Sinon on transcrit en LI le premier élément 
+					;et on réalise une récursion sur le reste
+	(if (atom (rest expr))
+		(eval-LI (first expr) env)
+		(map-eval-LI-progn (rest expr) env))))
 																								;
 																								;
 																								;
 																								;
 																								;
 																								;																																																																																																																								
-(defun map-env-eval-LI (expr env)
-	)
+(defun make-env-eval-LI (expr env)
+						;Si c'est un atome 
+  (if (atom expr) 
+					;On ne fait rien 
+      NIL 
+					;Sinon on transcrit en LI le premier élément 
+					;et on réalise une récursion sur le reste 
+    (make-array (make-env-eval-LI (cdr expr )))))
 																								;
 																								;
 																								;
 																								;
 																								;
 																								;																																																																																																																								
-(defun displace (expr env)
-	)
+(defun displace (cell1 cell2)
+	(setf (car cell2) (car cell1)
+		(cdr cell2) (car cell1))
+	cell2)
