@@ -1,0 +1,224 @@
+<!DOCTYPE html PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type"
+ content="text/html; charset=iso-8859-1">
+  <meta name="GENERATOR"
+ content="Mozilla/4.76 [fr] (X11; U; Linux 2.2.18 i686) [Netscape]">
+</head>
+<body>
+<h1>TD de LISP num&eacute;ro 3 et 4
+</h1>
+<hr>
+<ol>
+  <li> <b>Param&egrave;tres optionnels et APPLY</b></li>
+  <br>
+  <ul>
+    <li>D&eacute;finir les fonctions de recherche dans une liste telles
+que <b>member</b>, <b>assoc</b>,
+etc. avec un argument optionnel pour la fonction de comparaison
+&agrave;
+utiliser (mot-cl&eacute; <tt>:test</tt>). </li>
+    <li>Lire la description de ces fonctions dans le manuel en ligne et
+impl&eacute;menter
+aussi les mot-cl&eacute;s <tt>:key</tt> et <span
+ style="font-family: monospace;">:from-the-end</span>.</li>
+    <li>Montrez comment &eacute;viter l'usage de <span
+ style="font-family: monospace;">:key</span> en se servant de <span
+ style="font-family: monospace;">:test</span>.<br>
+    </li>
+    <li>Comment assurer un minimum d'efficacit&eacute; &agrave; ces
+fonctions ?<br>
+    </li>
+  </ul>
+  <br>
+  <hr> <li><b>fonctions d'arit&eacute; variable et APPLY</b></li>
+  <ul>
+    <li>D&eacute;finir les fonctions n-aires de manipulation de listes
+comme <b>append</b>,
+par une unique fonction r&eacute;cursive en utilisant <b>apply</b>.</li>
+    <li>d&eacute;finir ces fonctions sans utiliser <b>apply</b>,
+&agrave;
+l'aide
+d'une fonction r&eacute;cursive locale d&eacute;finie par <b>labels</b>.</li>
+    <li>idem pour la fonction <b>list*</b> telle que <tt>(list* 1 2 3
+'(4 5
+6))</tt>
+retourne <tt>(1 2 3 4 5 6)</tt>.<br>
+      <br>
+    </li>
+  </ul>
+  <hr> <li><b>Fonctions destructives sur les listes</b></li>
+  <br>
+D&eacute;finir les diff&eacute;rentes fonctions sur les listes en mode
+destructif (ou modification physique) et non pas en mode copie comme on
+l'a vu jusqu'ici.
+  <p>Fonctions concern&eacute;es : </p>
+  <ul>
+    <li> <b>nconc</b> version destructive de <b>append</b>.</li>
+    <li> <b>delete</b> version destructive de <b>remove</b>.</li>
+    <li> <b>nreverse</b> version destructrice de <b>reverse</b>.</li>
+    <li> <b>nsubst</b> version destructive de <b>subst</b>.<br>
+      <br>
+    </li>
+  </ul>
+  <hr> <li><b>Fonctions de partage sur les listes</b></li>
+  <br>
+Entre la copie et la destruction, il y a le partage, qui consiste
+&agrave;
+ne rien d&eacute;truire mais &agrave; ne recopier que le minimum. <br>
+D&eacute;finir les fonctions <b>subst</b> et <b>remove</b> en mode
+partage, de telle sorte que la fonction retourne son argument dans le
+cas
+o&ugrave; aucune substitution n'est faite. <br>
+  <b>NB.</b> la fonction ne doit effectuer qu'un unique parcours de
+l'arbre,
+comme pour les autres versions.
+  <p>Une pr&eacute;sentation &eacute;l&eacute;gante des 3 versions
+(copie,
+partage, destruction) de ces fonctions consiste &agrave; utiliser un
+sch&eacute;ma
+unique dans lequel on ne fait varier que la fonction de construction de
+liste : typiquement, dans les versions partage et destruction, on
+remplace
+l'usage de <b>cons</b> par celui d'une autre fonction, locale. <br>
+  <br>
+  </p>
+  <hr><li> <b>Calculette</b></li>
+  <br>
+D&eacute;finir la fonction <b>calcul</b> qui prend une expression
+arithm&eacute;tique
+en param&egrave;tre et l'&eacute;value. <br>
+L'expression ne doit contenir que des nombres et des op&eacute;rateurs
+arithm&eacute;tiques usuels.on g&eacute;n&eacute;ralisera ensuite
+&agrave;
+des op&eacute;rateurs d'arit&eacute; quelconque. <br>
+On commencera en ne traitant que des op&eacute;rateurs binaires et
+  <ul>
+    <li>faire une version qui prend en compte sp&eacute;cifiquement
+chaque
+op&eacute;rateur
+;</li>
+    <li>faire une version qui traite g&eacute;n&eacute;riquement chaque
+op&eacute;rateur
+;</li>
+    <li>g&eacute;n&eacute;raliser au cas de l'&eacute;valuation de
+n'importe
+quelle
+expression Lisp qui n'utilise que des fonctions globales nomm&eacute;es
+et des constantes de n'importe quel type. Traiter le cas de <b>quote</b>.<br>
+      <br>
+    </li>
+  </ul>
+  <hr> <li><b>Les macros</b></li>
+  <ul>
+    <li>reprendre l'exercice 1 de la <a href="lisp-1.html">feuille de
+TD 1 &amp; 2</a> et tranformer les expressions <span
+ style="font-weight: bold;">lambda</span> en <span
+ style="font-weight: bold;">let</span> ou <span
+ style="font-weight: bold;">let*</span> ;<br>
+    </li>
+    <li>d&eacute;finir les macros <b>let</b> et <b>let*</b>&nbsp;
+avec un
+nombre
+quelconque de variables ;</li>
+    <li>d&eacute;finir les macros <b>and</b> et <b>or</b> ;</li>
+    <li>d&eacute;finir les macros <b>cond</b> et <b>case</b> ;</li>
+  </ul>
+Dans tous les cas, attention aux r&eacute;cursions, aux doubles
+&eacute;valuations
+et &agrave; la capture de variable. <br>
+On utilisera <b>macroexpand</b> pour v&eacute;rifier la correction
+des expansions. <br>
+  <br>
+  <hr> <li><b>Tester backquote</b></li>
+  <br>
+Pour comprendre ce que fait <b>backquote</b>, il est
+int&eacute;ressant
+d'analyser la valeur de <b>`(toto , titi truc ,@tata tutu) </b>ou de
+toute
+autre expression backquot&eacute;e. <br>
+Pour cela, on peut regarder '<b>`(toto , titi truc ,@tata tutu) : </b>comme
+  <b>print</b>
+restitue la forme bacquot&eacute;e d'origine, on analysera la valeur en
+en prenant les <b>car</b> et <b>cdr</b> successifs. <br>
+Expliquer. <br>
+  <br>
+  <hr width="100%"> <li><b>Impl&eacute;menter backquote</b></li>
+  <br>
+L'objectif est de d&eacute;finir le fonctionnement du caract&egrave;re <i>backquote</i>
+en d&eacute;finissant une fonction <b>backquotify</b> qui transforme
+l'expression
+backquot&eacute;e en une expression de construction de liste. <br>
+Pour cela, il faut d'abord supposer que "<b>,x</b>" est lu (fonction <b>read</b>)
+comme la liste <b>(unquote x)</b>, de la m&ecirc;me mani&egrave;re que
+"<b>'x</b>" est lu <b>(quote x)</b>. Idem pour "<b>,@x</b>" qui est lu
+  <b>(splice-unquote
+x)</b>. <br>
+On proc&egrave;de par &eacute;tapes
+  <ol>
+    <li>dans un premier temps, on d&eacute;finit <b>backquotify</b>
+pour qu'il
+transforme l'expression <b>`(e1 e2 .. en)</b> en <b>(list 'e1 ... 'en)</b>
+;</li>
+    <li>on traite ensuite le cas o&ugrave; des <b>ei</b> sont de la
+forme <b>(unquote
+fi)</b> de telle sorte que l'expression produite comporte alors <b>fi</b>
+&agrave; la place de <b>'ei</b> ;</li>
+    <li>on g&eacute;n&eacute;ralise alors &agrave; un arbre : la
+r&eacute;cursion
+ne se fait pas seulement sur le <b>cdr</b> mais aussi sur le <b>car</b>
+;</li>
+    <li>on traite ensuite le cas des <b>(splice-unquote x)</b> :
+attention, il
+faut alors faire une r&eacute;cursion de la cellule "du dessus"&nbsp;
+(rare
+contre-exemple &agrave; la r&egrave;gle consistant &agrave; ne tester
+dans
+une r&eacute;cursion que la cellule courante) ;</li>
+    <li>on finit par la d&eacute;finition d'une fonction de
+simplification qui
+fait l'inverse de l'&eacute;tape 1 en reconstruisant des constantes et
+qui simplifie les appels imbriqu&eacute;s (<b>append</b>, <b>cons</b>
+et <b>list*</b>
+ou <b>list</b>, etc.)</li>
+  </ol>
+On peut alors v&eacute;rifier, que &ccedil;a marche :
+  <p><tt>(bacquotify '((lambda ((unquote (caar args))) (splice-unquote
+body))
+(unquote (cadar args))))</tt> <br>
+doit retourner quelque-chose comme : <br>
+  <tt>(list (list* 'lambda (list (caar args)) body) (cadar args))</tt> <br>
+On peut m&ecirc;me comparer ce que votre version produit avec le
+r&eacute;sultat
+de la version du syst&egrave;me, que la question
+pr&eacute;c&eacute;dente
+permet d'obtenir. <br>
+  <br>
+  </p>
+  <hr><li> <b>R&eacute;cursions terminales et continuations</b></li>
+  <br>
+Une <i>continuation</i> est une <i>fermeture</i>, c'est-&agrave;-dire
+une lambda-expression capturant l'environnement courant, pass&eacute;e
+en argument &agrave; une autre fonction qui appelle la continuation
+pour
+se continuer. <br>
+L'un des usages des continuations est de permettre la transformation
+de n'importe quelle r&eacute;cursion envelopp&eacute;e en
+r&eacute;cursion
+terminale.
+  <ul>
+    <li>Ecrire la fonction <b>length</b> en r&eacute;cursion terminale
+avec
+une
+continuation.</li>
+    <li>appliquer le m&ecirc;me principe pour d'autres fonctions : <b>fact</b>,
+      <b>copylist</b>,
+etc.</li>
+    <li>idem pour la fonction <b>size</b> qui est doublement
+r&eacute;cursive.</li>
+  </ul>
+  <hr>
+</ol>
+</body>
+</html>
