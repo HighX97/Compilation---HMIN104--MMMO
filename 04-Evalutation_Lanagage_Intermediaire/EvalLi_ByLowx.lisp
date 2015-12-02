@@ -27,9 +27,10 @@
 		(:VAR 
 			(aref env (cdr expr)))
 																								;(:SETVAR )
-		(:SETVAR 
+		(:SET-VAR 
 			(setf (aref env (cdr expr)) 
 				(eval-LI (cddr expr) env)))
+
 																								;(:IF)
 		(:IF 
 			(if (eval-LI (second expr) env) 
@@ -161,6 +162,7 @@
 					;et on réalise une récursion sur le reste
 	(if (atom (rest expr))
 		(eval-LI (first expr) env)
+
 		(map-eval-LI-progn (rest expr) env))))
 																								;
 																								;
@@ -186,3 +188,38 @@
 	(setf (car cell2) (car cell1)
 		(cdr cell2) (car cell1))
 	cell2)
+
+
+		;;TEST eval-LI
+
+(load "/auto_home/lortole/Bureau/Compilation_et_Interpretation_HMIN104/02-Generation_Langage_Intermediaire/LISP_to_LI.lisp")
+
+;Make_env
+(setf env (make-array 14))
+(setf (aref env 0) 'A )
+(setf (aref env 1) 'B )
+(setf (aref env 2) 'C )
+(setf (aref env 3) 'D )
+(setf (aref env 4) 'E )
+(setf (aref env 5) 'F )
+(setf (aref env 6) 'G )
+(setf (aref env 7) 'H )
+(setf (aref env 8) 'I )
+(setf (aref env 9) 'J )
+(setf (aref env 10) 'K )
+(setf (aref env 11) 'L )
+(setf (aref env 12) 'M )
+(setf (aref env 13) 'N )
+
+;Trace
+(trace eval-LI)
+(trace LISP2LI)
+
+;Cas Lit
+;(eval-LI (LISP2LI 1 env) env)
+
+;Cas Var
+;(eval-LI (LISP2LI 'g env) env)
+
+;Cas Set-Var
+(eval-LI (LISP2LI '(setf a 1) env) env)

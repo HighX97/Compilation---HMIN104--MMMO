@@ -110,8 +110,7 @@
             :call
             fun
             (maplisp2li args env)
-            ))
-        ))))
+            ))))))
 
 ;(lisp2li '(defun fibo200a (n x y) (if (<= n 0) y (fibo200a (- n 1) y (+ x y)))) ())
 ;(lisp2li '(defun lvm (vm code) (loop for instr in code do (+ 1 vm))) ())
@@ -129,8 +128,7 @@
       (lisp2li val env)
       (random (random 1000000))
       (lisp2li (car args) env)
-      (lisp2li (append (list 'setf (car lexpr) (list 'cdr (car lexpr)))) env )
-      )))
+      (lisp2li (append (list 'setf (car lexpr) (list 'cdr (car lexpr)))) env ))))
 
 (defun addtoenv (lexpr env)
   ;(print :addtoenv)

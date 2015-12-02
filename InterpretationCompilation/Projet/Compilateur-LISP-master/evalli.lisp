@@ -1,4 +1,4 @@
-(require "lisp2li.lisp")
+;(require "lisp2li.lisp")
 
 ;;Tentative de meta evaluateur
 ;;Gerer les erreurs sur les expressions mal formees (ici ? lisp2li ?)
@@ -89,6 +89,6 @@
       (make-fill-env-eval-li (cdr args) env nenv (+ 1 index))
       )))
 
-(evalli '((:CALL +) (:CONST 1) (:CONST 2)) '())
-(mapevalli '(:IF ((:CALL >) (:CONST 1) (:CONST 0)) (:CONST 1) (:CONST 0)) '())
-(evalli '(:if ((:call >) (:const 1) (:const 0)) (:const 1) (:const 0)) '())
+;(evalli '((:CALL +) (:CONST 1) (:CONST 2)) '())
+;(mapevalli '(:IF ((:CALL >) (:CONST 1) (:CONST 0)) (:CONST 1) (:CONST 0)) '())
+;(evalli '(:if ((:call >) (:const 1) (:const 0)) (:const 1) (:const 0)) '())
