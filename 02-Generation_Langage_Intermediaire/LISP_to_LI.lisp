@@ -84,7 +84,8 @@
 					;-----Cas GetDefun-----
        	((eq 'get-defun fun)
        	;
-    (warn "get-defun detected"))
+    (warn "get-defun detected")
+    (list :mcall fun (MAPLISP2LI args env)))
 					;-----Cas Unknow-----
 					;Si c'est une fonction inconnue 
        ((not (fboundp fun)) 
@@ -96,7 +97,12 @@
        ((fboundp fun) 
 					;On créé une liste avec :call, le nom de la fonction et la suite 
 					;qui sera transcrit en LI dans MAPLISP2LI 
-	(list :call fun (MAPLISP2LI args env)))))))
+	(list :call fun (MAPLISP2LI args env)))
+       				;Si c'est une expression appellant progn 
+		((eq 'progn fun) 
+					;On créé une liste avec :progn et MAPLISP2LI des arguments avec l'environnement 
+	(list :progn (MAPLISP2LI args env))
+				)))))
 
 					;--Case
 					;--quote,if,defun,let,cond
@@ -136,42 +142,75 @@
 
 		;;TEST LISP2LI
 
-	;LIT
-;(LISP2LI 1 '(a b c d e f g i j k l m n o p q r s t u v w x y z))
-;(:LIT . 1)
+;Make_env
+(setf env (make-array 26))
+(setf (aref env 0) 'A )
+(setf (aref env 1) 'B )
+(setf (aref env 2) 'C )
+(setf (aref env 3) 'D )
+(setf (aref env 4) 'E )
+(setf (aref env 5) 'F )
+(setf (aref env 6) 'G )
+(setf (aref env 7) 'H )
+(setf (aref env 8) 'I )
+(setf (aref env 9) 'J )
+(setf (aref env 10) 'K )
+(setf (aref env 11) 'L )
+(setf (aref env 12) 'M )
+(setf (aref env 13) 'N )
+(setf (aref env 14) 'O )
+(setf (aref env 15) 'P )
+(setf (aref env 16) 'Q )
+(setf (aref env 17) 'R )
+(setf (aref env 18) 'S )
+(setf (aref env 19) 'T )
+(setf (aref env 20) 'U )
+(setf (aref env 21) 'V )
+(setf (aref env 22) 'W )
+(setf (aref env 23) 'X )
+(setf (aref env 24) 'Y )
+(setf (aref env 25) 'Z )
 
-	;VAR
-;(LISP2LI 'a '(a b c d e f g h i j k l m n o p q r s t u v w x y z))
-;(:VAR . 0)
-;(LISP2LI 'l '(a b c d e f g h i j k l m n o p q r s t u v w x y z))
-;(LISP2LI 'z '(a b c d e f g h i j k l m n o p q r s t u v w x y z))
-;(:VAR . 24)
+;Trace
+(trace LISP2LI)
 
-	;QUOTE
-;(LISP2LI '(a) '(a b c d e f g i j k l m n o p q r s t u v w x y z))
-;(:UNKNOWN (A) (A B C D E F G I J K L M N O P Q R S T U V W X Y Z))
+	;LIT _ Valid
+;(LISP2LI 1 env)
+;LISP2LI ==> (:LIT . 1)
 
-	;IF
-;(LISP2LI '(IF (EQ 1 1)) '(a b c d e f g i j k l m n o p q r s t u v w x y z))
-;(:IF (:CALL EQ ((:LIT . 1) (:LIT . 1))))
+	;VAR _ Valid
+;(LISP2LI 'a env)
+;LISP2LI ==> (:VAR . 0)
+;(LISP2LI 'l env)
+;LISP2LI ==> (:VAR . 11)
+;(LISP2LI 'z env)
+;LISP2LI ==> (:VAR . 25)
 
-;(LISP2LI '(IF (EQ A B)) '(a b c d e f g i j k l m n o p q r s t u v w x y z))
-;(:IF (:CALL EQ ((:VAR . 0) (:VAR . 1))))
+	;QUOTE _ERRR
+;(LISP2LI '(1) env)
+;LISP2LI ==> (:UNKNOWN (A) #(A B C D E F G H I J K L M N O P Q R S T U V W X Y Z))
 
-	;DEFUN
-;(LISP2LI '(defun f (x) (+ 3 x)) '(a b c d e f g i j k l m n o p q r s t u v w x y z))
-;(:CALL + ((:LIT . 3) (:VAR . 0)))
+	;IF _ Valid
+;(LISP2LI '(IF (EQ 1 1) 3 7) env)
+;LISP2LI ==> (:IF (:CALL EQ ((:LIT . 1) (:LIT . 1))) (:LIT . 3) (:LIT . 7))
 
-	;SETF
-;(LISP2LI '(setf (car x) 'x (cadr y) (car x) (cdr x) y) '(a b c d e f g i j k l m n o p q r s t u v w x y z))
+;(LISP2LI '(IF (EQ A B) 3 7) env)
+;(:IF (:CALL EQ ((:VAR . 0) (:VAR . 1))) (:LIT . 3) (:LIT . 7))
+
+	;DEFUN _ Err
+;(LISP2LI '(defun f (x) (+ 3 x)) env)
+;LISP2LI ==> (:CALL + ((:LIT . 3) (:VAR . 0)))
+
+	;SETF _ Err
+;(LISP2LI '(setf (car x) 'x (cadr y) (car x) (cdr x) y) env)
 ;(:SETF (:CALL CAR ((:VAR . 22))))
 
 	;LET
-;(LISP2LI '(let ((a 'inside) (b a))
-;    (format nil "~S ~S ~S" a b (dummy-function))) '(a b c d e f g i j k l m n o p q r s t u v w x y z))
+(LISP2LI '(let ((a 'inside) (b a))))
+;    (format nil "~S ~S ~S" a b (dummy-function))) env)
 
 	;COND
-;(LISP2LI '(cond ((eq a 1) (let a 2)) ((eq a 2) (let a 3))) '(a b c d e f g i j k l m n o p q r s t u v w x y z))
+;(LISP2LI '(cond ((eq a 1) (let a 2)) ((eq a 2) (let a 3))) env)
 ;(car '(cond ((eq a 1) (let a 2)) ((eq a 2) (let a 3)) ((eq a 3) (let a 4))))
 ;COND
 ;(cdr '(cond ((eq a 1) (let a 2)) ((eq a 2) (let a 3)) ((eq a 3) (let a 4))))
@@ -216,27 +255,27 @@
 
 ;(cond2if '(cond ((eq a 1) (let a 2)) ((eq a 2) (let a 3)) ((eq a 3) (let a 4))))
 ;(LISP2LI '((IF (EQ A 1) (LET A 2) (IF (EQ A 2) (LET A 3) (IF (EQ A 3) (LET A 4)))))
-;(LISP2LI '(if (eq a 1) (let a 2) (if (eq a 2) (let a 3))) '(a b c d e f g i j k l m n o p q r s t u v w x y z))
+;(LISP2LI '(if (eq a 1) (let a 2) (if (eq a 2) (let a 3))) env)
 ;(:IF (:CALL EQ ((:VAR . 0) (:LIT . 1))) (:LET-VAR (:VAR . 0) (:LIT . 2))
 ; (:IF (:CALL EQ ((:VAR . 0) (:LIT . 2))) (:LET-VAR (:VAR . 0) (:LIT . 3))))
 
 
 	;macro-function
-;(LISP2LI '(defmacro macfun (x) '(macro-function 'macfun)) '(a b c d e f g i j k l m n o p q r s t u v w x y z))
+;(LISP2LI '(defmacro macfun (x) '(macro-function 'macfun)) env)
 ;(:CALL DEFMACRO ((:UNKNOWN MACFUN) (:UNKNOWN (X) (A B C D E F G I J K L M N O P Q R S T U V W X Y Z)) (:LIT (MACRO-FUNCTION 'MACFUN))))
 
 	;-----Cas Formspe-----
-;(LISP2LI '(defvar a) '(a b c d e f g i j k l m n o p q r s t u v w x y z))
+;(LISP2LI '(defvar a) env)
 
 	;-----Cas GetDefun-----
 
 	;-----Cas Unknow-----
-;(LISP2LI '(factice 4) '(a b c d e f g i j k l m n o p q r s t u v w x y z))
+;(LISP2LI '(factice 4) env)
 ;(:UNKNOWN (FACTICE 4) (A B C D E F G I J K L M N O P Q R S T U V W X Y Z))
 
 	;-----Cas Call----- 
-;(LISP2LI '(member 2 '(1 2 3)) '(a b c d e f g i j k l m n o p q r s t u v w x y z))
+;(LISP2LI '(member 2 '(1 2 3)) env)
 ;(:CALL MEMBER ((:LIT . 2) (:LIT (1 2 3))))
 
-;(LISP2LI '(facto 4) '(a b c d e f g i j k l m n o p q r s t u v w x y z))
+;(LISP2LI '(facto 4) env)
 ;(:CALL FACTO ((:LIT . 4)))
