@@ -1,0 +1,12 @@
+Attente du projet
+
+note: 12 - (defun, if)
+-fibo
+-généré li
+-eval-li
+-vm
+-vm-run
+
+note: >12
+-let
+-compile/charge vm-load

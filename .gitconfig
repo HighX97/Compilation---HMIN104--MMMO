@@ -1,0 +1,9 @@
+ [user] 
+    email = loic.ortole@gmail.com
+    name = HighX97
+
+ [alias] 
+    ci = commit 
+    co = checkout 
+    st = status 
+    br = branch 

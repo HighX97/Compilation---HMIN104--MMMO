@@ -50,7 +50,8 @@
 					;Alors on créé une liste avec :set-var et on transcrit en LI 
 					;la seconde partie de l'expression 
 					;ainsi que la troisième partie de celle-ci 
-	    (list :set-var (LISP2LI (second expr) env) (LISP2LI (third expr) env)) 
+
+	    (list :set-var (cdr (LISP2LI (second expr) env))  (LISP2LI (third expr) env)) 
 					;Sinon (c'est une valeur) on créé donc simplement une liste avec 
 					;:setf et on transcrit en LI la seconde partie de l'expression 
 	  (list :setf (LISP2LI (second expr ) env))))
@@ -202,9 +203,11 @@
 ;LISP2LI ==> (:CALL + ((:LIT . 3) (:VAR . 0)))
 
 	;SETF _ Err
-;(LISP2LI '(setf (car x) 'x (cadr y) (car x) (cdr x) y) env)
-;(:SETF (:CALL CAR ((:VAR . 22))))
-
+	;(:set-var <i> . <val>) cddr
+	;(:set-var <i> <val>) caddr
+	;
+;(LISP2LI '(setf g 1) env)
+;LISP2LI ==> (:SET-VAR 6 (:LIT . 1))
 	;LET
 ;(LISP2LI '(let ((a 'inside) (b a))))
 ;    (format nil "~S ~S ~S" a b (dummy-function))) env)
