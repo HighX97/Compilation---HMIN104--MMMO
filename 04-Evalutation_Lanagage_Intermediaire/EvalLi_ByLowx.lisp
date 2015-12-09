@@ -28,8 +28,8 @@
 			(aref env (cdr expr)))
 																								;(:SETVAR )
 		(:SET-VAR 
-			(setf (aref env (cdr expr)) 
-				(map-eval-LI (cddr expr) env)))
+			(setf (aref env (cadr expr)) 
+				(eval-LI (cddr expr) env)))
 
 																								;(:IF)
 		(:IF 
@@ -222,7 +222,7 @@
 ;(eval-LI (LISP2LI 'g env) env)
 
 ;Cas Set-Var _ Error
-;(eval-LI (LISP2LI '(setf g 1) env) env)
+(eval-LI (LISP2LI '(setf g 1) env) env)
 
 ;Cas If _ Error
 ;(eval-LI (LISP2LI '(IF (EQ 1 1) 3 7) env) env) 

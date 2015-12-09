@@ -206,7 +206,7 @@
 ;(:SETF (:CALL CAR ((:VAR . 22))))
 
 	;LET
-(LISP2LI '(let ((a 'inside) (b a))))
+;(LISP2LI '(let ((a 'inside) (b a))))
 ;    (format nil "~S ~S ~S" a b (dummy-function))) env)
 
 	;COND
