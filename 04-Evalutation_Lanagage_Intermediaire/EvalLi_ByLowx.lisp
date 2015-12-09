@@ -34,22 +34,22 @@
 																								;(:IF)
 		(:IF 
 			(if (eval-LI (second expr) env) 
-				(eval-LI (thrd expr) env)
-				(eval-LI (cdddr expr) env)))
+				(eval-LI (third expr) env)
+				(eval-LI (cadddr expr) env)))
 																								;(:CALL + (:LIT . 1)(:LIT . 2))
 		(:CALL (apply (second expr)
-			(map-eval-li (cddr expr) env)))
+			(map-eval-li (caddr expr) env)))
 																								;(:MCALL FIBO (:LIT . 30))
 																								;fun :
 																								;args
 		(:MCALL 
-			(let ((fun (get-defun (second expr))))
-			(args (map-eval-li (cddr expr))))
+			(let ((fun (get-defun (second expr)))
+			(args (map-eval-li (cddr expr) env)))
 																								;(thrid de fun) : corp de la fonction
 																								;(second fun) : parametres
 																								;(get-defun 'fibo') : 
-			(eval-LI (thrid de fun)
-				(make-env-eval-LI (second fun) args)))
+			(eval-LI (cddr fun)
+				(make-env-eval-LI (second fun) args))))
 																								;(:PROGN )
 		(:PROGN 
 			(map-eval-LI-progn PROGN (cdr expr)))
@@ -170,14 +170,14 @@
 																								;
 																								;
 																								;																																																																																																																								
-(defun make-env-eval-LI (expr env)
-						;Si c'est un atome 
-  (if (atom expr) 
-					;On ne fait rien 
-      NIL 
-					;Sinon on transcrit en LI le premier élément 
-					;et on réalise une récursion sur le reste 
-    (make-array (make-env-eval-LI (cdr expr )))))
+(defun make-env-eval-LI (nbArgs listArgs)
+  (make_env_rec listArgs 0 (make-array (+ nbArgs 1))))
+
+(defun make_env_rec (listArgs pos envGenerated)
+	(when listArgs
+		(setf (aref envGenerated pos) (car listArgs))
+		(make_env_rec (cdr listArgs) (+ pos 1) envGenerated))
+	envGenerated)
 																								;
 																								;
 																								;
@@ -213,7 +213,8 @@
 
 ;Trace
 (trace eval-LI)
-(trace LISP2LI)
+(trace make-env-eval-LI)
+(trace second)
 
 ;Cas Lit _ Valid
 ;(eval-LI (LISP2LI 1 env) env)
@@ -222,16 +223,30 @@
 ;(eval-LI (LISP2LI 'g env) env)
 
 ;Cas Set-Var _ Valid
-;(eval-LI (LISP2LI '(setf g 1) env) env)
+;(eval-LI (LISP2LI '(setf g 8) env) env)
 
-;Cas If _ Error
-;(eval-LI (LISP2LI '(IF (EQ 1 1) 3 7) env) env) 
+;Cas If _ Valid
+;(eval-LI (LISP2LI '(IF (EQ 1 2) 3 7) env) env) 
 
-;Cas CALL _ Error
+;Cas CALL _ Valid
 ;(eval-LI (LISP2LI '(EQ 1 1) env) env)
 
 ;Cas MCALL 
+(set-defun 'looc '(+ x 1))
+(eval-LI (LISP2LI '(looc 4) env) env)
+
+(eval-LI '(:MCALL + ((:VAR . 0) (:LIT . 1))) #(3))
+;(eval-LI '(:CALL + ((:VAR . 0) (:LIT . 1))) #(3))
+;30. Trace: (EVAL-LI '(:CALL + ((:VAR . 0) (:LIT . 1))) '#(3))
+;31. Trace: (EVAL-LI '(:VAR . 0) '#(3))
+;31. Trace: EVAL-LI ==> 3
+;31. Trace: (EVAL-LI '(:LIT . 1) '#(3))
+;31. Trace: EVAL-LI ==> 1
+;30. Trace: EVAL-LI ==> 4
+;4
 
 ;Cas PROGN
 
 ;Cas UNKNOWN
+
+

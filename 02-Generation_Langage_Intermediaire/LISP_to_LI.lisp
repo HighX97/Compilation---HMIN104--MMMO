@@ -83,10 +83,10 @@
        	;
     (warn "special-form-p detected"))
 					;-----Cas GetDefun-----
-       	((eq 'get-defun fun)
+       	((get-defun fun)
        	;
     (warn "get-defun detected")
-    (list :mcall fun (MAPLISP2LI args env)))
+    (list* :mcall fun (MAPLISP2LI args env)))
 					;-----Cas Unknow-----
 					;Si c'est une fonction inconnue 
        ((not (fboundp fun)) 
@@ -174,6 +174,7 @@
 
 ;Trace
 (trace LISP2LI)
+(trace MAPLISP2LI)
 
 	;LIT _ Valid
 ;(LISP2LI 1 env)
@@ -205,8 +206,7 @@
 	;SETF _ Err
 	;(:set-var <i> . <val>) cddr
 	;(:set-var <i> <val>) caddr
-	;
-;(LISP2LI '(setf g 1) env)
+	;(LISP2LI '(setf g 1) env)
 ;LISP2LI ==> (:SET-VAR 6 (:LIT . 1))
 	;LET
 ;(LISP2LI '(let ((a 'inside) (b a))))
@@ -282,3 +282,8 @@
 
 ;(LISP2LI '(facto 4) env)
 ;(:CALL FACTO ((:LIT . 4)))
+
+	;Cas Mcall _ Valid
+(set-defun 'looc '(+ x 1))
+;(defun loic (x) (+ x 1))
+(LISP2LI '(looc 4) env)
