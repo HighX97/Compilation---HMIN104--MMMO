@@ -192,7 +192,7 @@
 
 		;;TEST eval-LI
 
-(load "/auto_home/lortole/Bureau/Compilation_et_Interpretation_HMIN104/02-Generation_Langage_Intermediaire/LISP_to_LI.lisp")
+(load "../02-Generation_Langage_Intermediaire/LISP_to_LI.lisp")
 
 ;Make_env
 (setf env (make-array 14))
