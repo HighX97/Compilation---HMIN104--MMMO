@@ -1,0 +1,1898 @@
+/**************** Cas des lit ****************/
+>(lisp2li 2 nil)
+(:LIT . 2)
+> (evalLi '(:LIT . 2) nil)
+2
+
+
+/**************** Cas des var ****************/
+> (lisp2li 'x '(x))
+1. Trace: (LISP2LI 'X '(X))
+1. Trace: LISP2LI ==> (:VAR . 1)
+(:VAR . 1)
+> > (evalLi '(:VAR . 1) #(nil 1))
+1. Trace: (EVALLI '(:VAR . 1) '#(NIL 1))
+1. Trace: EVALLI ==> 1
+1
+> (evalLi '(:VAR . 1) #(nil 4 5 6))
+4
+> (evalLi '(:VAR . 2) #(nil 4 5 6))
+5
+
+
+/**************** Cas des setvar ****************/
+> (lisp2li '(let ((fun 1) (args 2))) nil)
+(:LET 2 ((:SETVAR 0 (:LIT . 1)) (:SETVAR 1 (:LIT . 2))) NIL)
+> (evalLi '(:SETVAR 1 . (:LIT . 6)) #(nil 4))
+1. Trace: (EVALLI '(:SETVAR 1 :LIT . 6) '#(NIL 4))
+2. Trace: (EVALLI '(:LIT . 6) '#(NIL 4))
+2. Trace: EVALLI ==> 6
+1. Trace: EVALLI ==> 6
+6
+> (lisp2li '(let ((fun 1) (args 2))) nil)
+(:LET 2 ((:SETVAR 0 :LIT . 1) (:SETVAR 1 :LIT . 2)) NIL)
+[50]> (evalLi '(:SETVAR 1 . :LIT . 6)) #(nil 4))
+> (evalLi '(:SETVAR 1 :LIT . 6) #(nil 4))
+1. Trace: (EVALLI '(:SETVAR 1 :LIT . 6) '#(NIL 4))
+2. Trace: (EVALLI '(:LIT . 6) '#(NIL 4))
+2. Trace: EVALLI ==> 6
+1. Trace: EVALLI ==> 6
+6
+
+
+/**************** Cas des if ****************/
+> (lisp2li '(if nil 1 2) nil)
+(:IF (:LIT) (:LIT . 1) :LIT . 2)
+> (evalLi '(:IF (:LIT) (:LIT . 1) :LIT . 2) nil)
+1. Trace: (EVALLI '(:IF (:LIT) (:LIT . 1) :LIT . 2) 'NIL)
+2. Trace: (EVALLI '(:LIT) 'NIL)
+2. Trace: EVALLI ==> NIL
+2. Trace: (EVALLI '(:LIT . 2) 'NIL)
+2. Trace: EVALLI ==> 2
+1. Trace: EVALLI ==> 2
+2
+> (lisp2li '(if t 1 2) nil)
+(:IF (:LIT . T) (:LIT . 1) :LIT . 2)
+> (evalLi '(:IF (:LIT . T) (:LIT . 1) :LIT . 2) nil)
+1. Trace: (EVALLI '(:IF (:LIT . T) (:LIT . 1) :LIT . 2) 'NIL)
+2. Trace: (EVALLI '(:LIT . T) 'NIL)
+2. Trace: EVALLI ==> T
+2. Trace: (EVALLI '(:LIT . 1) 'NIL)
+2. Trace: EVALLI ==> 1
+1. Trace: EVALLI ==> 1
+1
+
+
+/**************** Cas des call ****************/
+> (lisp2li '(car '(1 2 3)) nil)
+(:CALL CAR (:LIT 1 2 3))
+> (evalLi '(:CALL CAR (:LIT 1 2 3)) nil)
+1. Trace: (EVALLI '(:CALL CAR (:LIT 1 2 3)) 'NIL)
+2. Trace: (MAP-EVALLI '((:LIT 1 2 3)) 'NIL)
+3. Trace: (EVALLI '(:LIT 1 2 3) 'NIL)
+3. Trace: EVALLI ==> (1 2 3)
+3. Trace: (MAP-EVALLI 'NIL 'NIL)
+3. Trace: MAP-EVALLI ==> NIL
+2. Trace: MAP-EVALLI ==> ((1 2 3))
+1. Trace: EVALLI ==> 1
+1
+> (lisp2li '(+ 1 2) nil)
+(:CALL + (:LIT . 1) (:LIT . 2))
+> (evalLi '(:CALL + (:LIT . 1) (:LIT . 2)) nil)
+1. Trace: (EVALLI '(:CALL + (:LIT . 1) (:LIT . 2)) 'NIL)
+2. Trace: (MAP-EVALLI '((:LIT . 1) (:LIT . 2)) 'NIL)
+3. Trace: (EVALLI '(:LIT . 1) 'NIL)
+3. Trace: EVALLI ==> 1
+3. Trace: (MAP-EVALLI '((:LIT . 2)) 'NIL)
+4. Trace: (EVALLI '(:LIT . 2) 'NIL)
+4. Trace: EVALLI ==> 2
+4. Trace: (MAP-EVALLI 'NIL 'NIL)
+4. Trace: MAP-EVALLI ==> NIL
+3. Trace: MAP-EVALLI ==> (2)
+2. Trace: MAP-EVALLI ==> (1 2)
+1. Trace: EVALLI ==> 3
+3
+
+
+/**************** Cas des defun ****************/
+> (lisp2li '(defun mf (l) (if (atom l) 0 (+ 1 (mf (rest l))))) nil)
+(:CALL SET-DEFUN (:LIT . MF)
+ (:LIT :LAMBDA 1
+  (:IF (:CALL ATOM (:VAR . 0)) (:LIT . 0) :CALL + (:LIT . 1)
+   (:UNKNOWN (MF (REST L)) (L)))))
+
+> (lisp2li '(defun mf (l) (if (atom l) 0 (+ 1 (mf (rest l))))) nil)
+(:CALL SET-DEFUN (:LIT . MF)
+ (:LIT :LAMBDA 1
+  (:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1)
+   (:MCALL MF (:CALL REST (:VAR . 1))))))
+> (evalLi (lisp2li '(defun mf (l) (if (atom l) 0 (+ 1 (mf (rest l))))) nil) nil)
+1. Trace: 
+(EVALLI
+ '(:CALL SET-DEFUN (:LIT . MF)
+   (:LIT :LAMBDA 1
+    (:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1)
+     (:MCALL MF (:CALL REST (:VAR . 1))))))
+ 'NIL)
+2. Trace: 
+(MAP-EVALLI
+ '((:LIT . MF)
+   (:LIT :LAMBDA 1
+    (:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1)
+     (:MCALL MF (:CALL REST (:VAR . 1))))))
+ 'NIL)
+3. Trace: (EVALLI '(:LIT . MF) 'NIL)
+3. Trace: EVALLI ==> MF
+3. Trace: 
+(MAP-EVALLI
+ '((:LIT :LAMBDA 1
+    (:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1)
+     (:MCALL MF (:CALL REST (:VAR . 1))))))
+ 'NIL)
+4. Trace: 
+(EVALLI
+ '(:LIT :LAMBDA 1
+   (:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1)
+    (:MCALL MF (:CALL REST (:VAR . 1)))))
+ 'NIL)
+4. Trace: EVALLI ==> 
+(:LAMBDA 1
+ (:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1)
+  (:MCALL MF (:CALL REST (:VAR . 1)))))
+4. Trace: (MAP-EVALLI 'NIL 'NIL)
+4. Trace: MAP-EVALLI ==> NIL
+3. Trace: MAP-EVALLI ==> 
+((:LAMBDA 1
+  (:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1)
+   (:MCALL MF (:CALL REST (:VAR . 1))))))
+2. Trace: MAP-EVALLI ==> 
+(MF
+ (:LAMBDA 1
+  (:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1)
+   (:MCALL MF (:CALL REST (:VAR . 1))))))
+1. Trace: EVALLI ==> 
+(:LAMBDA 1
+ (:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1)
+  (:MCALL MF (:CALL REST (:VAR . 1)))))
+(:LAMBDA 1
+ (:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1)
+  (:MCALL MF (:CALL REST (:VAR . 1)))))
+   
+
+
+/**************** Cas des mcall ****************/
+> (lisp2li '(mf '(1 2 3)) nil)
+(:MCALL MF (:LIT 1 2 3))
+> (evalLi '(:MCALL MF (:LIT 1 2 3)) nil)
+1. Trace: (EVALLI '(:MCALL MF (:LIT 1 2 3)) 'NIL)
+2. Trace: (GET-DEFUN 'MF)
+2. Trace: GET-DEFUN ==> (:LAMBDA 1 (:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1) (:UNKNOWN (MF (REST L)) (L))))
+2. Trace: (MAP-MCALL-EVALLI '((:LIT 1 2 3)) 'NIL)
+3. Trace: (EVALLI '(:LIT 1 2 3) 'NIL)
+3. Trace: EVALLI ==> (1 2 3)
+3. Trace: (MAP-EVALLI 'NIL 'NIL)
+3. Trace: MAP-EVALLI ==> NIL
+2. Trace: MAP-MCALL-EVALLI ==> ((1 2 3))
+2. Trace: (MAKE-ENV-EVALLI '((1 2 3)) 'NIL '#(NIL NIL) '1)
+3. Trace: (MAKE-ENV-EVALLI 'NIL 'NIL '#(NIL (1 2 3)) '2)
+3. Trace: MAKE-ENV-EVALLI ==> #(NIL (1 2 3))
+2. Trace: MAKE-ENV-EVALLI ==> #(NIL (1 2 3))
+2. Trace: (EVALLI '(:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1) (:UNKNOWN (MF (REST L)) (L))) '#(NIL (1 2 3)))
+3. Trace: (EVALLI '(:CALL ATOM (:VAR . 1)) '#(NIL (1 2 3)))
+4. Trace: (MAP-EVALLI '((:VAR . 1)) '#(NIL (1 2 3)))
+5. Trace: (EVALLI '(:VAR . 1) '#(NIL (1 2 3)))
+5. Trace: EVALLI ==> (1 2 3)
+5. Trace: (MAP-EVALLI 'NIL '#(NIL (1 2 3)))
+5. Trace: MAP-EVALLI ==> NIL
+4. Trace: MAP-EVALLI ==> ((1 2 3))
+3. Trace: EVALLI ==> NIL
+3. Trace: (EVALLI '(:CALL + (:LIT . 1) (:UNKNOWN (MF (REST L)) (L))) '#(NIL (1 2 3)))
+4. Trace: (MAP-EVALLI '((:LIT . 1) (:UNKNOWN (MF (REST L)) (L))) '#(NIL (1 2 3)))
+5. Trace: (EVALLI '(:LIT . 1) '#(NIL (1 2 3)))
+5. Trace: EVALLI ==> 1
+5. Trace: (MAP-EVALLI '((:UNKNOWN (MF (REST L)) (L))) '#(NIL (1 2 3)))
+6. Trace: (EVALLI '(:UNKNOWN (MF (REST L)) (L)) '#(NIL (1 2 3)))
+7. Trace: (LISP2LI '(MF (REST L)) '(L))
+8. Trace: (GET-DEFUN 'MF)
+8. Trace: GET-DEFUN ==> (:LAMBDA 1 (:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1) (:UNKNOWN (MF (REST L)) (L))))
+8. Trace: (MAP-LISP2LI '((REST L)) '(L))
+9. Trace: (LISP2LI '(REST L) '(L))
+10. Trace: (GET-DEFUN 'REST)
+10. Trace: GET-DEFUN ==> NIL
+10. Trace: (MAP-LISP2LI '(L) '(L))
+11. Trace: (LISP2LI 'L '(L))
+11. Trace: LISP2LI ==> (:VAR . 1)
+11. Trace: (MAP-LISP2LI 'NIL '(L))
+11. Trace: MAP-LISP2LI ==> NIL
+10. Trace: MAP-LISP2LI ==> ((:VAR . 1))
+9. Trace: LISP2LI ==> (:CALL REST (:VAR . 1))
+9. Trace: (MAP-LISP2LI 'NIL '(L))
+9. Trace: MAP-LISP2LI ==> NIL
+8. Trace: MAP-LISP2LI ==> ((:CALL REST (:VAR . 1)))
+7. Trace: LISP2LI ==> (:MCALL MF (:CALL REST (:VAR . 1)))
+7. Trace: (DISPLACE '(:UNKNOWN (MF (REST L)) (L)) '(:MCALL MF (:CALL REST (:VAR . 1))))
+7. Trace: DISPLACE ==> (:MCALL MF (:CALL REST (:VAR . 1)))
+7. Trace: (EVALLI '(:MCALL MF (:CALL REST (:VAR . 1))) '#(NIL (1 2 3)))
+8. Trace: (GET-DEFUN 'MF)
+8. Trace: GET-DEFUN ==> (:LAMBDA 1 (:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1) (:MCALL MF (:CALL REST (:VAR . 1)))))
+8. Trace: (MAP-MCALL-EVALLI '((:CALL REST (:VAR . 1))) '#(NIL (1 2 3)))
+9. Trace: (EVALLI '(:CALL REST (:VAR . 1)) '#(NIL (1 2 3)))
+10. Trace: (MAP-EVALLI '((:VAR . 1)) '#(NIL (1 2 3)))
+11. Trace: (EVALLI '(:VAR . 1) '#(NIL (1 2 3)))
+11. Trace: EVALLI ==> (1 2 3)
+11. Trace: (MAP-EVALLI 'NIL '#(NIL (1 2 3)))
+11. Trace: MAP-EVALLI ==> NIL
+10. Trace: MAP-EVALLI ==> ((1 2 3))
+9. Trace: EVALLI ==> (2 3)
+9. Trace: (MAP-EVALLI 'NIL '#(NIL (1 2 3)))
+9. Trace: MAP-EVALLI ==> NIL
+8. Trace: MAP-MCALL-EVALLI ==> ((2 3))
+8. Trace: (MAKE-ENV-EVALLI '((2 3)) '#(NIL (1 2 3)) '#(NIL NIL) '1)
+9. Trace: (MAKE-ENV-EVALLI 'NIL '#(NIL (1 2 3)) '#(NIL (2 3)) '2)
+9. Trace: MAKE-ENV-EVALLI ==> #(NIL (2 3))
+8. Trace: MAKE-ENV-EVALLI ==> #(NIL (2 3))
+8. Trace: (EVALLI '(:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1) (:MCALL MF (:CALL REST (:VAR . 1)))) '#(NIL (2 3)))
+9. Trace: (EVALLI '(:CALL ATOM (:VAR . 1)) '#(NIL (2 3)))
+10. Trace: (MAP-EVALLI '((:VAR . 1)) '#(NIL (2 3)))
+11. Trace: (EVALLI '(:VAR . 1) '#(NIL (2 3)))
+11. Trace: EVALLI ==> (2 3)
+11. Trace: (MAP-EVALLI 'NIL '#(NIL (2 3)))
+11. Trace: MAP-EVALLI ==> NIL
+10. Trace: MAP-EVALLI ==> ((2 3))
+9. Trace: EVALLI ==> NIL
+9. Trace: (EVALLI '(:CALL + (:LIT . 1) (:MCALL MF (:CALL REST (:VAR . 1)))) '#(NIL (2 3)))
+10. Trace: (MAP-EVALLI '((:LIT . 1) (:MCALL MF (:CALL REST (:VAR . 1)))) '#(NIL (2 3)))
+11. Trace: (EVALLI '(:LIT . 1) '#(NIL (2 3)))
+11. Trace: EVALLI ==> 1
+11. Trace: (MAP-EVALLI '((:MCALL MF (:CALL REST (:VAR . 1)))) '#(NIL (2 3)))
+12. Trace: (EVALLI '(:MCALL MF (:CALL REST (:VAR . 1))) '#(NIL (2 3)))
+13. Trace: (GET-DEFUN 'MF)
+13. Trace: GET-DEFUN ==> (:LAMBDA 1 (:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1) (:MCALL MF (:CALL REST (:VAR . 1)))))
+13. Trace: (MAP-MCALL-EVALLI '((:CALL REST (:VAR . 1))) '#(NIL (2 3)))
+14. Trace: (EVALLI '(:CALL REST (:VAR . 1)) '#(NIL (2 3)))
+15. Trace: (MAP-EVALLI '((:VAR . 1)) '#(NIL (2 3)))
+16. Trace: (EVALLI '(:VAR . 1) '#(NIL (2 3)))
+16. Trace: EVALLI ==> (2 3)
+16. Trace: (MAP-EVALLI 'NIL '#(NIL (2 3)))
+16. Trace: MAP-EVALLI ==> NIL
+15. Trace: MAP-EVALLI ==> ((2 3))
+14. Trace: EVALLI ==> (3)
+14. Trace: (MAP-EVALLI 'NIL '#(NIL (2 3)))
+14. Trace: MAP-EVALLI ==> NIL
+13. Trace: MAP-MCALL-EVALLI ==> ((3))
+13. Trace: (MAKE-ENV-EVALLI '((3)) '#(NIL (2 3)) '#(NIL NIL) '1)
+14. Trace: (MAKE-ENV-EVALLI 'NIL '#(NIL (2 3)) '#(NIL (3)) '2)
+14. Trace: MAKE-ENV-EVALLI ==> #(NIL (3))
+13. Trace: MAKE-ENV-EVALLI ==> #(NIL (3))
+13. Trace: (EVALLI '(:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1) (:MCALL MF (:CALL REST (:VAR . 1)))) '#(NIL (3)))
+14. Trace: (EVALLI '(:CALL ATOM (:VAR . 1)) '#(NIL (3)))
+15. Trace: (MAP-EVALLI '((:VAR . 1)) '#(NIL (3)))
+16. Trace: (EVALLI '(:VAR . 1) '#(NIL (3)))
+16. Trace: EVALLI ==> (3)
+16. Trace: (MAP-EVALLI 'NIL '#(NIL (3)))
+16. Trace: MAP-EVALLI ==> NIL
+15. Trace: MAP-EVALLI ==> ((3))
+14. Trace: EVALLI ==> NIL
+14. Trace: (EVALLI '(:CALL + (:LIT . 1) (:MCALL MF (:CALL REST (:VAR . 1)))) '#(NIL (3)))
+15. Trace: (MAP-EVALLI '((:LIT . 1) (:MCALL MF (:CALL REST (:VAR . 1)))) '#(NIL (3)))
+16. Trace: (EVALLI '(:LIT . 1) '#(NIL (3)))
+16. Trace: EVALLI ==> 1
+16. Trace: (MAP-EVALLI '((:MCALL MF (:CALL REST (:VAR . 1)))) '#(NIL (3)))
+17. Trace: (EVALLI '(:MCALL MF (:CALL REST (:VAR . 1))) '#(NIL (3)))
+18. Trace: (GET-DEFUN 'MF)
+18. Trace: GET-DEFUN ==> (:LAMBDA 1 (:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1) (:MCALL MF (:CALL REST (:VAR . 1)))))
+18. Trace: (MAP-MCALL-EVALLI '((:CALL REST (:VAR . 1))) '#(NIL (3)))
+19. Trace: (EVALLI '(:CALL REST (:VAR . 1)) '#(NIL (3)))
+20. Trace: (MAP-EVALLI '((:VAR . 1)) '#(NIL (3)))
+21. Trace: (EVALLI '(:VAR . 1) '#(NIL (3)))
+21. Trace: EVALLI ==> (3)
+21. Trace: (MAP-EVALLI 'NIL '#(NIL (3)))
+21. Trace: MAP-EVALLI ==> NIL
+20. Trace: MAP-EVALLI ==> ((3))
+19. Trace: EVALLI ==> NIL
+19. Trace: (MAP-EVALLI 'NIL '#(NIL (3)))
+19. Trace: MAP-EVALLI ==> NIL
+18. Trace: MAP-MCALL-EVALLI ==> (NIL)
+18. Trace: (MAKE-ENV-EVALLI '(NIL) '#(NIL (3)) '#(NIL NIL) '1)
+19. Trace: (MAKE-ENV-EVALLI 'NIL '#(NIL (3)) '#(NIL NIL) '2)
+19. Trace: MAKE-ENV-EVALLI ==> #(NIL NIL)
+18. Trace: MAKE-ENV-EVALLI ==> #(NIL NIL)
+18. Trace: (EVALLI '(:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1) (:MCALL MF (:CALL REST (:VAR . 1)))) '#(NIL NIL))
+19. Trace: (EVALLI '(:CALL ATOM (:VAR . 1)) '#(NIL NIL))
+20. Trace: (MAP-EVALLI '((:VAR . 1)) '#(NIL NIL))
+21. Trace: (EVALLI '(:VAR . 1) '#(NIL NIL))
+21. Trace: EVALLI ==> NIL
+21. Trace: (MAP-EVALLI 'NIL '#(NIL NIL))
+21. Trace: MAP-EVALLI ==> NIL
+20. Trace: MAP-EVALLI ==> (NIL)
+19. Trace: EVALLI ==> T
+19. Trace: (EVALLI '(:LIT . 0) '#(NIL NIL))
+19. Trace: EVALLI ==> 0
+18. Trace: EVALLI ==> 0
+17. Trace: EVALLI ==> 0
+17. Trace: (MAP-EVALLI 'NIL '#(NIL (3)))
+17. Trace: MAP-EVALLI ==> NIL
+16. Trace: MAP-EVALLI ==> (0)
+15. Trace: MAP-EVALLI ==> (1 0)
+14. Trace: EVALLI ==> 1
+13. Trace: EVALLI ==> 1
+12. Trace: EVALLI ==> 1
+12. Trace: (MAP-EVALLI 'NIL '#(NIL (2 3)))
+12. Trace: MAP-EVALLI ==> NIL
+11. Trace: MAP-EVALLI ==> (1)
+10. Trace: MAP-EVALLI ==> (1 1)
+9. Trace: EVALLI ==> 2
+8. Trace: EVALLI ==> 2
+7. Trace: EVALLI ==> 2
+6. Trace: EVALLI ==> 2
+6. Trace: (MAP-EVALLI 'NIL '#(NIL (1 2 3)))
+6. Trace: MAP-EVALLI ==> NIL
+5. Trace: MAP-EVALLI ==> (2)
+4. Trace: MAP-EVALLI ==> (1 2)
+3. Trace: EVALLI ==> 3
+2. Trace: EVALLI ==> 3
+1. Trace: EVALLI ==> 3
+3
+> (evalLi '(:MCALL MF (:LIT 1 2)) nil)
+1. Trace: (EVALLI '(:MCALL MF (:LIT 1 2)) 'NIL)
+2. Trace: (GET-DEFUN 'MF)
+2. Trace: GET-DEFUN ==> (:LAMBDA 1 (:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1) (:MCALL MF (:CALL REST (:VAR . 1)))))
+2. Trace: (MAP-MCALL-EVALLI '((:LIT 1 2)) 'NIL)
+3. Trace: (EVALLI '(:LIT 1 2) 'NIL)
+3. Trace: EVALLI ==> (1 2)
+3. Trace: (MAP-EVALLI 'NIL 'NIL)
+3. Trace: MAP-EVALLI ==> NIL
+2. Trace: MAP-MCALL-EVALLI ==> ((1 2))
+2. Trace: (MAKE-ENV-EVALLI '((1 2)) 'NIL '#(NIL NIL) '1)
+3. Trace: (MAKE-ENV-EVALLI 'NIL 'NIL '#(NIL (1 2)) '2)
+3. Trace: MAKE-ENV-EVALLI ==> #(NIL (1 2))
+2. Trace: MAKE-ENV-EVALLI ==> #(NIL (1 2))
+2. Trace: (EVALLI '(:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1) (:MCALL MF (:CALL REST (:VAR . 1)))) '#(NIL (1 2)))
+3. Trace: (EVALLI '(:CALL ATOM (:VAR . 1)) '#(NIL (1 2)))
+4. Trace: (MAP-EVALLI '((:VAR . 1)) '#(NIL (1 2)))
+5. Trace: (EVALLI '(:VAR . 1) '#(NIL (1 2)))
+5. Trace: EVALLI ==> (1 2)
+5. Trace: (MAP-EVALLI 'NIL '#(NIL (1 2)))
+5. Trace: MAP-EVALLI ==> NIL
+4. Trace: MAP-EVALLI ==> ((1 2))
+3. Trace: EVALLI ==> NIL
+3. Trace: (EVALLI '(:CALL + (:LIT . 1) (:MCALL MF (:CALL REST (:VAR . 1)))) '#(NIL (1 2)))
+4. Trace: (MAP-EVALLI '((:LIT . 1) (:MCALL MF (:CALL REST (:VAR . 1)))) '#(NIL (1 2)))
+5. Trace: (EVALLI '(:LIT . 1) '#(NIL (1 2)))
+5. Trace: EVALLI ==> 1
+5. Trace: (MAP-EVALLI '((:MCALL MF (:CALL REST (:VAR . 1)))) '#(NIL (1 2)))
+6. Trace: (EVALLI '(:MCALL MF (:CALL REST (:VAR . 1))) '#(NIL (1 2)))
+7. Trace: (GET-DEFUN 'MF)
+7. Trace: GET-DEFUN ==> (:LAMBDA 1 (:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1) (:MCALL MF (:CALL REST (:VAR . 1)))))
+7. Trace: (MAP-MCALL-EVALLI '((:CALL REST (:VAR . 1))) '#(NIL (1 2)))
+8. Trace: (EVALLI '(:CALL REST (:VAR . 1)) '#(NIL (1 2)))
+9. Trace: (MAP-EVALLI '((:VAR . 1)) '#(NIL (1 2)))
+10. Trace: (EVALLI '(:VAR . 1) '#(NIL (1 2)))
+10. Trace: EVALLI ==> (1 2)
+10. Trace: (MAP-EVALLI 'NIL '#(NIL (1 2)))
+10. Trace: MAP-EVALLI ==> NIL
+9. Trace: MAP-EVALLI ==> ((1 2))
+8. Trace: EVALLI ==> (2)
+8. Trace: (MAP-EVALLI 'NIL '#(NIL (1 2)))
+8. Trace: MAP-EVALLI ==> NIL
+7. Trace: MAP-MCALL-EVALLI ==> ((2))
+7. Trace: (MAKE-ENV-EVALLI '((2)) '#(NIL (1 2)) '#(NIL NIL) '1)
+8. Trace: (MAKE-ENV-EVALLI 'NIL '#(NIL (1 2)) '#(NIL (2)) '2)
+8. Trace: MAKE-ENV-EVALLI ==> #(NIL (2))
+7. Trace: MAKE-ENV-EVALLI ==> #(NIL (2))
+7. Trace: (EVALLI '(:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1) (:MCALL MF (:CALL REST (:VAR . 1)))) '#(NIL (2)))
+8. Trace: (EVALLI '(:CALL ATOM (:VAR . 1)) '#(NIL (2)))
+9. Trace: (MAP-EVALLI '((:VAR . 1)) '#(NIL (2)))
+10. Trace: (EVALLI '(:VAR . 1) '#(NIL (2)))
+10. Trace: EVALLI ==> (2)
+10. Trace: (MAP-EVALLI 'NIL '#(NIL (2)))
+10. Trace: MAP-EVALLI ==> NIL
+9. Trace: MAP-EVALLI ==> ((2))
+8. Trace: EVALLI ==> NIL
+8. Trace: (EVALLI '(:CALL + (:LIT . 1) (:MCALL MF (:CALL REST (:VAR . 1)))) '#(NIL (2)))
+9. Trace: (MAP-EVALLI '((:LIT . 1) (:MCALL MF (:CALL REST (:VAR . 1)))) '#(NIL (2)))
+10. Trace: (EVALLI '(:LIT . 1) '#(NIL (2)))
+10. Trace: EVALLI ==> 1
+10. Trace: (MAP-EVALLI '((:MCALL MF (:CALL REST (:VAR . 1)))) '#(NIL (2)))
+11. Trace: (EVALLI '(:MCALL MF (:CALL REST (:VAR . 1))) '#(NIL (2)))
+12. Trace: (GET-DEFUN 'MF)
+12. Trace: GET-DEFUN ==> (:LAMBDA 1 (:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1) (:MCALL MF (:CALL REST (:VAR . 1)))))
+12. Trace: (MAP-MCALL-EVALLI '((:CALL REST (:VAR . 1))) '#(NIL (2)))
+13. Trace: (EVALLI '(:CALL REST (:VAR . 1)) '#(NIL (2)))
+14. Trace: (MAP-EVALLI '((:VAR . 1)) '#(NIL (2)))
+15. Trace: (EVALLI '(:VAR . 1) '#(NIL (2)))
+15. Trace: EVALLI ==> (2)
+15. Trace: (MAP-EVALLI 'NIL '#(NIL (2)))
+15. Trace: MAP-EVALLI ==> NIL
+14. Trace: MAP-EVALLI ==> ((2))
+13. Trace: EVALLI ==> NIL
+13. Trace: (MAP-EVALLI 'NIL '#(NIL (2)))
+13. Trace: MAP-EVALLI ==> NIL
+12. Trace: MAP-MCALL-EVALLI ==> (NIL)
+12. Trace: (MAKE-ENV-EVALLI '(NIL) '#(NIL (2)) '#(NIL NIL) '1)
+13. Trace: (MAKE-ENV-EVALLI 'NIL '#(NIL (2)) '#(NIL NIL) '2)
+13. Trace: MAKE-ENV-EVALLI ==> #(NIL NIL)
+12. Trace: MAKE-ENV-EVALLI ==> #(NIL NIL)
+12. Trace: (EVALLI '(:IF (:CALL ATOM (:VAR . 1)) (:LIT . 0) :CALL + (:LIT . 1) (:MCALL MF (:CALL REST (:VAR . 1)))) '#(NIL NIL))
+13. Trace: (EVALLI '(:CALL ATOM (:VAR . 1)) '#(NIL NIL))
+14. Trace: (MAP-EVALLI '((:VAR . 1)) '#(NIL NIL))
+15. Trace: (EVALLI '(:VAR . 1) '#(NIL NIL))
+15. Trace: EVALLI ==> NIL
+15. Trace: (MAP-EVALLI 'NIL '#(NIL NIL))
+15. Trace: MAP-EVALLI ==> NIL
+14. Trace: MAP-EVALLI ==> (NIL)
+13. Trace: EVALLI ==> T
+13. Trace: (EVALLI '(:LIT . 0) '#(NIL NIL))
+13. Trace: EVALLI ==> 0
+12. Trace: EVALLI ==> 0
+11. Trace: EVALLI ==> 0
+11. Trace: (MAP-EVALLI 'NIL '#(NIL (2)))
+11. Trace: MAP-EVALLI ==> NIL
+10. Trace: MAP-EVALLI ==> (0)
+9. Trace: MAP-EVALLI ==> (1 0)
+8. Trace: EVALLI ==> 1
+7. Trace: EVALLI ==> 1
+6. Trace: EVALLI ==> 1
+6. Trace: (MAP-EVALLI 'NIL '#(NIL (1 2)))
+6. Trace: MAP-EVALLI ==> NIL
+5. Trace: MAP-EVALLI ==> (1)
+4. Trace: MAP-EVALLI ==> (1 1)
+3. Trace: EVALLI ==> 2
+2. Trace: EVALLI ==> 2
+1. Trace: EVALLI ==> 2
+2
+
+
+/**************** Cas des progn ****************/
+> (lisp2li '(progn 1 2 3) nil)
+1. Trace: (LISP2LI '(PROGN 1 2 3) 'NIL)
+2. Trace: (GET-DEFUN 'PROGN)
+2. Trace: GET-DEFUN ==> NIL
+2. Trace: (MAP-LISP2LI '(1 2 3) 'NIL)
+3. Trace: (LISP2LI '1 'NIL)
+3. Trace: LISP2LI ==> (:LIT . 1)
+3. Trace: (MAP-LISP2LI '(2 3) 'NIL)
+4. Trace: (LISP2LI '2 'NIL)
+4. Trace: LISP2LI ==> (:LIT . 2)
+4. Trace: (MAP-LISP2LI '(3) 'NIL)
+5. Trace: (LISP2LI '3 'NIL)
+5. Trace: LISP2LI ==> (:LIT . 3)
+5. Trace: (MAP-LISP2LI 'NIL 'NIL)
+5. Trace: MAP-LISP2LI ==> NIL
+4. Trace: MAP-LISP2LI ==> ((:LIT . 3))
+3. Trace: MAP-LISP2LI ==> ((:LIT . 2) (:LIT . 3))
+2. Trace: MAP-LISP2LI ==> ((:LIT . 1) (:LIT . 2) (:LIT . 3))
+1. Trace: LISP2LI ==> (:PROGN (:LIT . 1) (:LIT . 2) (:LIT . 3))
+(:PROGN (:LIT . 1) (:LIT . 2) (:LIT . 3))
+> (evalLi (lisp2li '(progn 1 2 3) nil) nil)
+1. Trace: (LISP2LI '(PROGN 1 2 3) 'NIL)
+2. Trace: (GET-DEFUN 'PROGN)
+2. Trace: GET-DEFUN ==> NIL
+2. Trace: (MAP-LISP2LI '(1 2 3) 'NIL)
+3. Trace: (LISP2LI '1 'NIL)
+3. Trace: LISP2LI ==> (:LIT . 1)
+3. Trace: (MAP-LISP2LI '(2 3) 'NIL)
+4. Trace: (LISP2LI '2 'NIL)
+4. Trace: LISP2LI ==> (:LIT . 2)
+4. Trace: (MAP-LISP2LI '(3) 'NIL)
+5. Trace: (LISP2LI '3 'NIL)
+5. Trace: LISP2LI ==> (:LIT . 3)
+5. Trace: (MAP-LISP2LI 'NIL 'NIL)
+5. Trace: MAP-LISP2LI ==> NIL
+4. Trace: MAP-LISP2LI ==> ((:LIT . 3))
+3. Trace: MAP-LISP2LI ==> ((:LIT . 2) (:LIT . 3))
+2. Trace: MAP-LISP2LI ==> ((:LIT . 1) (:LIT . 2) (:LIT . 3))
+1. Trace: LISP2LI ==> (:PROGN (:LIT . 1) (:LIT . 2) (:LIT . 3))
+1. Trace: (EVALLI '(:PROGN (:LIT . 1) (:LIT . 2) (:LIT . 3)) 'NIL)
+2. Trace: (MAP-PROGN-EVALLI '((:LIT . 1) (:LIT . 2) (:LIT . 3)) 'NIL)
+3. Trace: (EVALLI '(:LIT . 3) 'NIL)
+3. Trace: EVALLI ==> 3
+2. Trace: MAP-PROGN-EVALLI ==> 3
+1. Trace: EVALLI ==> 3
+3
+
+
+/**************** Cas des let ****************/
+> (lisp2li '(let ((a 1) (b 2)) (+ 1 2)) nil)
+1. Trace: (LISP2LI '(LET ((A 1) (B 1)) (+ 1 2)) 'NIL)
+2. Trace: (GET-DEFUN 'LET)
+2. Trace: GET-DEFUN ==> NIL
+2. Trace: (ADDTOENV '((A 1) (B 1)) 'NIL)
+3. Trace: (ADDTOENV '((B 1)) '(A))
+4. Trace: (ADDTOENV 'NIL '(A B))
+4. Trace: ADDTOENV ==> (A B)
+3. Trace: ADDTOENV ==> (A B)
+2. Trace: ADDTOENV ==> (A B)
+2. Trace: (LET-LISP2LI '((A 1) (B 1)) '(A B))
+3. Trace: (LISP2LI '1 '(A B))
+3. Trace: LISP2LI ==> (:LIT . 1)
+3. Trace: (LET-LISP2LI '((B 1)) '(A B))
+4. Trace: (LISP2LI '1 '(A B))
+4. Trace: LISP2LI ==> (:LIT . 1)
+4. Trace: (LET-LISP2LI 'NIL '(A B))
+4. Trace: LET-LISP2LI ==> NIL
+3. Trace: LET-LISP2LI ==> ((:SETVAR 1 :LIT . 1))
+2. Trace: LET-LISP2LI ==> ((:SETVAR 0 :LIT . 1) (:SETVAR 1 :LIT . 1))
+2. Trace: (ADDTOENV '((A 1) (B 1)) 'NIL)
+3. Trace: (ADDTOENV '((B 1)) '(A))
+4. Trace: (ADDTOENV 'NIL '(A B))
+4. Trace: ADDTOENV ==> (A B)
+3. Trace: ADDTOENV ==> (A B)
+2. Trace: ADDTOENV ==> (A B)
+2. Trace: (MAP-LISP2LI '((+ 1 2)) '(A B))
+3. Trace: (LISP2LI '(+ 1 2) '(A B))
+4. Trace: (GET-DEFUN '+)
+4. Trace: GET-DEFUN ==> NIL
+4. Trace: (MAP-LISP2LI '(1 2) '(A B))
+5. Trace: (LISP2LI '1 '(A B))
+5. Trace: LISP2LI ==> (:LIT . 1)
+5. Trace: (MAP-LISP2LI '(2) '(A B))
+6. Trace: (LISP2LI '2 '(A B))
+6. Trace: LISP2LI ==> (:LIT . 2)
+6. Trace: (MAP-LISP2LI 'NIL '(A B))
+6. Trace: MAP-LISP2LI ==> NIL
+5. Trace: MAP-LISP2LI ==> ((:LIT . 2))
+4. Trace: MAP-LISP2LI ==> ((:LIT . 1) (:LIT . 2))
+3. Trace: LISP2LI ==> (:CALL + (:LIT . 1) (:LIT . 2))
+3. Trace: (MAP-LISP2LI 'NIL '(A B))
+3. Trace: MAP-LISP2LI ==> NIL
+2. Trace: MAP-LISP2LI ==> ((:CALL + (:LIT . 1) (:LIT . 2)))
+1. Trace: LISP2LI ==> (:LET 2 ((:SETVAR 0 :LIT . 1) (:SETVAR 1 :LIT . 1)) ((:CALL + (:LIT . 1) (:LIT . 2))))
+(:LET 2 ((:SETVAR 0 :LIT . 1) (:SETVAR 1 :LIT . 1)) ((:CALL + (:LIT . 1) (:LIT . 2))))
+> (lisp2li '(let ((a 1) (b 2)) (+ a b)) nil)
+1. Trace: (LISP2LI '(LET ((A 1) (B 2)) (+ A B)) 'NIL)
+2. Trace: (GET-DEFUN 'LET)
+2. Trace: GET-DEFUN ==> NIL
+2. Trace: (ADDTOENV '((A 1) (B 2)) 'NIL)
+3. Trace: (ADDTOENV '((B 2)) '(A))
+4. Trace: (ADDTOENV 'NIL '(A B))
+4. Trace: ADDTOENV ==> (A B)
+3. Trace: ADDTOENV ==> (A B)
+2. Trace: ADDTOENV ==> (A B)
+2. Trace: (LET-LISP2LI '((A 1) (B 2)) '(A B))
+3. Trace: (LISP2LI '1 '(A B))
+3. Trace: LISP2LI ==> (:LIT . 1)
+3. Trace: (LET-LISP2LI '((B 2)) '(A B))
+4. Trace: (LISP2LI '2 '(A B))
+4. Trace: LISP2LI ==> (:LIT . 2)
+4. Trace: (LET-LISP2LI 'NIL '(A B))
+4. Trace: LET-LISP2LI ==> NIL
+3. Trace: LET-LISP2LI ==> ((:SETVAR 1 :LIT . 2))
+2. Trace: LET-LISP2LI ==> ((:SETVAR 0 :LIT . 1) (:SETVAR 1 :LIT . 2))
+2. Trace: (ADDTOENV '((A 1) (B 2)) 'NIL)
+3. Trace: (ADDTOENV '((B 2)) '(A))
+4. Trace: (ADDTOENV 'NIL '(A B))
+4. Trace: ADDTOENV ==> (A B)
+3. Trace: ADDTOENV ==> (A B)
+2. Trace: ADDTOENV ==> (A B)
+2. Trace: (MAP-LISP2LI '((+ A B)) '(A B))
+3. Trace: (LISP2LI '(+ A B) '(A B))
+4. Trace: (GET-DEFUN '+)
+4. Trace: GET-DEFUN ==> NIL
+4. Trace: (MAP-LISP2LI '(A B) '(A B))
+5. Trace: (LISP2LI 'A '(A B))
+5. Trace: LISP2LI ==> (:VAR . 1)
+5. Trace: (MAP-LISP2LI '(B) '(A B))
+6. Trace: (LISP2LI 'B '(A B))
+6. Trace: LISP2LI ==> (:VAR . 2)
+6. Trace: (MAP-LISP2LI 'NIL '(A B))
+6. Trace: MAP-LISP2LI ==> NIL
+5. Trace: MAP-LISP2LI ==> ((:VAR . 2))
+4. Trace: MAP-LISP2LI ==> ((:VAR . 1) (:VAR . 2))
+3. Trace: LISP2LI ==> (:CALL + (:VAR . 1) (:VAR . 2))
+3. Trace: (MAP-LISP2LI 'NIL '(A B))
+3. Trace: MAP-LISP2LI ==> NIL
+2. Trace: MAP-LISP2LI ==> ((:CALL + (:VAR . 1) (:VAR . 2)))
+1. Trace: LISP2LI ==> 
+(:LET 2 ((:SETVAR 0 :LIT . 1) (:SETVAR 1 :LIT . 2))
+ ((:CALL + (:VAR . 1) (:VAR . 2))))
+(:LET 2 ((:SETVAR 0 :LIT . 1) (:SETVAR 1 :LIT . 2))
+ ((:CALL + (:VAR . 1) (:VAR . 2))))
+> (evalLi '(:LET 2 ((:SETVAR 0 :LIT . 1) (:SETVAR 1 :LIT . 2))
+((:CALL + (:VAR . 1) (:VAR . 2)))) nil)
+3. Trace: 
+(EVALLI
+ '(:LET 2 ((:SETVAR 0 :LIT . 1) (:SETVAR 1 :LIT . 2))
+   ((:CALL + (:VAR . 1) (:VAR . 2))))
+ 'NIL)
+4. Trace: 
+(MAKE-ENV-LET-EVALLI '((:SETVAR 0 :LIT . 1) (:SETVAR 1 :LIT . 2))
+ '#(NIL NIL NIL) '1)
+WARNING: taille tableau 3
+5. Trace: (EVALLI '(:LIT . 1) '#(NIL NIL NIL))
+5. Trace: EVALLI ==> 1
+5. Trace: (MAKE-ENV-LET-EVALLI '((:SETVAR 1 :LIT . 2)) '#(NIL 1 NIL) '2)
+WARNING: taille tableau 3
+6. Trace: (EVALLI '(:LIT . 2) '#(NIL 1 NIL))
+6. Trace: EVALLI ==> 2
+6. Trace: (MAKE-ENV-LET-EVALLI 'NIL '#(NIL 1 2) '3)
+WARNING: taille tableau 3
+6. Trace: MAKE-ENV-LET-EVALLI ==> #(NIL 1 2)
+5. Trace: MAKE-ENV-LET-EVALLI ==> #(NIL 1 2)
+4. Trace: MAKE-ENV-LET-EVALLI ==> #(NIL 1 2)
+4. Trace: (MAP-EVALLI '((:CALL + (:VAR . 1) (:VAR . 2))) '#(NIL 1 2))
+5. Trace: (EVALLI '(:CALL + (:VAR . 1) (:VAR . 2)) '#(NIL 1 2))
+6. Trace: (MAP-EVALLI '((:VAR . 1) (:VAR . 2)) '#(NIL 1 2))
+7. Trace: (EVALLI '(:VAR . 1) '#(NIL 1 2))
+7. Trace: EVALLI ==> 1
+7. Trace: (MAP-EVALLI '((:VAR . 2)) '#(NIL 1 2))
+8. Trace: (EVALLI '(:VAR . 2) '#(NIL 1 2))
+8. Trace: EVALLI ==> 2
+8. Trace: (MAP-EVALLI 'NIL '#(NIL 1 2))
+8. Trace: MAP-EVALLI ==> NIL
+7. Trace: MAP-EVALLI ==> (2)
+6. Trace: MAP-EVALLI ==> (1 2)
+5. Trace: EVALLI ==> 3
+5. Trace: (MAP-EVALLI 'NIL '#(NIL 1 2))
+5. Trace: MAP-EVALLI ==> NIL
+4. Trace: MAP-EVALLI ==> (3)
+3. Trace: EVALLI ==> (3)
+(3)
+> (lisp2li '(let ((a 1) (b 2)) (+ 1 2)) '(x))
+1. Trace: (LISP2LI '(LET ((A 1) (B 2)) (+ 1 2)) '(X))
+2. Trace: (GET-DEFUN 'LET)
+2. Trace: GET-DEFUN ==> NIL
+2. Trace: (ADDTOENV '((A 1) (B 2)) '(X))
+3. Trace: (ADDTOENV '((B 2)) '(X A))
+4. Trace: (ADDTOENV 'NIL '(X A B))
+4. Trace: ADDTOENV ==> (X A B)
+3. Trace: ADDTOENV ==> (X A B)
+2. Trace: ADDTOENV ==> (X A B)
+2. Trace: (LET-LISP2LI '((A 1) (B 2)) '(X A B))
+3. Trace: (LISP2LI '1 '(X A B))
+3. Trace: LISP2LI ==> (:LIT . 1)
+3. Trace: (LET-LISP2LI '((B 2)) '(X A B))
+4. Trace: (LISP2LI '2 '(X A B))
+4. Trace: LISP2LI ==> (:LIT . 2)
+4. Trace: (LET-LISP2LI 'NIL '(X A B))
+4. Trace: LET-LISP2LI ==> NIL
+3. Trace: LET-LISP2LI ==> ((:SETVAR 2 :LIT . 2))
+2. Trace: LET-LISP2LI ==> ((:SETVAR 1 :LIT . 1) (:SETVAR 2 :LIT . 2))
+2. Trace: (ADDTOENV '((A 1) (B 2)) '(X))
+3. Trace: (ADDTOENV '((B 2)) '(X A))
+4. Trace: (ADDTOENV 'NIL '(X A B))
+4. Trace: ADDTOENV ==> (X A B)
+3. Trace: ADDTOENV ==> (X A B)
+2. Trace: ADDTOENV ==> (X A B)
+2. Trace: (MAP-LISP2LI '((+ 1 2)) '(X A B))
+3. Trace: (LISP2LI '(+ 1 2) '(X A B))
+4. Trace: (GET-DEFUN '+)
+4. Trace: GET-DEFUN ==> NIL
+4. Trace: (MAP-LISP2LI '(1 2) '(X A B))
+5. Trace: (LISP2LI '1 '(X A B))
+5. Trace: LISP2LI ==> (:LIT . 1)
+5. Trace: (MAP-LISP2LI '(2) '(X A B))
+6. Trace: (LISP2LI '2 '(X A B))
+6. Trace: LISP2LI ==> (:LIT . 2)
+6. Trace: (MAP-LISP2LI 'NIL '(X A B))
+6. Trace: MAP-LISP2LI ==> NIL
+5. Trace: MAP-LISP2LI ==> ((:LIT . 2))
+4. Trace: MAP-LISP2LI ==> ((:LIT . 1) (:LIT . 2))
+3. Trace: LISP2LI ==> (:CALL + (:LIT . 1) (:LIT . 2))
+3. Trace: (MAP-LISP2LI 'NIL '(X A B))
+3. Trace: MAP-LISP2LI ==> NIL
+2. Trace: MAP-LISP2LI ==> ((:CALL + (:LIT . 1) (:LIT . 2)))
+1. Trace: LISP2LI ==> 
+(:LET 2 ((:SETVAR 1 :LIT . 1) (:SETVAR 2 :LIT . 2))
+ ((:CALL + (:LIT . 1) (:LIT . 2))))
+(:LET 2 ((:SETVAR 1 :LIT . 1) (:SETVAR 2 :LIT . 2))
+ ((:CALL + (:LIT . 1) (:LIT . 2))))
+> (evalLi '(:LET 2 ((:SETVAR 1 :LIT . 1) (:SETVAR 2 :LIT . 2)) ((:CALL + (:LIT . 1) (:LIT . 2)))) #(nil x))
+1. Trace: 
+(EVALLI
+ '(:LET 2 ((:SETVAR 1 :LIT . 1) (:SETVAR 2 :LIT . 2))
+   ((:CALL + (:LIT . 1) (:LIT . 2))))
+ '#(NIL X))
+2. Trace: (EVALLI '(:LIT . 1) '#(NIL X))
+2. Trace: EVALLI ==> 1
+2. Trace: (EVALLI '(:LIT . 2) '#(NIL X))
+2. Trace: EVALLI ==> 2
+2. Trace: (MAP-EVALLI '((:CALL + (:LIT . 1) (:LIT . 2))) '#(NIL X 1 2))
+3. Trace: (EVALLI '(:CALL + (:LIT . 1) (:LIT . 2)) '#(NIL X 1 2))
+4. Trace: (MAP-EVALLI '((:LIT . 1) (:LIT . 2)) '#(NIL X 1 2))
+5. Trace: (EVALLI '(:LIT . 1) '#(NIL X 1 2))
+5. Trace: EVALLI ==> 1
+5. Trace: (MAP-EVALLI '((:LIT . 2)) '#(NIL X 1 2))
+6. Trace: (EVALLI '(:LIT . 2) '#(NIL X 1 2))
+6. Trace: EVALLI ==> 2
+6. Trace: (MAP-EVALLI 'NIL '#(NIL X 1 2))
+6. Trace: MAP-EVALLI ==> NIL
+5. Trace: MAP-EVALLI ==> (2)
+4. Trace: MAP-EVALLI ==> (1 2)
+3. Trace: EVALLI ==> 3
+3. Trace: (MAP-EVALLI 'NIL '#(NIL X 1 2))
+3. Trace: MAP-EVALLI ==> NIL
+2. Trace: MAP-EVALLI ==> (3)
+1. Trace: EVALLI ==> (3)
+(3)
+
+
+
+/**************** Cas des cond ****************/
+> (lisp2li '(cond ((eql 1 2) (+ 1 2)) ((eql 1 1) (+ 3 4))) nil)
+1. Trace: (LISP2LI '(COND ((EQL 1 1) (+ 1 2)) ((EQL 1 2) (+ 3 4))) 'NIL)
+2. Trace: (GET-DEFUN 'COND)
+2. Trace: GET-DEFUN ==> NIL
+2. Trace: (COND-LISP2LI '(((EQL 1 1) (+ 1 2)) ((EQL 1 2) (+ 3 4))) 'NIL)
+3. Trace: (LISP2LI '(EQL 1 1) 'NIL)
+4. Trace: (GET-DEFUN 'EQL)
+4. Trace: GET-DEFUN ==> NIL
+4. Trace: (MAP-LISP2LI '(1 1) 'NIL)
+5. Trace: (LISP2LI '1 'NIL)
+5. Trace: LISP2LI ==> (:LIT . 1)
+5. Trace: (MAP-LISP2LI '(1) 'NIL)
+6. Trace: (LISP2LI '1 'NIL)
+6. Trace: LISP2LI ==> (:LIT . 1)
+6. Trace: (MAP-LISP2LI 'NIL 'NIL)
+6. Trace: MAP-LISP2LI ==> NIL
+5. Trace: MAP-LISP2LI ==> ((:LIT . 1))
+4. Trace: MAP-LISP2LI ==> ((:LIT . 1) (:LIT . 1))
+3. Trace: LISP2LI ==> (:CALL EQL (:LIT . 1) (:LIT . 1))
+3. Trace: (LISP2LI '(+ 1 2) 'NIL)
+4. Trace: (GET-DEFUN '+)
+4. Trace: GET-DEFUN ==> NIL
+4. Trace: (MAP-LISP2LI '(1 2) 'NIL)
+5. Trace: (LISP2LI '1 'NIL)
+5. Trace: LISP2LI ==> (:LIT . 1)
+5. Trace: (MAP-LISP2LI '(2) 'NIL)
+6. Trace: (LISP2LI '2 'NIL)
+6. Trace: LISP2LI ==> (:LIT . 2)
+6. Trace: (MAP-LISP2LI 'NIL 'NIL)
+6. Trace: MAP-LISP2LI ==> NIL
+5. Trace: MAP-LISP2LI ==> ((:LIT . 2))
+4. Trace: MAP-LISP2LI ==> ((:LIT . 1) (:LIT . 2))
+3. Trace: LISP2LI ==> (:CALL + (:LIT . 1) (:LIT . 2))
+3. Trace: (COND-LISP2LI '(((EQL 1 2) (+ 3 4))) 'NIL)
+4. Trace: (LISP2LI '(EQL 1 2) 'NIL)
+5. Trace: (GET-DEFUN 'EQL)
+5. Trace: GET-DEFUN ==> NIL
+5. Trace: (MAP-LISP2LI '(1 2) 'NIL)
+6. Trace: (LISP2LI '1 'NIL)
+6. Trace: LISP2LI ==> (:LIT . 1)
+6. Trace: (MAP-LISP2LI '(2) 'NIL)
+7. Trace: (LISP2LI '2 'NIL)
+7. Trace: LISP2LI ==> (:LIT . 2)
+7. Trace: (MAP-LISP2LI 'NIL 'NIL)
+7. Trace: MAP-LISP2LI ==> NIL
+6. Trace: MAP-LISP2LI ==> ((:LIT . 2))
+5. Trace: MAP-LISP2LI ==> ((:LIT . 1) (:LIT . 2))
+4. Trace: LISP2LI ==> (:CALL EQL (:LIT . 1) (:LIT . 2))
+4. Trace: (LISP2LI '(+ 3 4) 'NIL)
+5. Trace: (GET-DEFUN '+)
+5. Trace: GET-DEFUN ==> NIL
+5. Trace: (MAP-LISP2LI '(3 4) 'NIL)
+6. Trace: (LISP2LI '3 'NIL)
+6. Trace: LISP2LI ==> (:LIT . 3)
+6. Trace: (MAP-LISP2LI '(4) 'NIL)
+7. Trace: (LISP2LI '4 'NIL)
+7. Trace: LISP2LI ==> (:LIT . 4)
+7. Trace: (MAP-LISP2LI 'NIL 'NIL)
+7. Trace: MAP-LISP2LI ==> NIL
+6. Trace: MAP-LISP2LI ==> ((:LIT . 4))
+5. Trace: MAP-LISP2LI ==> ((:LIT . 3) (:LIT . 4))
+4. Trace: LISP2LI ==> (:CALL + (:LIT . 3) (:LIT . 4))
+4. Trace: (COND-LISP2LI 'NIL 'NIL)
+4. Trace: COND-LISP2LI ==> NIL
+3. Trace: COND-LISP2LI ==> ((:CALL EQL (:LIT . 1) (:LIT . 2)) (:CALL + (:LIT . 3) (:LIT . 4)) NIL)
+2. Trace: COND-LISP2LI ==> 
+((:CALL EQL (:LIT . 1) (:LIT . 1)) (:CALL + (:LIT . 1) (:LIT . 2))
+ ((:CALL EQL (:LIT . 1) (:LIT . 2)) (:CALL + (:LIT . 3) (:LIT . 4)) NIL))
+1. Trace: LISP2LI ==> 
+(:COND (:CALL EQL (:LIT . 1) (:LIT . 1)) (:CALL + (:LIT . 1) (:LIT . 2))
+ ((:CALL EQL (:LIT . 1) (:LIT . 2)) (:CALL + (:LIT . 3) (:LIT . 4)) NIL))
+(:COND (:CALL EQL (:LIT . 1) (:LIT . 1)) (:CALL + (:LIT . 1) (:LIT . 2))
+ ((:CALL EQL (:LIT . 1) (:LIT . 2)) (:CALL + (:LIT . 3) (:LIT . 4)) NIL))
+ > (evalLi '(:COND (:CALL EQL (:LIT . 1) (:LIT . 1)) (:CALL + (:LIT . 1) (:LIT . 2))
+ ((:CALL EQL (:LIT . 1) (:LIT . 2)) (:CALL + (:LIT . 3) (:LIT . 4)) NIL)) nil)
+1. Trace: 
+(EVALLI
+ '(:COND (:CALL EQL (:LIT . 1) (:LIT . 1)) (:CALL + (:LIT . 1) (:LIT . 2))
+   ((:CALL EQL (:LIT . 1) (:LIT . 2)) (:CALL + (:LIT . 3) (:LIT . 4)) NIL))
+ 'NIL)
+2. Trace: 
+(MAP-COND-EVALLI
+ '((:CALL EQL (:LIT . 1) (:LIT . 1)) (:CALL + (:LIT . 1) (:LIT . 2))
+   ((:CALL EQL (:LIT . 1) (:LIT . 2)) (:CALL + (:LIT . 3) (:LIT . 4)) NIL))
+ 'NIL)
+3. Trace: (EVALLI '(:CALL EQL (:LIT . 1) (:LIT . 1)) 'NIL)
+4. Trace: (MAP-EVALLI '((:LIT . 1) (:LIT . 1)) 'NIL)
+5. Trace: (EVALLI '(:LIT . 1) 'NIL)
+5. Trace: EVALLI ==> 1
+5. Trace: (MAP-EVALLI '((:LIT . 1)) 'NIL)
+6. Trace: (EVALLI '(:LIT . 1) 'NIL)
+6. Trace: EVALLI ==> 1
+6. Trace: (MAP-EVALLI 'NIL 'NIL)
+6. Trace: MAP-EVALLI ==> NIL
+5. Trace: MAP-EVALLI ==> (1)
+4. Trace: MAP-EVALLI ==> (1 1)
+3. Trace: EVALLI ==> T
+3. Trace: (EVALLI '(:CALL + (:LIT . 1) (:LIT . 2)) 'NIL)
+4. Trace: (MAP-EVALLI '((:LIT . 1) (:LIT . 2)) 'NIL)
+5. Trace: (EVALLI '(:LIT . 1) 'NIL)
+5. Trace: EVALLI ==> 1
+5. Trace: (MAP-EVALLI '((:LIT . 2)) 'NIL)
+6. Trace: (EVALLI '(:LIT . 2) 'NIL)
+6. Trace: EVALLI ==> 2
+6. Trace: (MAP-EVALLI 'NIL 'NIL)
+6. Trace: MAP-EVALLI ==> NIL
+5. Trace: MAP-EVALLI ==> (2)
+4. Trace: MAP-EVALLI ==> (1 2)
+3. Trace: EVALLI ==> 3
+2. Trace: MAP-COND-EVALLI ==> 3
+1. Trace: EVALLI ==> 3
+3
+> (lisp2li '(cond ((eql 1 2) (+ 1 2)) ((eql 1 1) (+ 3 4))) nil)
+1. Trace: (LISP2LI '(COND ((EQL 1 2) (+ 1 2)) ((EQL 1 1) (+ 3 4))) 'NIL)
+2. Trace: (GET-DEFUN 'COND)
+2. Trace: GET-DEFUN ==> NIL
+2. Trace: (COND-LISP2LI '(((EQL 1 2) (+ 1 2)) ((EQL 1 1) (+ 3 4))) 'NIL)
+3. Trace: (LISP2LI '(EQL 1 2) 'NIL)
+4. Trace: (GET-DEFUN 'EQL)
+4. Trace: GET-DEFUN ==> NIL
+4. Trace: (MAP-LISP2LI '(1 2) 'NIL)
+5. Trace: (LISP2LI '1 'NIL)
+5. Trace: LISP2LI ==> (:LIT . 1)
+5. Trace: (MAP-LISP2LI '(2) 'NIL)
+6. Trace: (LISP2LI '2 'NIL)
+6. Trace: LISP2LI ==> (:LIT . 2)
+6. Trace: (MAP-LISP2LI 'NIL 'NIL)
+6. Trace: MAP-LISP2LI ==> NIL
+5. Trace: MAP-LISP2LI ==> ((:LIT . 2))
+4. Trace: MAP-LISP2LI ==> ((:LIT . 1) (:LIT . 2))
+3. Trace: LISP2LI ==> (:CALL EQL (:LIT . 1) (:LIT . 2))
+3. Trace: (LISP2LI '(+ 1 2) 'NIL)
+4. Trace: (GET-DEFUN '+)
+4. Trace: GET-DEFUN ==> NIL
+4. Trace: (MAP-LISP2LI '(1 2) 'NIL)
+5. Trace: (LISP2LI '1 'NIL)
+5. Trace: LISP2LI ==> (:LIT . 1)
+5. Trace: (MAP-LISP2LI '(2) 'NIL)
+6. Trace: (LISP2LI '2 'NIL)
+6. Trace: LISP2LI ==> (:LIT . 2)
+6. Trace: (MAP-LISP2LI 'NIL 'NIL)
+6. Trace: MAP-LISP2LI ==> NIL
+5. Trace: MAP-LISP2LI ==> ((:LIT . 2))
+4. Trace: MAP-LISP2LI ==> ((:LIT . 1) (:LIT . 2))
+3. Trace: LISP2LI ==> (:CALL + (:LIT . 1) (:LIT . 2))
+3. Trace: (COND-LISP2LI '(((EQL 1 1) (+ 3 4))) 'NIL)
+4. Trace: (LISP2LI '(EQL 1 1) 'NIL)
+5. Trace: (GET-DEFUN 'EQL)
+5. Trace: GET-DEFUN ==> NIL
+5. Trace: (MAP-LISP2LI '(1 1) 'NIL)
+6. Trace: (LISP2LI '1 'NIL)
+6. Trace: LISP2LI ==> (:LIT . 1)
+6. Trace: (MAP-LISP2LI '(1) 'NIL)
+7. Trace: (LISP2LI '1 'NIL)
+7. Trace: LISP2LI ==> (:LIT . 1)
+7. Trace: (MAP-LISP2LI 'NIL 'NIL)
+7. Trace: MAP-LISP2LI ==> NIL
+6. Trace: MAP-LISP2LI ==> ((:LIT . 1))
+5. Trace: MAP-LISP2LI ==> ((:LIT . 1) (:LIT . 1))
+4. Trace: LISP2LI ==> (:CALL EQL (:LIT . 1) (:LIT . 1))
+4. Trace: (LISP2LI '(+ 3 4) 'NIL)
+5. Trace: (GET-DEFUN '+)
+5. Trace: GET-DEFUN ==> NIL
+5. Trace: (MAP-LISP2LI '(3 4) 'NIL)
+6. Trace: (LISP2LI '3 'NIL)
+6. Trace: LISP2LI ==> (:LIT . 3)
+6. Trace: (MAP-LISP2LI '(4) 'NIL)
+7. Trace: (LISP2LI '4 'NIL)
+7. Trace: LISP2LI ==> (:LIT . 4)
+7. Trace: (MAP-LISP2LI 'NIL 'NIL)
+7. Trace: MAP-LISP2LI ==> NIL
+6. Trace: MAP-LISP2LI ==> ((:LIT . 4))
+5. Trace: MAP-LISP2LI ==> ((:LIT . 3) (:LIT . 4))
+4. Trace: LISP2LI ==> (:CALL + (:LIT . 3) (:LIT . 4))
+4. Trace: (COND-LISP2LI 'NIL 'NIL)
+4. Trace: COND-LISP2LI ==> NIL
+3. Trace: COND-LISP2LI ==> ((:CALL EQL (:LIT . 1) (:LIT . 1)) (:CALL + (:LIT . 3) (:LIT . 4)) NIL)
+2. Trace: COND-LISP2LI ==> 
+((:CALL EQL (:LIT . 1) (:LIT . 2)) (:CALL + (:LIT . 1) (:LIT . 2))
+ ((:CALL EQL (:LIT . 1) (:LIT . 1)) (:CALL + (:LIT . 3) (:LIT . 4)) NIL))
+1. Trace: LISP2LI ==> 
+(:COND (:CALL EQL (:LIT . 1) (:LIT . 2)) (:CALL + (:LIT . 1) (:LIT . 2))
+ ((:CALL EQL (:LIT . 1) (:LIT . 1)) (:CALL + (:LIT . 3) (:LIT . 4)) NIL))
+(:COND (:CALL EQL (:LIT . 1) (:LIT . 2)) (:CALL + (:LIT . 1) (:LIT . 2))
+ ((:CALL EQL (:LIT . 1) (:LIT . 1)) (:CALL + (:LIT . 3) (:LIT . 4)) NIL))
+> (evalLi '(:COND (:CALL EQL (:LIT . 1) (:LIT . 2)) (:CALL + (:LIT . 1) (:LIT . 2))
+ ((:CALL EQL (:LIT . 1) (:LIT . 1)) (:CALL + (:LIT . 3) (:LIT . 4)) NIL)) nil)
+1. Trace: 
+(EVALLI
+ '(:COND (:CALL EQL (:LIT . 1) (:LIT . 2)) (:CALL + (:LIT . 1) (:LIT . 2))
+   ((:CALL EQL (:LIT . 1) (:LIT . 1)) (:CALL + (:LIT . 3) (:LIT . 4)) NIL))
+ 'NIL)
+2. Trace: 
+(MAP-COND-EVALLI
+ '((:CALL EQL (:LIT . 1) (:LIT . 2)) (:CALL + (:LIT . 1) (:LIT . 2))
+   ((:CALL EQL (:LIT . 1) (:LIT . 1)) (:CALL + (:LIT . 3) (:LIT . 4)) NIL))
+ 'NIL)
+3. Trace: (EVALLI '(:CALL EQL (:LIT . 1) (:LIT . 2)) 'NIL)
+4. Trace: (MAP-EVALLI '((:LIT . 1) (:LIT . 2)) 'NIL)
+5. Trace: (EVALLI '(:LIT . 1) 'NIL)
+5. Trace: EVALLI ==> 1
+5. Trace: (MAP-EVALLI '((:LIT . 2)) 'NIL)
+6. Trace: (EVALLI '(:LIT . 2) 'NIL)
+6. Trace: EVALLI ==> 2
+6. Trace: (MAP-EVALLI 'NIL 'NIL)
+6. Trace: MAP-EVALLI ==> NIL
+5. Trace: MAP-EVALLI ==> (2)
+4. Trace: MAP-EVALLI ==> (1 2)
+3. Trace: EVALLI ==> NIL
+3. Trace: 
+(MAP-COND-EVALLI
+ '((:CALL EQL (:LIT . 1) (:LIT . 1)) (:CALL + (:LIT . 3) (:LIT . 4)) NIL) 'NIL)
+4. Trace: (EVALLI '(:CALL EQL (:LIT . 1) (:LIT . 1)) 'NIL)
+5. Trace: (MAP-EVALLI '((:LIT . 1) (:LIT . 1)) 'NIL)
+6. Trace: (EVALLI '(:LIT . 1) 'NIL)
+6. Trace: EVALLI ==> 1
+6. Trace: (MAP-EVALLI '((:LIT . 1)) 'NIL)
+7. Trace: (EVALLI '(:LIT . 1) 'NIL)
+7. Trace: EVALLI ==> 1
+7. Trace: (MAP-EVALLI 'NIL 'NIL)
+7. Trace: MAP-EVALLI ==> NIL
+6. Trace: MAP-EVALLI ==> (1)
+5. Trace: MAP-EVALLI ==> (1 1)
+4. Trace: EVALLI ==> T
+4. Trace: (EVALLI '(:CALL + (:LIT . 3) (:LIT . 4)) 'NIL)
+5. Trace: (MAP-EVALLI '((:LIT . 3) (:LIT . 4)) 'NIL)
+6. Trace: (EVALLI '(:LIT . 3) 'NIL)
+6. Trace: EVALLI ==> 3
+6. Trace: (MAP-EVALLI '((:LIT . 4)) 'NIL)
+7. Trace: (EVALLI '(:LIT . 4) 'NIL)
+7. Trace: EVALLI ==> 4
+7. Trace: (MAP-EVALLI 'NIL 'NIL)
+7. Trace: MAP-EVALLI ==> NIL
+6. Trace: MAP-EVALLI ==> (4)
+5. Trace: MAP-EVALLI ==> (3 4)
+4. Trace: EVALLI ==> 7
+3. Trace: MAP-COND-EVALLI ==> 7
+2. Trace: MAP-COND-EVALLI ==> 7
+1. Trace: EVALLI ==> 7
+7
+
+/**************** Cas des setf ****************/
+
+
+
+
+
+
+/**************** Cas des case ****************/
+> (lisp2li '(case 1 (1 (+ 1 0)) (2 (+ 1 2))) nil) 
+1. Trace: (LISP2LI '(CASE 1 (1 (+ 1 0)) (2 (+ 1 2))) 'NIL)
+2. Trace: (GET-DEFUN 'CASE)
+2. Trace: GET-DEFUN ==> NIL
+2. Trace: (CASE-LISP2LI '(1 (1 (+ 1 0)) (2 (+ 1 2))) 'NIL)
+3. Trace: (LISP2LI '1 'NIL)
+3. Trace: LISP2LI ==> (:LIT . 1)
+3. Trace: (CASE-LISP2LI '((1 (+ 1 0)) (2 (+ 1 2))) 'NIL)
+4. Trace: (LISP2LI '1 'NIL)
+4. Trace: LISP2LI ==> (:LIT . 1)
+4. Trace: (LISP2LI '(+ 1 0) 'NIL)
+5. Trace: (GET-DEFUN '+)
+5. Trace: GET-DEFUN ==> NIL
+5. Trace: (MAP-LISP2LI '(1 0) 'NIL)
+6. Trace: (LISP2LI '1 'NIL)
+6. Trace: LISP2LI ==> (:LIT . 1)
+6. Trace: (MAP-LISP2LI '(0) 'NIL)
+7. Trace: (LISP2LI '0 'NIL)
+7. Trace: LISP2LI ==> (:LIT . 0)
+7. Trace: (MAP-LISP2LI 'NIL 'NIL)
+7. Trace: MAP-LISP2LI ==> NIL
+6. Trace: MAP-LISP2LI ==> ((:LIT . 0))
+5. Trace: MAP-LISP2LI ==> ((:LIT . 1) (:LIT . 0))
+4. Trace: LISP2LI ==> (:CALL + (:LIT . 1) (:LIT . 0))
+4. Trace: (CASE-LISP2LI '((2 (+ 1 2))) 'NIL)
+5. Trace: (LISP2LI '2 'NIL)
+5. Trace: LISP2LI ==> (:LIT . 2)
+5. Trace: (LISP2LI '(+ 1 2) 'NIL)
+6. Trace: (GET-DEFUN '+)
+6. Trace: GET-DEFUN ==> NIL
+6. Trace: (MAP-LISP2LI '(1 2) 'NIL)
+7. Trace: (LISP2LI '1 'NIL)
+7. Trace: LISP2LI ==> (:LIT . 1)
+7. Trace: (MAP-LISP2LI '(2) 'NIL)
+8. Trace: (LISP2LI '2 'NIL)
+8. Trace: LISP2LI ==> (:LIT . 2)
+8. Trace: (MAP-LISP2LI 'NIL 'NIL)
+8. Trace: MAP-LISP2LI ==> NIL
+7. Trace: MAP-LISP2LI ==> ((:LIT . 2))
+6. Trace: MAP-LISP2LI ==> ((:LIT . 1) (:LIT . 2))
+5. Trace: LISP2LI ==> (:CALL + (:LIT . 1) (:LIT . 2))
+5. Trace: (CASE-LISP2LI 'NIL 'NIL)
+5. Trace: CASE-LISP2LI ==> NIL
+4. Trace: CASE-LISP2LI ==> ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL)
+3. Trace: CASE-LISP2LI ==> ((:LIT . 1) (:CALL + (:LIT . 1) (:LIT . 0)) ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+2. Trace: CASE-LISP2LI ==> ((:LIT . 1) (:LIT . 1) (:CALL + (:LIT . 1) (:LIT . 0)) ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+1. Trace: LISP2LI ==> (:CASE (:LIT . 1) (:LIT . 1) (:CALL + (:LIT . 1) (:LIT . 0)) ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+(:CASE (:LIT . 1) (:LIT . 1) (:CALL + (:LIT . 1) (:LIT . 0)) ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+> (evalLi '(:CASE (:LIT . 1) (:LIT . 1) (:CALL + (:LIT . 1) (:LIT . 0)) ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL)) nil)
+1. Trace: 
+(EVALLI
+ '(:CASE (:LIT . 1) (:LIT . 1) (:CALL + (:LIT . 1) (:LIT . 0))
+   ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+ 'NIL)
+2. Trace: (EVALLI '(:LIT . 1) 'NIL)
+2. Trace: EVALLI ==> 1
+2. Trace: 
+(MAP-CASE-EVALLI '1
+ '((:LIT . 1) (:CALL + (:LIT . 1) (:LIT . 0))
+   ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+ 'NIL)
+3. Trace: (EVALLI '(:LIT . 1) 'NIL)
+3. Trace: EVALLI ==> 1
+3. Trace: (EVALLI '(:CALL + (:LIT . 1) (:LIT . 0)) 'NIL)
+4. Trace: (MAP-EVALLI '((:LIT . 1) (:LIT . 0)) 'NIL)
+5. Trace: (EVALLI '(:LIT . 1) 'NIL)
+5. Trace: EVALLI ==> 1
+5. Trace: (MAP-EVALLI '((:LIT . 0)) 'NIL)
+6. Trace: (EVALLI '(:LIT . 0) 'NIL)
+6. Trace: EVALLI ==> 0
+6. Trace: (MAP-EVALLI 'NIL 'NIL)
+6. Trace: MAP-EVALLI ==> NIL
+5. Trace: MAP-EVALLI ==> (0)
+4. Trace: MAP-EVALLI ==> (1 0)
+3. Trace: EVALLI ==> 1
+2. Trace: MAP-CASE-EVALLI ==> 1
+1. Trace: EVALLI ==> 1
+1
+> (lisp2li '(case 2 (1 (+ 1 0)) (2 (+ 1 2))) nil) 
+1. Trace: (LISP2LI '(CASE 2 (1 (+ 1 0)) (2 (+ 1 2))) 'NIL)
+2. Trace: (GET-DEFUN 'CASE)
+2. Trace: GET-DEFUN ==> NIL
+2. Trace: (CASE-LISP2LI '(2 (1 (+ 1 0)) (2 (+ 1 2))) 'NIL)
+3. Trace: (LISP2LI '2 'NIL)
+3. Trace: LISP2LI ==> (:LIT . 2)
+3. Trace: (CASE-LISP2LI '((1 (+ 1 0)) (2 (+ 1 2))) 'NIL)
+4. Trace: (LISP2LI '1 'NIL)
+4. Trace: LISP2LI ==> (:LIT . 1)
+4. Trace: (LISP2LI '(+ 1 0) 'NIL)
+5. Trace: (GET-DEFUN '+)
+5. Trace: GET-DEFUN ==> NIL
+5. Trace: (MAP-LISP2LI '(1 0) 'NIL)
+6. Trace: (LISP2LI '1 'NIL)
+6. Trace: LISP2LI ==> (:LIT . 1)
+6. Trace: (MAP-LISP2LI '(0) 'NIL)
+7. Trace: (LISP2LI '0 'NIL)
+7. Trace: LISP2LI ==> (:LIT . 0)
+7. Trace: (MAP-LISP2LI 'NIL 'NIL)
+7. Trace: MAP-LISP2LI ==> NIL
+6. Trace: MAP-LISP2LI ==> ((:LIT . 0))
+5. Trace: MAP-LISP2LI ==> ((:LIT . 1) (:LIT . 0))
+4. Trace: LISP2LI ==> (:CALL + (:LIT . 1) (:LIT . 0))
+4. Trace: (CASE-LISP2LI '((2 (+ 1 2))) 'NIL)
+5. Trace: (LISP2LI '2 'NIL)
+5. Trace: LISP2LI ==> (:LIT . 2)
+5. Trace: (LISP2LI '(+ 1 2) 'NIL)
+6. Trace: (GET-DEFUN '+)
+6. Trace: GET-DEFUN ==> NIL
+6. Trace: (MAP-LISP2LI '(1 2) 'NIL)
+7. Trace: (LISP2LI '1 'NIL)
+7. Trace: LISP2LI ==> (:LIT . 1)
+7. Trace: (MAP-LISP2LI '(2) 'NIL)
+8. Trace: (LISP2LI '2 'NIL)
+8. Trace: LISP2LI ==> (:LIT . 2)
+8. Trace: (MAP-LISP2LI 'NIL 'NIL)
+8. Trace: MAP-LISP2LI ==> NIL
+7. Trace: MAP-LISP2LI ==> ((:LIT . 2))
+6. Trace: MAP-LISP2LI ==> ((:LIT . 1) (:LIT . 2))
+5. Trace: LISP2LI ==> (:CALL + (:LIT . 1) (:LIT . 2))
+5. Trace: (CASE-LISP2LI 'NIL 'NIL)
+5. Trace: CASE-LISP2LI ==> NIL
+4. Trace: CASE-LISP2LI ==> ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL)
+3. Trace: CASE-LISP2LI ==> 
+((:LIT . 1) (:CALL + (:LIT . 1) (:LIT . 0))
+ ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+2. Trace: CASE-LISP2LI ==> 
+((:LIT . 2) (:LIT . 1) (:CALL + (:LIT . 1) (:LIT . 0))
+ ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+1. Trace: LISP2LI ==> 
+(:CASE (:LIT . 2) (:LIT . 1) (:CALL + (:LIT . 1) (:LIT . 0))
+ ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+(:CASE (:LIT . 2) (:LIT . 1) (:CALL + (:LIT . 1) (:LIT . 0))
+ ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+> (lisp2li '(case 2 (1 (+ 1 0)) (2 (+ 1 2))) nil) 
+1. Trace: (LISP2LI '(CASE 2 (1 (+ 1 0)) (2 (+ 1 2))) 'NIL)
+2. Trace: (GET-DEFUN 'CASE)
+2. Trace: GET-DEFUN ==> NIL
+2. Trace: (CASE-LISP2LI '(2 (1 (+ 1 0)) (2 (+ 1 2))) 'NIL)
+3. Trace: (LISP2LI '2 'NIL)
+3. Trace: LISP2LI ==> (:LIT . 2)
+3. Trace: (CASE-LISP2LI '((1 (+ 1 0)) (2 (+ 1 2))) 'NIL)
+4. Trace: (LISP2LI '1 'NIL)
+4. Trace: LISP2LI ==> (:LIT . 1)
+4. Trace: (LISP2LI '(+ 1 0) 'NIL)
+5. Trace: (GET-DEFUN '+)
+5. Trace: GET-DEFUN ==> NIL
+5. Trace: (MAP-LISP2LI '(1 0) 'NIL)
+6. Trace: (LISP2LI '1 'NIL)
+6. Trace: LISP2LI ==> (:LIT . 1)
+6. Trace: (MAP-LISP2LI '(0) 'NIL)
+7. Trace: (LISP2LI '0 'NIL)
+7. Trace: LISP2LI ==> (:LIT . 0)
+7. Trace: (MAP-LISP2LI 'NIL 'NIL)
+7. Trace: MAP-LISP2LI ==> NIL
+6. Trace: MAP-LISP2LI ==> ((:LIT . 0))
+5. Trace: MAP-LISP2LI ==> ((:LIT . 1) (:LIT . 0))
+4. Trace: LISP2LI ==> (:CALL + (:LIT . 1) (:LIT . 0))
+4. Trace: (CASE-LISP2LI '((2 (+ 1 2))) 'NIL)
+5. Trace: (LISP2LI '2 'NIL)
+5. Trace: LISP2LI ==> (:LIT . 2)
+5. Trace: (LISP2LI '(+ 1 2) 'NIL)
+6. Trace: (GET-DEFUN '+)
+6. Trace: GET-DEFUN ==> NIL
+6. Trace: (MAP-LISP2LI '(1 2) 'NIL)
+7. Trace: (LISP2LI '1 'NIL)
+7. Trace: LISP2LI ==> (:LIT . 1)
+7. Trace: (MAP-LISP2LI '(2) 'NIL)
+8. Trace: (LISP2LI '2 'NIL)
+8. Trace: LISP2LI ==> (:LIT . 2)
+8. Trace: (MAP-LISP2LI 'NIL 'NIL)
+8. Trace: MAP-LISP2LI ==> NIL
+7. Trace: MAP-LISP2LI ==> ((:LIT . 2))
+6. Trace: MAP-LISP2LI ==> ((:LIT . 1) (:LIT . 2))
+5. Trace: LISP2LI ==> (:CALL + (:LIT . 1) (:LIT . 2))
+5. Trace: (CASE-LISP2LI 'NIL 'NIL)
+5. Trace: CASE-LISP2LI ==> NIL
+4. Trace: CASE-LISP2LI ==> ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL)
+3. Trace: CASE-LISP2LI ==> 
+((:LIT . 1) (:CALL + (:LIT . 1) (:LIT . 0))
+ ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+2. Trace: CASE-LISP2LI ==> 
+((:LIT . 2) (:LIT . 1) (:CALL + (:LIT . 1) (:LIT . 0))
+ ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+1. Trace: LISP2LI ==> 
+(:CASE (:LIT . 2) (:LIT . 1) (:CALL + (:LIT . 1) (:LIT . 0))
+ ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+(:CASE (:LIT . 2) (:LIT . 1) (:CALL + (:LIT . 1) (:LIT . 0))
+ ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+[98]> (evalLi '(:CASE (:LIT . 2) (:LIT . 1) (:CALL + (:LIT . 1) (:LIT . 0))
+ ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL)) nil)
+1. Trace: 
+(EVALLI
+ '(:CASE (:LIT . 2) (:LIT . 1) (:CALL + (:LIT . 1) (:LIT . 0))
+   ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+ 'NIL)
+2. Trace: (EVALLI '(:LIT . 2) 'NIL)
+2. Trace: EVALLI ==> 2
+2. Trace: 
+(MAP-CASE-EVALLI '2
+ '((:LIT . 1) (:CALL + (:LIT . 1) (:LIT . 0))
+   ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+ 'NIL)
+3. Trace: (EVALLI '(:LIT . 1) 'NIL)
+3. Trace: EVALLI ==> 1
+3. Trace: (MAP-CASE-EVALLI '2 '((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL) 'NIL)
+4. Trace: (EVALLI '(:LIT . 2) 'NIL)
+4. Trace: EVALLI ==> 2
+4. Trace: (EVALLI '(:CALL + (:LIT . 1) (:LIT . 2)) 'NIL)
+5. Trace: (MAP-EVALLI '((:LIT . 1) (:LIT . 2)) 'NIL)
+6. Trace: (EVALLI '(:LIT . 1) 'NIL)
+6. Trace: EVALLI ==> 1
+6. Trace: (MAP-EVALLI '((:LIT . 2)) 'NIL)
+7. Trace: (EVALLI '(:LIT . 2) 'NIL)
+7. Trace: EVALLI ==> 2
+7. Trace: (MAP-EVALLI 'NIL 'NIL)
+7. Trace: MAP-EVALLI ==> NIL
+6. Trace: MAP-EVALLI ==> (2)
+5. Trace: MAP-EVALLI ==> (1 2)
+4. Trace: EVALLI ==> 3
+3. Trace: MAP-CASE-EVALLI ==> 3
+2. Trace: MAP-CASE-EVALLI ==> 3
+1. Trace: EVALLI ==> 3
+3
+> (lisp2li '(case a (b (+ 1 0)) (a (+ 1 2))) nil)
+1. Trace: (LISP2LI '(CASE A (B (+ 1 0)) (A (+ 1 2))) 'NIL)
+2. Trace: (GET-DEFUN 'CASE)
+2. Trace: GET-DEFUN ==> NIL
+2. Trace: (CASE-LISP2LI '(A (B (+ 1 0)) (A (+ 1 2))) 'NIL)
+3. Trace: (LISP2LI 'A 'NIL)
+3. Trace: LISP2LI ==> (:CAR . A)
+3. Trace: (CASE-LISP2LI '((B (+ 1 0)) (A (+ 1 2))) 'NIL)
+4. Trace: (LISP2LI 'B 'NIL)
+4. Trace: LISP2LI ==> (:CAR . B)
+4. Trace: (LISP2LI '(+ 1 0) 'NIL)
+5. Trace: (GET-DEFUN '+)
+5. Trace: GET-DEFUN ==> NIL
+5. Trace: (MAP-LISP2LI '(1 0) 'NIL)
+6. Trace: (LISP2LI '1 'NIL)
+6. Trace: LISP2LI ==> (:LIT . 1)
+6. Trace: (MAP-LISP2LI '(0) 'NIL)
+7. Trace: (LISP2LI '0 'NIL)
+7. Trace: LISP2LI ==> (:LIT . 0)
+7. Trace: (MAP-LISP2LI 'NIL 'NIL)
+7. Trace: MAP-LISP2LI ==> NIL
+6. Trace: MAP-LISP2LI ==> ((:LIT . 0))
+5. Trace: MAP-LISP2LI ==> ((:LIT . 1) (:LIT . 0))
+4. Trace: LISP2LI ==> (:CALL + (:LIT . 1) (:LIT . 0))
+4. Trace: (CASE-LISP2LI '((A (+ 1 2))) 'NIL)
+5. Trace: (LISP2LI 'A 'NIL)
+5. Trace: LISP2LI ==> (:CAR . A)
+5. Trace: (LISP2LI '(+ 1 2) 'NIL)
+6. Trace: (GET-DEFUN '+)
+6. Trace: GET-DEFUN ==> NIL
+6. Trace: (MAP-LISP2LI '(1 2) 'NIL)
+7. Trace: (LISP2LI '1 'NIL)
+7. Trace: LISP2LI ==> (:LIT . 1)
+7. Trace: (MAP-LISP2LI '(2) 'NIL)
+8. Trace: (LISP2LI '2 'NIL)
+8. Trace: LISP2LI ==> (:LIT . 2)
+8. Trace: (MAP-LISP2LI 'NIL 'NIL)
+8. Trace: MAP-LISP2LI ==> NIL
+7. Trace: MAP-LISP2LI ==> ((:LIT . 2))
+6. Trace: MAP-LISP2LI ==> ((:LIT . 1) (:LIT . 2))
+5. Trace: LISP2LI ==> (:CALL + (:LIT . 1) (:LIT . 2))
+5. Trace: (CASE-LISP2LI 'NIL 'NIL)
+5. Trace: CASE-LISP2LI ==> NIL
+4. Trace: CASE-LISP2LI ==> ((:CAR . A) (:CALL + (:LIT . 1) (:LIT . 2)) NIL)
+3. Trace: CASE-LISP2LI ==> 
+((:CAR . B) (:CALL + (:LIT . 1) (:LIT . 0))
+ ((:CAR . A) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+2. Trace: CASE-LISP2LI ==> 
+((:CAR . A) (:CAR . B) (:CALL + (:LIT . 1) (:LIT . 0))
+ ((:CAR . A) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+1. Trace: LISP2LI ==> 
+(:CASE (:CAR . A) (:CAR . B) (:CALL + (:LIT . 1) (:LIT . 0))
+ ((:CAR . A) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+(:CASE (:CAR . A) (:CAR . B) (:CALL + (:LIT . 1) (:LIT . 0))
+ ((:CAR . A) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+> (evalLi (lisp2li '(case a (b (+ 1 0)) (a (+ 1 2))) nil) nil)
+1. Trace: (LISP2LI '(CASE A (B (+ 1 0)) (A (+ 1 2))) 'NIL)
+2. Trace: (GET-DEFUN 'CASE)
+2. Trace: GET-DEFUN ==> NIL
+2. Trace: (CASE-LISP2LI '(A (B (+ 1 0)) (A (+ 1 2))) 'NIL)
+3. Trace: (LISP2LI 'A 'NIL)
+3. Trace: LISP2LI ==> (:CAR . A)
+3. Trace: (CASE-LISP2LI '((B (+ 1 0)) (A (+ 1 2))) 'NIL)
+4. Trace: (LISP2LI 'B 'NIL)
+4. Trace: LISP2LI ==> (:CAR . B)
+4. Trace: (LISP2LI '(+ 1 0) 'NIL)
+5. Trace: (GET-DEFUN '+)
+5. Trace: GET-DEFUN ==> NIL
+5. Trace: (MAP-LISP2LI '(1 0) 'NIL)
+6. Trace: (LISP2LI '1 'NIL)
+6. Trace: LISP2LI ==> (:LIT . 1)
+6. Trace: (MAP-LISP2LI '(0) 'NIL)
+7. Trace: (LISP2LI '0 'NIL)
+7. Trace: LISP2LI ==> (:LIT . 0)
+7. Trace: (MAP-LISP2LI 'NIL 'NIL)
+7. Trace: MAP-LISP2LI ==> NIL
+6. Trace: MAP-LISP2LI ==> ((:LIT . 0))
+5. Trace: MAP-LISP2LI ==> ((:LIT . 1) (:LIT . 0))
+4. Trace: LISP2LI ==> (:CALL + (:LIT . 1) (:LIT . 0))
+4. Trace: (CASE-LISP2LI '((A (+ 1 2))) 'NIL)
+5. Trace: (LISP2LI 'A 'NIL)
+5. Trace: LISP2LI ==> (:CAR . A)
+5. Trace: (LISP2LI '(+ 1 2) 'NIL)
+6. Trace: (GET-DEFUN '+)
+6. Trace: GET-DEFUN ==> NIL
+6. Trace: (MAP-LISP2LI '(1 2) 'NIL)
+7. Trace: (LISP2LI '1 'NIL)
+7. Trace: LISP2LI ==> (:LIT . 1)
+7. Trace: (MAP-LISP2LI '(2) 'NIL)
+8. Trace: (LISP2LI '2 'NIL)
+8. Trace: LISP2LI ==> (:LIT . 2)
+8. Trace: (MAP-LISP2LI 'NIL 'NIL)
+8. Trace: MAP-LISP2LI ==> NIL
+7. Trace: MAP-LISP2LI ==> ((:LIT . 2))
+6. Trace: MAP-LISP2LI ==> ((:LIT . 1) (:LIT . 2))
+5. Trace: LISP2LI ==> (:CALL + (:LIT . 1) (:LIT . 2))
+5. Trace: (CASE-LISP2LI 'NIL 'NIL)
+5. Trace: CASE-LISP2LI ==> NIL
+4. Trace: CASE-LISP2LI ==> ((:CAR . A) (:CALL + (:LIT . 1) (:LIT . 2)) NIL)
+3. Trace: CASE-LISP2LI ==> 
+((:CAR . B) (:CALL + (:LIT . 1) (:LIT . 0))
+ ((:CAR . A) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+2. Trace: CASE-LISP2LI ==> 
+((:CAR . A) (:CAR . B) (:CALL + (:LIT . 1) (:LIT . 0))
+ ((:CAR . A) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+1. Trace: LISP2LI ==> 
+(:CASE (:CAR . A) (:CAR . B) (:CALL + (:LIT . 1) (:LIT . 0))
+ ((:CAR . A) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+1. Trace: 
+(EVALLI
+ '(:CASE (:CAR . A) (:CAR . B) (:CALL + (:LIT . 1) (:LIT . 0))
+   ((:CAR . A) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+ 'NIL)
+2. Trace: (EVALLI '(:CAR . A) 'NIL)
+2. Trace: EVALLI ==> A
+2. Trace: 
+(MAP-CASE-EVALLI 'A
+ '((:CAR . B) (:CALL + (:LIT . 1) (:LIT . 0))
+   ((:CAR . A) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+ 'NIL)
+3. Trace: (EVALLI '(:CAR . B) 'NIL)
+3. Trace: EVALLI ==> B
+3. Trace: (MAP-CASE-EVALLI 'A '((:CAR . A) (:CALL + (:LIT . 1) (:LIT . 2)) NIL) 'NIL)
+4. Trace: (EVALLI '(:CAR . A) 'NIL)
+4. Trace: EVALLI ==> A
+4. Trace: (EVALLI '(:CALL + (:LIT . 1) (:LIT . 2)) 'NIL)
+5. Trace: (MAP-EVALLI '((:LIT . 1) (:LIT . 2)) 'NIL)
+6. Trace: (EVALLI '(:LIT . 1) 'NIL)
+6. Trace: EVALLI ==> 1
+6. Trace: (MAP-EVALLI '((:LIT . 2)) 'NIL)
+7. Trace: (EVALLI '(:LIT . 2) 'NIL)
+7. Trace: EVALLI ==> 2
+7. Trace: (MAP-EVALLI 'NIL 'NIL)
+7. Trace: MAP-EVALLI ==> NIL
+6. Trace: MAP-EVALLI ==> (2)
+5. Trace: MAP-EVALLI ==> (1 2)
+4. Trace: EVALLI ==> 3
+3. Trace: MAP-CASE-EVALLI ==> 3
+2. Trace: MAP-CASE-EVALLI ==> 3
+1. Trace: EVALLI ==> 3
+3
+
+
+
+
+/**************** essai avec fact ****************/
+> (lisp2li '(defun fact (n) (if (= n 0) 1 (* (fact(- n 1)) n))) nil)
+1. Trace: (LISP2LI '(DEFUN FACT (N) (IF (= N 0) 1 (* (FACT (- N 1)) N))) 'NIL)
+2. Trace: (GET-DEFUN 'DEFUN)
+2. Trace: GET-DEFUN ==> NIL
+2. Trace: (LISP2LI '(IF (= N 0) 1 (* (FACT (- N 1)) N)) '(N))
+3. Trace: (GET-DEFUN 'IF)
+3. Trace: GET-DEFUN ==> NIL
+3. Trace: (LISP2LI '(= N 0) '(N))
+4. Trace: (GET-DEFUN '=)
+4. Trace: GET-DEFUN ==> NIL
+4. Trace: (MAP-LISP2LI '(N 0) '(N))
+5. Trace: (LISP2LI 'N '(N))
+5. Trace: LISP2LI ==> (:VAR . 1)
+5. Trace: (MAP-LISP2LI '(0) '(N))
+6. Trace: (LISP2LI '0 '(N))
+6. Trace: LISP2LI ==> (:LIT . 0)
+6. Trace: (MAP-LISP2LI 'NIL '(N))
+6. Trace: MAP-LISP2LI ==> NIL
+5. Trace: MAP-LISP2LI ==> ((:LIT . 0))
+4. Trace: MAP-LISP2LI ==> ((:VAR . 1) (:LIT . 0))
+3. Trace: LISP2LI ==> (:CALL = (:VAR . 1) (:LIT . 0))
+3. Trace: (LISP2LI '1 '(N))
+3. Trace: LISP2LI ==> (:LIT . 1)
+3. Trace: (LISP2LI '(* (FACT (- N 1)) N) '(N))
+4. Trace: (GET-DEFUN '*)
+4. Trace: GET-DEFUN ==> NIL
+4. Trace: (MAP-LISP2LI '((FACT (- N 1)) N) '(N))
+5. Trace: (LISP2LI '(FACT (- N 1)) '(N))
+6. Trace: (GET-DEFUN 'FACT)
+6. Trace: GET-DEFUN ==> NIL
+5. Trace: LISP2LI ==> (:UNKNOWN (FACT (- N 1)) (N))
+5. Trace: (MAP-LISP2LI '(N) '(N))
+6. Trace: (LISP2LI 'N '(N))
+6. Trace: LISP2LI ==> (:VAR . 1)
+6. Trace: (MAP-LISP2LI 'NIL '(N))
+6. Trace: MAP-LISP2LI ==> NIL
+5. Trace: MAP-LISP2LI ==> ((:VAR . 1))
+4. Trace: MAP-LISP2LI ==> ((:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1))
+3. Trace: LISP2LI ==> (:CALL * (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1))
+2. Trace: LISP2LI ==> 
+(:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+ (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1))
+1. Trace: LISP2LI ==> 
+(:CALL SET-DEFUN (:LIT . FACT)
+ (:LIT :LAMBDA 1
+  (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+   (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1))))
+(:CALL SET-DEFUN (:LIT . FACT)
+ (:LIT :LAMBDA 1
+  (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+   (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1))))
+> (evalLi (lisp2li '(defun fact (n) (if (= n 0) 1 (* (fact(- n 1)) n))) nil)nil)
+1. Trace: (LISP2LI '(DEFUN FACT (N) (IF (= N 0) 1 (* (FACT (- N 1)) N))) 'NIL)
+2. Trace: (GET-DEFUN 'DEFUN)
+2. Trace: GET-DEFUN ==> NIL
+2. Trace: (LISP2LI '(IF (= N 0) 1 (* (FACT (- N 1)) N)) '(N))
+3. Trace: (GET-DEFUN 'IF)
+3. Trace: GET-DEFUN ==> NIL
+3. Trace: (LISP2LI '(= N 0) '(N))
+4. Trace: (GET-DEFUN '=)
+4. Trace: GET-DEFUN ==> NIL
+4. Trace: (MAP-LISP2LI '(N 0) '(N))
+5. Trace: (LISP2LI 'N '(N))
+5. Trace: LISP2LI ==> (:VAR . 1)
+5. Trace: (MAP-LISP2LI '(0) '(N))
+6. Trace: (LISP2LI '0 '(N))
+6. Trace: LISP2LI ==> (:LIT . 0)
+6. Trace: (MAP-LISP2LI 'NIL '(N))
+6. Trace: MAP-LISP2LI ==> NIL
+5. Trace: MAP-LISP2LI ==> ((:LIT . 0))
+4. Trace: MAP-LISP2LI ==> ((:VAR . 1) (:LIT . 0))
+3. Trace: LISP2LI ==> (:CALL = (:VAR . 1) (:LIT . 0))
+3. Trace: (LISP2LI '1 '(N))
+3. Trace: LISP2LI ==> (:LIT . 1)
+3. Trace: (LISP2LI '(* (FACT (- N 1)) N) '(N))
+4. Trace: (GET-DEFUN '*)
+4. Trace: GET-DEFUN ==> NIL
+4. Trace: (MAP-LISP2LI '((FACT (- N 1)) N) '(N))
+5. Trace: (LISP2LI '(FACT (- N 1)) '(N))
+6. Trace: (GET-DEFUN 'FACT)
+6. Trace: GET-DEFUN ==> NIL
+5. Trace: LISP2LI ==> (:UNKNOWN (FACT (- N 1)) (N))
+5. Trace: (MAP-LISP2LI '(N) '(N))
+6. Trace: (LISP2LI 'N '(N))
+6. Trace: LISP2LI ==> (:VAR . 1)
+6. Trace: (MAP-LISP2LI 'NIL '(N))
+6. Trace: MAP-LISP2LI ==> NIL
+5. Trace: MAP-LISP2LI ==> ((:VAR . 1))
+4. Trace: MAP-LISP2LI ==> ((:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1))
+3. Trace: LISP2LI ==> (:CALL * (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1))
+2. Trace: LISP2LI ==> 
+(:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+ (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1))
+1. Trace: LISP2LI ==> 
+(:CALL SET-DEFUN (:LIT . FACT)
+ (:LIT :LAMBDA 1
+  (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+   (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1))))
+1. Trace: 
+(EVALLI
+ '(:CALL SET-DEFUN (:LIT . FACT)
+   (:LIT :LAMBDA 1
+    (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+     (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1))))
+ 'NIL)
+2. Trace: 
+(MAP-EVALLI
+ '((:LIT . FACT)
+   (:LIT :LAMBDA 1
+    (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+     (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1))))
+ 'NIL)
+3. Trace: (EVALLI '(:LIT . FACT) 'NIL)
+3. Trace: EVALLI ==> FACT
+3. Trace: 
+(MAP-EVALLI
+ '((:LIT :LAMBDA 1
+    (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+     (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1))))
+ 'NIL)
+4. Trace: 
+(EVALLI
+ '(:LIT :LAMBDA 1
+   (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+    (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1)))
+ 'NIL)
+4. Trace: EVALLI ==> 
+(:LAMBDA 1
+ (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+  (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1)))
+4. Trace: (MAP-EVALLI 'NIL 'NIL)
+4. Trace: MAP-EVALLI ==> NIL
+3. Trace: MAP-EVALLI ==> 
+((:LAMBDA 1
+  (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+   (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1))))
+2. Trace: MAP-EVALLI ==> 
+(FACT
+ (:LAMBDA 1
+  (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+   (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1))))
+2. Trace: 
+(SET-DEFUN 'FACT
+ '(:LAMBDA 1
+   (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+    (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1))))
+2. Trace: SET-DEFUN ==> 
+(:LAMBDA 1
+ (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+  (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1)))
+1. Trace: EVALLI ==> 
+(:LAMBDA 1
+ (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+  (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1)))
+(:LAMBDA 1
+ (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+  (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1)))
+> (lisp2li '(fact 0) nil)
+1. Trace: (LISP2LI '(FACT 0) 'NIL)
+2. Trace: (GET-DEFUN 'FACT)
+2. Trace: GET-DEFUN ==> 
+(:LAMBDA 1
+ (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+  (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1)))
+2. Trace: (MAP-LISP2LI '(0) 'NIL)
+3. Trace: (LISP2LI '0 'NIL)
+3. Trace: LISP2LI ==> (:LIT . 0)
+3. Trace: (MAP-LISP2LI 'NIL 'NIL)
+3. Trace: MAP-LISP2LI ==> NIL
+2. Trace: MAP-LISP2LI ==> ((:LIT . 0))
+1. Trace: LISP2LI ==> (:MCALL FACT (:LIT . 0))
+(:MCALL FACT (:LIT . 0))
+> (evalLi (lisp2li '(fact 0) nil) nil)
+1. Trace: (LISP2LI '(FACT 0) 'NIL)
+2. Trace: (GET-DEFUN 'FACT)
+2. Trace: GET-DEFUN ==> 
+(:LAMBDA 1
+ (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+  (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1)))
+2. Trace: (MAP-LISP2LI '(0) 'NIL)
+3. Trace: (LISP2LI '0 'NIL)
+3. Trace: LISP2LI ==> (:LIT . 0)
+3. Trace: (MAP-LISP2LI 'NIL 'NIL)
+3. Trace: MAP-LISP2LI ==> NIL
+2. Trace: MAP-LISP2LI ==> ((:LIT . 0))
+1. Trace: LISP2LI ==> (:MCALL FACT (:LIT . 0))
+1. Trace: (EVALLI '(:MCALL FACT (:LIT . 0)) 'NIL)
+2. Trace: (GET-DEFUN 'FACT)
+2. Trace: GET-DEFUN ==> 
+(:LAMBDA 1
+ (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+  (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1)))
+2. Trace: (MAP-MCALL-EVALLI '((:LIT . 0)) 'NIL)
+3. Trace: (EVALLI '(:LIT . 0) 'NIL)
+3. Trace: EVALLI ==> 0
+3. Trace: (MAP-EVALLI 'NIL 'NIL)
+3. Trace: MAP-EVALLI ==> NIL
+2. Trace: MAP-MCALL-EVALLI ==> (0)
+2. Trace: (MAKE-ENV-EVALLI '(0) 'NIL '#(NIL NIL) '1)
+3. Trace: (MAKE-ENV-EVALLI 'NIL 'NIL '#(NIL 0) '2)
+3. Trace: MAKE-ENV-EVALLI ==> #(NIL 0)
+2. Trace: MAKE-ENV-EVALLI ==> #(NIL 0)
+2. Trace: 
+(EVALLI
+ '(:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+   (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1))
+ '#(NIL 0))
+3. Trace: (EVALLI '(:CALL = (:VAR . 1) (:LIT . 0)) '#(NIL 0))
+4. Trace: (MAP-EVALLI '((:VAR . 1) (:LIT . 0)) '#(NIL 0))
+5. Trace: (EVALLI '(:VAR . 1) '#(NIL 0))
+5. Trace: EVALLI ==> 0
+5. Trace: (MAP-EVALLI '((:LIT . 0)) '#(NIL 0))
+6. Trace: (EVALLI '(:LIT . 0) '#(NIL 0))
+6. Trace: EVALLI ==> 0
+6. Trace: (MAP-EVALLI 'NIL '#(NIL 0))
+6. Trace: MAP-EVALLI ==> NIL
+5. Trace: MAP-EVALLI ==> (0)
+4. Trace: MAP-EVALLI ==> (0 0)
+3. Trace: EVALLI ==> T
+3. Trace: (EVALLI '(:LIT . 1) '#(NIL 0))
+3. Trace: EVALLI ==> 1
+2. Trace: EVALLI ==> 1
+1. Trace: EVALLI ==> 1
+1
+> (evalLi (lisp2li '(fact 4) nil) nil)
+1. Trace: (LISP2LI '(FACT 4) 'NIL)
+2. Trace: (GET-DEFUN 'FACT)
+2. Trace: GET-DEFUN ==> 
+(:LAMBDA 1
+ (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+  (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1)))
+2. Trace: (MAP-LISP2LI '(4) 'NIL)
+3. Trace: (LISP2LI '4 'NIL)
+3. Trace: LISP2LI ==> (:LIT . 4)
+3. Trace: (MAP-LISP2LI 'NIL 'NIL)
+3. Trace: MAP-LISP2LI ==> NIL
+2. Trace: MAP-LISP2LI ==> ((:LIT . 4))
+1. Trace: LISP2LI ==> (:MCALL FACT (:LIT . 4))
+1. Trace: (EVALLI '(:MCALL FACT (:LIT . 4)) 'NIL)
+2. Trace: (GET-DEFUN 'FACT)
+2. Trace: GET-DEFUN ==> 
+(:LAMBDA 1
+ (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+  (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1)))
+2. Trace: (MAP-MCALL-EVALLI '((:LIT . 4)) 'NIL)
+3. Trace: (EVALLI '(:LIT . 4) 'NIL)
+3. Trace: EVALLI ==> 4
+3. Trace: (MAP-EVALLI 'NIL 'NIL)
+3. Trace: MAP-EVALLI ==> NIL
+2. Trace: MAP-MCALL-EVALLI ==> (4)
+2. Trace: (MAKE-ENV-EVALLI '(4) 'NIL '#(NIL NIL) '1)
+3. Trace: (MAKE-ENV-EVALLI 'NIL 'NIL '#(NIL 4) '2)
+3. Trace: MAKE-ENV-EVALLI ==> #(NIL 4)
+2. Trace: MAKE-ENV-EVALLI ==> #(NIL 4)
+2. Trace: 
+(EVALLI
+ '(:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+   (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1))
+ '#(NIL 4))
+3. Trace: (EVALLI '(:CALL = (:VAR . 1) (:LIT . 0)) '#(NIL 4))
+4. Trace: (MAP-EVALLI '((:VAR . 1) (:LIT . 0)) '#(NIL 4))
+5. Trace: (EVALLI '(:VAR . 1) '#(NIL 4))
+5. Trace: EVALLI ==> 4
+5. Trace: (MAP-EVALLI '((:LIT . 0)) '#(NIL 4))
+6. Trace: (EVALLI '(:LIT . 0) '#(NIL 4))
+6. Trace: EVALLI ==> 0
+6. Trace: (MAP-EVALLI 'NIL '#(NIL 4))
+6. Trace: MAP-EVALLI ==> NIL
+5. Trace: MAP-EVALLI ==> (0)
+4. Trace: MAP-EVALLI ==> (4 0)
+3. Trace: EVALLI ==> NIL
+3. Trace: (EVALLI '(:CALL * (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1)) '#(NIL 4))
+4. Trace: (MAP-EVALLI '((:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1)) '#(NIL 4))
+5. Trace: (EVALLI '(:UNKNOWN (FACT (- N 1)) (N)) '#(NIL 4))
+6. Trace: (LISP2LI '(FACT (- N 1)) '(N))
+7. Trace: (GET-DEFUN 'FACT)
+7. Trace: GET-DEFUN ==> 
+(:LAMBDA 1
+ (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+  (:UNKNOWN (FACT (- N 1)) (N)) (:VAR . 1)))
+7. Trace: (MAP-LISP2LI '((- N 1)) '(N))
+8. Trace: (LISP2LI '(- N 1) '(N))
+9. Trace: (GET-DEFUN '-)
+9. Trace: GET-DEFUN ==> NIL
+9. Trace: (MAP-LISP2LI '(N 1) '(N))
+10. Trace: (LISP2LI 'N '(N))
+10. Trace: LISP2LI ==> (:VAR . 1)
+10. Trace: (MAP-LISP2LI '(1) '(N))
+11. Trace: (LISP2LI '1 '(N))
+11. Trace: LISP2LI ==> (:LIT . 1)
+11. Trace: (MAP-LISP2LI 'NIL '(N))
+11. Trace: MAP-LISP2LI ==> NIL
+10. Trace: MAP-LISP2LI ==> ((:LIT . 1))
+9. Trace: MAP-LISP2LI ==> ((:VAR . 1) (:LIT . 1))
+8. Trace: LISP2LI ==> (:CALL - (:VAR . 1) (:LIT . 1))
+8. Trace: (MAP-LISP2LI 'NIL '(N))
+8. Trace: MAP-LISP2LI ==> NIL
+7. Trace: MAP-LISP2LI ==> ((:CALL - (:VAR . 1) (:LIT . 1)))
+6. Trace: LISP2LI ==> (:MCALL FACT (:CALL - (:VAR . 1) (:LIT . 1)))
+6. Trace: 
+(DISPLACE '(:UNKNOWN (FACT (- N 1)) (N))
+ '(:MCALL FACT (:CALL - (:VAR . 1) (:LIT . 1))))
+6. Trace: DISPLACE ==> (:MCALL FACT (:CALL - (:VAR . 1) (:LIT . 1)))
+6. Trace: (EVALLI '(:MCALL FACT (:CALL - (:VAR . 1) (:LIT . 1))) '#(NIL 4))
+7. Trace: (GET-DEFUN 'FACT)
+7. Trace: GET-DEFUN ==> 
+(:LAMBDA 1
+ (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+  (:MCALL FACT (:CALL - (:VAR . 1) (:LIT . 1))) (:VAR . 1)))
+7. Trace: (MAP-MCALL-EVALLI '((:CALL - (:VAR . 1) (:LIT . 1))) '#(NIL 4))
+8. Trace: (EVALLI '(:CALL - (:VAR . 1) (:LIT . 1)) '#(NIL 4))
+9. Trace: (MAP-EVALLI '((:VAR . 1) (:LIT . 1)) '#(NIL 4))
+10. Trace: (EVALLI '(:VAR . 1) '#(NIL 4))
+10. Trace: EVALLI ==> 4
+10. Trace: (MAP-EVALLI '((:LIT . 1)) '#(NIL 4))
+11. Trace: (EVALLI '(:LIT . 1) '#(NIL 4))
+11. Trace: EVALLI ==> 1
+11. Trace: (MAP-EVALLI 'NIL '#(NIL 4))
+11. Trace: MAP-EVALLI ==> NIL
+10. Trace: MAP-EVALLI ==> (1)
+9. Trace: MAP-EVALLI ==> (4 1)
+8. Trace: EVALLI ==> 3
+8. Trace: (MAP-EVALLI 'NIL '#(NIL 4))
+8. Trace: MAP-EVALLI ==> NIL
+7. Trace: MAP-MCALL-EVALLI ==> (3)
+7. Trace: (MAKE-ENV-EVALLI '(3) '#(NIL 4) '#(NIL NIL) '1)
+8. Trace: (MAKE-ENV-EVALLI 'NIL '#(NIL 4) '#(NIL 3) '2)
+8. Trace: MAKE-ENV-EVALLI ==> #(NIL 3)
+7. Trace: MAKE-ENV-EVALLI ==> #(NIL 3)
+7. Trace: 
+(EVALLI
+ '(:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+   (:MCALL FACT (:CALL - (:VAR . 1) (:LIT . 1))) (:VAR . 1))
+ '#(NIL 3))
+8. Trace: (EVALLI '(:CALL = (:VAR . 1) (:LIT . 0)) '#(NIL 3))
+9. Trace: (MAP-EVALLI '((:VAR . 1) (:LIT . 0)) '#(NIL 3))
+10. Trace: (EVALLI '(:VAR . 1) '#(NIL 3))
+10. Trace: EVALLI ==> 3
+10. Trace: (MAP-EVALLI '((:LIT . 0)) '#(NIL 3))
+11. Trace: (EVALLI '(:LIT . 0) '#(NIL 3))
+11. Trace: EVALLI ==> 0
+11. Trace: (MAP-EVALLI 'NIL '#(NIL 3))
+11. Trace: MAP-EVALLI ==> NIL
+10. Trace: MAP-EVALLI ==> (0)
+9. Trace: MAP-EVALLI ==> (3 0)
+8. Trace: EVALLI ==> NIL
+8. Trace: 
+(EVALLI '(:CALL * (:MCALL FACT (:CALL - (:VAR . 1) (:LIT . 1))) (:VAR . 1))
+ '#(NIL 3))
+9. Trace: 
+(MAP-EVALLI '((:MCALL FACT (:CALL - (:VAR . 1) (:LIT . 1))) (:VAR . 1))
+ '#(NIL 3))
+10. Trace: (EVALLI '(:MCALL FACT (:CALL - (:VAR . 1) (:LIT . 1))) '#(NIL 3))
+11. Trace: (GET-DEFUN 'FACT)
+11. Trace: GET-DEFUN ==> 
+(:LAMBDA 1
+ (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+  (:MCALL FACT (:CALL - (:VAR . 1) (:LIT . 1))) (:VAR . 1)))
+11. Trace: (MAP-MCALL-EVALLI '((:CALL - (:VAR . 1) (:LIT . 1))) '#(NIL 3))
+12. Trace: (EVALLI '(:CALL - (:VAR . 1) (:LIT . 1)) '#(NIL 3))
+13. Trace: (MAP-EVALLI '((:VAR . 1) (:LIT . 1)) '#(NIL 3))
+14. Trace: (EVALLI '(:VAR . 1) '#(NIL 3))
+14. Trace: EVALLI ==> 3
+14. Trace: (MAP-EVALLI '((:LIT . 1)) '#(NIL 3))
+15. Trace: (EVALLI '(:LIT . 1) '#(NIL 3))
+15. Trace: EVALLI ==> 1
+15. Trace: (MAP-EVALLI 'NIL '#(NIL 3))
+15. Trace: MAP-EVALLI ==> NIL
+14. Trace: MAP-EVALLI ==> (1)
+13. Trace: MAP-EVALLI ==> (3 1)
+12. Trace: EVALLI ==> 2
+12. Trace: (MAP-EVALLI 'NIL '#(NIL 3))
+12. Trace: MAP-EVALLI ==> NIL
+11. Trace: MAP-MCALL-EVALLI ==> (2)
+11. Trace: (MAKE-ENV-EVALLI '(2) '#(NIL 3) '#(NIL NIL) '1)
+12. Trace: (MAKE-ENV-EVALLI 'NIL '#(NIL 3) '#(NIL 2) '2)
+12. Trace: MAKE-ENV-EVALLI ==> #(NIL 2)
+11. Trace: MAKE-ENV-EVALLI ==> #(NIL 2)
+11. Trace: 
+(EVALLI
+ '(:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+   (:MCALL FACT (:CALL - (:VAR . 1) (:LIT . 1))) (:VAR . 1))
+ '#(NIL 2))
+12. Trace: (EVALLI '(:CALL = (:VAR . 1) (:LIT . 0)) '#(NIL 2))
+13. Trace: (MAP-EVALLI '((:VAR . 1) (:LIT . 0)) '#(NIL 2))
+14. Trace: (EVALLI '(:VAR . 1) '#(NIL 2))
+14. Trace: EVALLI ==> 2
+14. Trace: (MAP-EVALLI '((:LIT . 0)) '#(NIL 2))
+15. Trace: (EVALLI '(:LIT . 0) '#(NIL 2))
+15. Trace: EVALLI ==> 0
+15. Trace: (MAP-EVALLI 'NIL '#(NIL 2))
+15. Trace: MAP-EVALLI ==> NIL
+14. Trace: MAP-EVALLI ==> (0)
+13. Trace: MAP-EVALLI ==> (2 0)
+12. Trace: EVALLI ==> NIL
+12. Trace: 
+(EVALLI '(:CALL * (:MCALL FACT (:CALL - (:VAR . 1) (:LIT . 1))) (:VAR . 1))
+ '#(NIL 2))
+13. Trace: 
+(MAP-EVALLI '((:MCALL FACT (:CALL - (:VAR . 1) (:LIT . 1))) (:VAR . 1))
+ '#(NIL 2))
+14. Trace: (EVALLI '(:MCALL FACT (:CALL - (:VAR . 1) (:LIT . 1))) '#(NIL 2))
+15. Trace: (GET-DEFUN 'FACT)
+15. Trace: GET-DEFUN ==> 
+(:LAMBDA 1
+ (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+  (:MCALL FACT (:CALL - (:VAR . 1) (:LIT . 1))) (:VAR . 1)))
+15. Trace: (MAP-MCALL-EVALLI '((:CALL - (:VAR . 1) (:LIT . 1))) '#(NIL 2))
+16. Trace: (EVALLI '(:CALL - (:VAR . 1) (:LIT . 1)) '#(NIL 2))
+17. Trace: (MAP-EVALLI '((:VAR . 1) (:LIT . 1)) '#(NIL 2))
+18. Trace: (EVALLI '(:VAR . 1) '#(NIL 2))
+18. Trace: EVALLI ==> 2
+18. Trace: (MAP-EVALLI '((:LIT . 1)) '#(NIL 2))
+19. Trace: (EVALLI '(:LIT . 1) '#(NIL 2))
+19. Trace: EVALLI ==> 1
+19. Trace: (MAP-EVALLI 'NIL '#(NIL 2))
+19. Trace: MAP-EVALLI ==> NIL
+18. Trace: MAP-EVALLI ==> (1)
+17. Trace: MAP-EVALLI ==> (2 1)
+16. Trace: EVALLI ==> 1
+16. Trace: (MAP-EVALLI 'NIL '#(NIL 2))
+16. Trace: MAP-EVALLI ==> NIL
+15. Trace: MAP-MCALL-EVALLI ==> (1)
+15. Trace: (MAKE-ENV-EVALLI '(1) '#(NIL 2) '#(NIL NIL) '1)
+16. Trace: (MAKE-ENV-EVALLI 'NIL '#(NIL 2) '#(NIL 1) '2)
+16. Trace: MAKE-ENV-EVALLI ==> #(NIL 1)
+15. Trace: MAKE-ENV-EVALLI ==> #(NIL 1)
+15. Trace: 
+(EVALLI
+ '(:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+   (:MCALL FACT (:CALL - (:VAR . 1) (:LIT . 1))) (:VAR . 1))
+ '#(NIL 1))
+16. Trace: (EVALLI '(:CALL = (:VAR . 1) (:LIT . 0)) '#(NIL 1))
+17. Trace: (MAP-EVALLI '((:VAR . 1) (:LIT . 0)) '#(NIL 1))
+18. Trace: (EVALLI '(:VAR . 1) '#(NIL 1))
+18. Trace: EVALLI ==> 1
+18. Trace: (MAP-EVALLI '((:LIT . 0)) '#(NIL 1))
+19. Trace: (EVALLI '(:LIT . 0) '#(NIL 1))
+19. Trace: EVALLI ==> 0
+19. Trace: (MAP-EVALLI 'NIL '#(NIL 1))
+19. Trace: MAP-EVALLI ==> NIL
+18. Trace: MAP-EVALLI ==> (0)
+17. Trace: MAP-EVALLI ==> (1 0)
+16. Trace: EVALLI ==> NIL
+16. Trace: 
+(EVALLI '(:CALL * (:MCALL FACT (:CALL - (:VAR . 1) (:LIT . 1))) (:VAR . 1))
+ '#(NIL 1))
+17. Trace: 
+(MAP-EVALLI '((:MCALL FACT (:CALL - (:VAR . 1) (:LIT . 1))) (:VAR . 1))
+ '#(NIL 1))
+18. Trace: (EVALLI '(:MCALL FACT (:CALL - (:VAR . 1) (:LIT . 1))) '#(NIL 1))
+19. Trace: (GET-DEFUN 'FACT)
+19. Trace: GET-DEFUN ==> 
+(:LAMBDA 1
+ (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+  (:MCALL FACT (:CALL - (:VAR . 1) (:LIT . 1))) (:VAR . 1)))
+19. Trace: (MAP-MCALL-EVALLI '((:CALL - (:VAR . 1) (:LIT . 1))) '#(NIL 1))
+20. Trace: (EVALLI '(:CALL - (:VAR . 1) (:LIT . 1)) '#(NIL 1))
+21. Trace: (MAP-EVALLI '((:VAR . 1) (:LIT . 1)) '#(NIL 1))
+22. Trace: (EVALLI '(:VAR . 1) '#(NIL 1))
+22. Trace: EVALLI ==> 1
+22. Trace: (MAP-EVALLI '((:LIT . 1)) '#(NIL 1))
+23. Trace: (EVALLI '(:LIT . 1) '#(NIL 1))
+23. Trace: EVALLI ==> 1
+23. Trace: (MAP-EVALLI 'NIL '#(NIL 1))
+23. Trace: MAP-EVALLI ==> NIL
+22. Trace: MAP-EVALLI ==> (1)
+21. Trace: MAP-EVALLI ==> (1 1)
+20. Trace: EVALLI ==> 0
+20. Trace: (MAP-EVALLI 'NIL '#(NIL 1))
+20. Trace: MAP-EVALLI ==> NIL
+19. Trace: MAP-MCALL-EVALLI ==> (0)
+19. Trace: (MAKE-ENV-EVALLI '(0) '#(NIL 1) '#(NIL NIL) '1)
+20. Trace: (MAKE-ENV-EVALLI 'NIL '#(NIL 1) '#(NIL 0) '2)
+20. Trace: MAKE-ENV-EVALLI ==> #(NIL 0)
+19. Trace: MAKE-ENV-EVALLI ==> #(NIL 0)
+19. Trace: 
+(EVALLI
+ '(:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL *
+   (:MCALL FACT (:CALL - (:VAR . 1) (:LIT . 1))) (:VAR . 1))
+ '#(NIL 0))
+20. Trace: (EVALLI '(:CALL = (:VAR . 1) (:LIT . 0)) '#(NIL 0))
+21. Trace: (MAP-EVALLI '((:VAR . 1) (:LIT . 0)) '#(NIL 0))
+22. Trace: (EVALLI '(:VAR . 1) '#(NIL 0))
+22. Trace: EVALLI ==> 0
+22. Trace: (MAP-EVALLI '((:LIT . 0)) '#(NIL 0))
+23. Trace: (EVALLI '(:LIT . 0) '#(NIL 0))
+23. Trace: EVALLI ==> 0
+23. Trace: (MAP-EVALLI 'NIL '#(NIL 0))
+23. Trace: MAP-EVALLI ==> NIL
+22. Trace: MAP-EVALLI ==> (0)
+21. Trace: MAP-EVALLI ==> (0 0)
+20. Trace: EVALLI ==> T
+20. Trace: (EVALLI '(:LIT . 1) '#(NIL 0))
+20. Trace: EVALLI ==> 1
+19. Trace: EVALLI ==> 1
+18. Trace: EVALLI ==> 1
+18. Trace: (MAP-EVALLI '((:VAR . 1)) '#(NIL 1))
+19. Trace: (EVALLI '(:VAR . 1) '#(NIL 1))
+19. Trace: EVALLI ==> 1
+19. Trace: (MAP-EVALLI 'NIL '#(NIL 1))
+19. Trace: MAP-EVALLI ==> NIL
+18. Trace: MAP-EVALLI ==> (1)
+17. Trace: MAP-EVALLI ==> (1 1)
+16. Trace: EVALLI ==> 1
+15. Trace: EVALLI ==> 1
+14. Trace: EVALLI ==> 1
+14. Trace: (MAP-EVALLI '((:VAR . 1)) '#(NIL 2))
+15. Trace: (EVALLI '(:VAR . 1) '#(NIL 2))
+15. Trace: EVALLI ==> 2
+15. Trace: (MAP-EVALLI 'NIL '#(NIL 2))
+15. Trace: MAP-EVALLI ==> NIL
+14. Trace: MAP-EVALLI ==> (2)
+13. Trace: MAP-EVALLI ==> (1 2)
+12. Trace: EVALLI ==> 2
+11. Trace: EVALLI ==> 2
+10. Trace: EVALLI ==> 2
+10. Trace: (MAP-EVALLI '((:VAR . 1)) '#(NIL 3))
+11. Trace: (EVALLI '(:VAR . 1) '#(NIL 3))
+11. Trace: EVALLI ==> 3
+11. Trace: (MAP-EVALLI 'NIL '#(NIL 3))
+11. Trace: MAP-EVALLI ==> NIL
+10. Trace: MAP-EVALLI ==> (3)
+9. Trace: MAP-EVALLI ==> (2 3)
+8. Trace: EVALLI ==> 6
+7. Trace: EVALLI ==> 6
+6. Trace: EVALLI ==> 6
+5. Trace: EVALLI ==> 6
+5. Trace: (MAP-EVALLI '((:VAR . 1)) '#(NIL 4))
+6. Trace: (EVALLI '(:VAR . 1) '#(NIL 4))
+6. Trace: EVALLI ==> 4
+6. Trace: (MAP-EVALLI 'NIL '#(NIL 4))
+6. Trace: MAP-EVALLI ==> NIL
+5. Trace: MAP-EVALLI ==> (4)
+4. Trace: MAP-EVALLI ==> (6 4)
+3. Trace: EVALLI ==> 24
+2. Trace: EVALLI ==> 24
+1. Trace: EVALLI ==> 24
+24
+
+
+/**************** essai avec lisp2li ****************/
+
+
+(defun lisp2li (expr env)(if (atom expr)(if (constantp expr)(cons :LIT expr)(if (member expr env)(cons :VAR (+ (position expr env) 1))(cons :CAR expr)))(let ((fun (car expr)) (args (cdr expr)))(if (consp fun) (if (eq 'lambda (car fun))(warn "lambda pas traité ~s" (car fun))(warn "une expression evaluable ne commence pas par (( ~s" expr))(if (not (symbolp fun))(warn "~s n'est pas un symbole" fun) (if (get-defun fun) (cons :MCALL (cons fun (map-lisp2li args env)))(if (not (fboundp fun))`(:UNKNOWN ,expr ,env)(case fun (if `(:IF ,(lisp2li (first args) env) ,(lisp2li (second args) env) . ,(lisp2li (third args) env)))  (quote `(:LIT .,(first args))) (defun `(:CALL SET-DEFUN (:LIT . ,(first args)) (:LIT (:LAMBDA ,(length (second args)) ,(lisp2li (third args)  (second  args))))))(let `(:LET ,(length (car args)) , (let-lisp2li (car args) (addtoenv (car args) env)), (map-lisp2li (cdr args) (addtoenv (car args) env)))) (cond (cons :COND (cond-lisp2li args env))) ; forme special (setf (setf-lisp2li args env))(progn (cons :PROGN (map-lisp2li args env)))(case (cons :CASE (case-lisp2li args env)))(t (if (special-form-p fun)  (warn "reste forme special ~s" fun) (if (macro-function fun) (lisp2li (macroexpand-1 expr) env)(cons :CALL (cons fun (map-lisp2li args env))))))))))))))
+
+
+(defun fact (n) (if (= n 0) 1 (* (fact(- n 1)) n)))
+
+defun fibo (n) (if (<= n 1) 1 (+ (fibo(- n 1)) (fibo(- n 2))))
+
+
+
+((:CALL EQL (:LIT . 1) (:LIT . 1)) (:CALL + (:LIT . 1) (:LIT . 2))
+           ((:CALL EQL (:LIT . 1) (:LIT . 2)) (:CALL + (:LIT . 3) (:LIT . 4))
+            NIL))
+
+(evalLi '(:MCALL MF (:LIT 1 2 3)) nil)
+
+
+((:LIT . 1) (:CALL + (:LIT . 1) (:LIT . 0)) ((:LIT . 2) (:CALL + (:LIT . 1) (:LIT . 2)) NIL))
+
+
+
+> (trace evalLi map-evalLi make-env-evalLi map-mcall-evalLi displace map-progn-evalLi make-env-let-evalLi make-env-let2-evalLi map-case-evalLi map-cond-evalLi)
+> (trace lisp2li map-lisp2li get-defun set-defun let-lisp2li addtoenv setf-lisp2li cond-lisp2li case-lisp2li)
+
+
+
