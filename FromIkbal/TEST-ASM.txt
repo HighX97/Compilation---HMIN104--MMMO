@@ -1,0 +1,104 @@
+(vm-load 'vm '((MOVE 55 R0) (MOVE (- 53 R0) R1) (MULT R1 R0) (STORE R0 (:CONST 1000)) (LOAD 1000 R2) (HALT)))
+
+"############### CHARGEUR ###############" 
+NIL
+
+(vm-run 'vm)
+
+"############### EXECUTION ###############" 
+"Rentre dans MOVE -->" 
+"Rentre dans MOVE -->" 
+"Rentre dans MULT -->" 
+"Rentre dans STORE -->" 
+"Rentre dans LOAD -->" 
+"############### A BIENTOT ################" 
+NIL
+(get-register 'vm 'R2)
+-110
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+(vm-load 'vm '((MOVE 55 R0) (MOVE (- R0 53) R1) (MULT R1 R0) (PUSH R0) (POP R2) (HALT)))
+
+"############### CHARGEUR ###############" 
+NIL
+(vm-run 'vm)
+
+"############### EXECUTION ###############" 
+"Rentre dans MOVE -->" 
+"Rentre dans MOVE -->" 
+"Rentre dans MULT -->" 
+"Rentre dans PUSH -->" 
+"Rentre dans POP -->" 
+"############### A BIENTOT ################" 
+NIL
+(get-register 'vm 'R2)
+110
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ LABELS
+(vm-load 'vm '((MOVE 1 R0) (LABEL KIKI) (MOVE 2 R1) (JMP KIKI) (JMP TOTO) (MOVE 3 R2) (LABEL TOTO)))
+
+"############### CHARGEUR ###############" 
+2. Trace: (GET-REGISTER 'VM 'CO)
+2. Trace: GET-REGISTER ==> 0
+2. Trace: (SET-MEMORY 'VM '0 '(MOVE 1 R0))
+2. Trace: SET-MEMORY ==> (MOVE 1 R0)
+"Creation du label" 
+2. Trace: (SET-MEMORY 'VM '1 '(MOVE 2 R1))
+2. Trace: SET-MEMORY ==> (MOVE 2 R1)
+2. Trace: (SET-MEMORY 'VM '2 '(JMP (:REF 1)))
+2. Trace: SET-MEMORY ==> (JMP (:REF 1))
+2. Trace: (SET-MEMORY 'VM '3 '(JMP TOTO))
+2. Trace: SET-MEMORY ==> (JMP TOTO)
+2. Trace: (SET-MEMORY 'VM '4 '(MOVE 3 R2))
+2. Trace: SET-MEMORY ==> (MOVE 3 R2)
+2. Trace: (GET-MEMORY 'VM '3)
+2. Trace: GET-MEMORY ==> (JMP TOTO)
+2. Trace: (SET-MEMORY 'VM '3 '(JMP (:REF 5)))
+2. Trace: SET-MEMORY ==> (JMP (:REF 5))
+"Creation du label" 
+"Tous les labels ont été résolus." 
+"Tous les labels ont été résolus."
+
+(get-memory 'vm 0) 
+2. Trace: (GET-MEMORY 'VM '0)
+2. Trace: GET-MEMORY ==> (MOVE 1 R0)
+(MOVE 1 R0)
+(get-memory 'vm 1) 
+2. Trace: (GET-MEMORY 'VM '1)
+2. Trace: GET-MEMORY ==> (MOVE 2 R1)
+(MOVE 2 R1)
+(get-memory 'vm 2) 
+2. Trace: (GET-MEMORY 'VM '2)
+2. Trace: GET-MEMORY ==> (JMP (:REF 1))
+(JMP (:REF 1))
+(get-memory 'vm 3) 
+2. Trace: (GET-MEMORY 'VM '3)
+2. Trace: GET-MEMORY ==> (JMP (:REF 5))
+(JMP (:REF 5))
+(get-memory 'vm 4) 
+2. Trace: (GET-MEMORY 'VM '4)
+2. Trace: GET-MEMORY ==> (MOVE 3 R2)
+(MOVE 3 R2)
+(get-memory 'vm 5) 
+2. Trace: (GET-MEMORY 'VM '5)
+2. Trace: GET-MEMORY ==> NIL
+NIL
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+(vm-load 'vm '((MOVE 1 R0) (LABEL KIKI) (MOVE 2 R1) (JMP KIKI) (JMP TOTO) (MOVE 3 R2) ))
+
+"############### CHARGEUR ###############" 
+2. Trace: (GET-REGISTER 'VM 'CO)
+2. Trace: GET-REGISTER ==> 0
+2. Trace: (SET-MEMORY 'VM '0 '(MOVE 1 R0))
+2. Trace: SET-MEMORY ==> (MOVE 1 R0)
+"Creation du label" 
+2. Trace: (SET-MEMORY 'VM '1 '(MOVE 2 R1))
+2. Trace: SET-MEMORY ==> (MOVE 2 R1)
+2. Trace: (SET-MEMORY 'VM '2 '(JMP (:REF 1)))
+2. Trace: SET-MEMORY ==> (JMP (:REF 1))
+2. Trace: (SET-MEMORY 'VM '3 '(JMP TOTO))
+2. Trace: SET-MEMORY ==> (JMP TOTO)
+2. Trace: (SET-MEMORY 'VM '4 '(MOVE 3 R2))
+2. Trace: SET-MEMORY ==> (MOVE 3 R2)
+*** - 1 label(s) non résolu(s).

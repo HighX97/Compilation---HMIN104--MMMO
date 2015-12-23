@@ -1,0 +1,228 @@
+;A FAIRE:
+;voir si je leve une erreure si dans ADD deuxieme n'est pas un registre
+
+;Chargement de la VM
+;pas testé 
+(defun vm-load(vm code )
+  (let ((adr (get-load-adr vm )))
+    (loop while code do 
+	  (let ((instr (car code)))
+	    (setf code (cdr code))
+	    ;charger l'instruction
+	    (setf adr (+ 1 adr))
+	    ))))
+
+;Execution de la VM
+;pas testé
+(defun vm-run (vm)
+  (set-halt vm ())
+  (loop while (get-memory vm (get-register vm 'CO));while (not (get-halt vm))
+	do
+	(vm-run-instr vm (get-memory vm (get-register vm 'CO)))))
+
+;pas testé et je ne connais pas la structure de donnée LEVER UNE ERR SI DEUXIEME PAS REGISTRE
+;simule les instructions assembleur
+(defun vm-run-instr (vm instr)
+ ; (let ((source (get-register vm  (car (cdr instr))))) pas possible car pas utilisé tous le temps
+  (ecase (car instr)
+	 ;OK
+	 (move (print "Rentre dans MOVE -->")
+	       (if (eql (is-register vm (deuxieme instr)) 1)
+		   (if (eql (is-register vm (premier instr)) 1)
+		       (set-register vm (deuxieme instr) (get-register vm (premier instr))) ; premier et deuxieme sont des registres
+		     (if (listp (premier instr))
+			  (let ((calcule (apply (car (premier instr))
+					  (list (get-register vm (car(cdr (premier instr))))
+						(car(cddr(premier instr)))))))
+			    (set-register vm (deuxieme instr) calcule)); premier est une liste
+		       (set-register vm (deuxieme instr) (premier instr))));deuxieme est un registre mais pas premier
+		 (error"~s doit être un registre." (deuxieme instr))); deuxieme n'est pas un registre cas impossible à traiter
+	       (increase-register vm 'CO)
+	       (print "----------------------------------------"))
+		     
+	 ;OK si registre ou valeur PAS OK si calcule    
+	 (push  (print "Rentre dans PUSH -->")
+		(if (eql (is-register vm (premier instr)) 1);(INCR 'SP) (STORE registre 'SP)
+		    (cons (increase-register vm 'SP)(set-memory vm (get-register vm 'SP) (get-register vm (premier instr)))); Si on a un registre
+		  (if (atom (premier instr))
+		      (cons (increase-register vm 'SP) (set-memory vm (get-register vm 'SP) (premier instr))); si c'est juste une valeur
+		    (print "STRUCTURE NON CALCULEE")));si c'est une structure plus complexe je sais pas... encore
+	        (increase-register vm 'CO)
+		(print "----------------------------------------"))
+	 ;ok
+	 (pop  (print "Rentre dans POP -->")
+	       (cons
+		(set-register vm (premier instr) (get-memory vm (get-register vm 'SP)))
+		(decrease-register vm 'SP));(LOAD SP <dest>) (DECR SP)
+	       (increase-register vm 'CO)
+	       (print "----------------------------------------"))
+	 ;##
+	 (load  (print "Rentre dans LOAD -->")
+		(if (listp (premier instr))
+		    (let ((calcule (apply (car (premier instr))
+					  (list (get-register vm (car(cdr (premier instr))))
+						(car(cddr(premier instr)))))))
+		     (set-register vm (deuxieme instr) (get-memory vm calcule)))
+		  (set-register vm (deuxieme instr) (get-memory vm (get-register vm (premier instr)))))
+		(increase-register vm 'CO)
+		(print "----------------------------------------"))	 
+	 ;OK
+	 (store  (print "Rentre dans STORE -->")
+		 (set-memory vm (get-register vm 'SP) (if (eql (is-register vm (premier instr)) 1)
+							 (get-register vm (premier instr))
+						       (premier instr)))
+		 (increase-register vm 'CO)
+		 (print "----------------------------------------"))
+	 ;OK
+	 (add
+	  (print "Rentre dans ADD -->")
+	  (if (eql (is-register vm (premier instr)) 1);(ADD 2 'R0) ajoute 2 à la valeure dans 'R0
+		 (set-register vm (deuxieme instr) (+ (get-register vm (premier instr)) (get-register vm (deuxieme instr))))
+	    (set-register vm (deuxieme instr) (+ (premier instr) (get-register vm (deuxieme instr)))))
+	  (increase-register vm 'CO)
+	  (print "----------------------------------------"))
+	 ;
+	 (sub
+	  (print "Rentre dans SUB -->")
+	  (if (eql (is-register vm (premier instr)) 1)
+	      (set-register vm (deuxieme instr) (- (get-register vm (premier instr)) (get-register vm (deuxieme instr))))
+	    (set-register vm (deuxieme instr) (- (premier instr) (get-register vm (deuxieme instr)))))
+	  (increase-register vm 'CO)
+	  (print "----------------------------------------"))
+
+	 ;
+	 (mult
+	  (print "Rentre dans MULT -->")
+	  (if (eql (is-register vm (premier instr)) 1)
+	      (set-register vm (deuxieme instr) (* (get-register vm (premier instr)) (get-register vm (deuxieme instr))))
+	    (set-register vm (deuxieme instr) (* (premier instr) (get-register vm (deuxieme instr)))))
+	  (increase-register vm 'CO)
+	  (print "----------------------------------------"))
+	 ;
+	 (div
+	  (print "Rentre dans DIV -->")
+	  (if (not (eql (is-register vm (deuxieme instr)) 1))
+	      (error "~s doit être un registre." (deuxieme instr))
+	    (if (eql (get-register vm (deuxieme instr)) 0)
+		(error "Une division par 0 a été rencontrée. ")
+	      (cons
+	       (if (eql (is-register vm (premier instr)) 1)
+		   (set-register vm (deuxieme instr) (/ (get-register vm (premier instr)) (get-register vm (deuxieme instr))))
+		 (set-register vm (deuxieme instr) (/ (premier instr) (get-register vm (deuxieme instr)))))
+	       (increase-register vm 'CO))))
+	  (print "----------------------------------------"))
+	 
+	 (incr (print "Rentre dans INCR -->")
+	       (if (eql (is-register vm (premier instr)) 1)
+		   (increase-register vm (premier instr))
+		 (error"~s doit être un registre." (premier instr)))
+	       (print "----------------------------------------"))
+	 
+	 (decr (print "Rentre dans DECR -->")
+	       (if (eql (is-register vm (premier instr)) 1)
+		   (decrease-register vm (premier instr))
+		 (error"~s doit être un registre." (premier instr)))
+	       (print "----------------------------------------"))
+	  ;PAS FINI
+;	 (cmp
+;	  (if (listp (premier instr))
+;	      (if (listp (deuxieme instr))
+;		  (comp vm (car(cdr (premier instr))) (car(cdr (deuxieme instr))));1er et 2eme liste
+;		(if (is-register vm (deuxieme instr))
+;		    (comp vm (car(cdr (premier instr))) (get-register vm (deuxieme instr)));1er list 2eme reg
+;		  (comp vm (car(cdr (premier instr))) (get-memory vm (deuxieme instr)) )));1er list 2eme num
+;	    (if (listp (deuxieme instr))
+;		(if (is-register vm (premier instr))
+;		    (comp vm (get-register vm (premier instr)) (car(cdr (deuxieme instr)))); 1er reg 2eme list
+;		  (comp vm (get-memory vm (premier instr))(car(cdr(deuxieme instr))) ));1er num 2eme list
+;	      (if (is-register vm (deuxieme instr))
+;		  (if (is-register vm (premier instr))
+;		      (if (is-register vm (deuxieme instr))
+;			  (comp vm (get-register vm (premier instr)) (get-register vm (deuxieme instr))); premier et deuxieme reg
+;			(comp vm (get-register vm (premier instr)) (deuxieme instr))) ;premier reg pas deuxieme
+;		    (if (is-register vm (premier instr))
+;			(comp vm (get-register vm (premier instr) (deuxieme instr))) ;deuxieme reg
+;		      (comp vm (set-memory vm (premier instr)) (set-memory vm (deuxieme instr))))))))) ; pas de reg FAUX !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! traiter la valeur en memoire
+
+	 (cmp
+	  (if (listp (premier instr))
+	      (if (listp (deuxieme instr))
+		  (comp vm (car(cdr (premier instr))) (car(cdr(deuxieme instr))));list list
+		(if (is-register vm (deuxieme instr))
+		    (comp vm (car(cdr (premier instr))) (get-register vm (deuxieme instr)));list reg
+		  (comp vm (car(cdr (premier instr))) (get-memory vm (deuxieme instr)))));list val
+	    (if (is-register vm (premier instr))
+		(if (listp (deuxieme instr))
+		    (comp vm (get-register vm (premier instr)) (car(cdr(deuxieme instr))));reg list
+		  (if (is-register vm (deuxieme instr))
+		      (comp vm (get-register vm (premier instr)) (get-register vm (deuxieme instr)));reg reg
+		    (comp vm (get-register vm (premier instr)) (get-memory vm (deuxieme instr)))));reg val
+	      (if (listp (deuxieme instr))
+		  (comp vm (get-memory vm (premier instr)) (car(cdr(deuxieme instr))));val list
+		(if (is-register vm (deuxieme instr))
+		    (comp vm (get-memory vm (premier instr)) (get-register vm(deuxieme instr)));val reg
+		  (comp vm (get-memory vm (premier instr)) (get-memory vm (deuxieme instr))))))));val val
+	 (jmp ())
+	 (jpp ())
+	 (jpg ())
+	 (jeq ())
+	 (jpe ())
+	 (jge ())
+	 (jne ())
+	 (halt set-halt) ;voir les echappements
+	 (rtn ()) ;retourne la pile et le CO
+	 ('nil ())
+	 ))
+
+
+(defun comp ( vm a b)
+  (if (< a b) 
+      (cons (set-register vm :FPP 1) ;1er < 2eme
+	    (cons (set-register vm :FPG 0)
+		  (set-register vm :FEQ 0)))
+    (if (> a b)
+	(cons (set-register vm :FPP 0) ;1er > 2eme
+	      (cons (set-register vm :FPG 1)
+		    (set-register vm :FEQ 0)))
+      (cons (set-register vm :FPP 0) ; 1er = 2eme
+	    (cons (set-register vm :FPG 0)
+		  (set-register vm :FEQ 1))))))
+
+;uniquement pour alleger le code...
+;retourne la valeur de elem
+;(defun valeur ( vm elem)
+;  (if (eql (is-register vm elem) 1)
+;      (get-register vm elem)
+;    (+ elem 0)));je sais pas comment retourner A CHANGER
+
+;PREMIER et SECOND pas utile mais je m'y retrouve plus facilement
+;retourne R0 pour la liste '(ADD R0 R1)
+;OK
+(defun premier (liste)
+  (car (cdr liste)))
+					
+;retourne R1 pour la liste '(ADD R0 R1)
+;OK
+(defun deuxieme (liste)
+  (car (cddr liste)))
+
+;retourne 1 si source est un registre, nil si non
+;OK
+(defun is-register (nomvm source)
+  (if (eql (get-register nomvm source) 'nil)
+      ()
+    (+ 1 0)))
+
+;incremente le compteur ordinal de + 1
+;OK
+(defun increase-register (vm register)
+  (set-register vm register (+ 1 (get-register vm register))))
+
+;decremente le compteur ordinal de - 1
+;OK
+(defun decrease-register (vm register)
+  (set-register vm register (- (get-register vm register) 1 )))
+;enmagasine la valeur val dans 
+
+(defun set-halt (vm switch)
+  (setf (get vm switch) 1))

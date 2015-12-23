@@ -1,0 +1,436 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;LOAD
+(defun vm-load(vm code )
+  (print "############### CHARGEUR ###############")
+  (clrhash (get vm 'TSR)) ;on supprimme les valeurs de la TSR et de la TRA pour ne pas qu'un label d'un premier chargement soit confondu avec un label d'un autre chargement
+  (clrhash (get vm 'TRA))
+  (let ((adr (get-register vm 'CO )))
+    (loop while code do 
+	  (let ((instr (car code)))
+
+	    (case (car instr)
+		  ('LABEL (if (gethash (car (cdr instr)) (get vm 'TRA))
+			      (cons (set-memory vm (gethash (car (cdr instr)) (get vm 'TRA)) (list (car (get-memory vm (gethash (car (cdr instr)) (get vm 'TRA)))) (list :REF adr)))
+				    (cons (setf (gethash (car (cdr instr)) (get vm 'TSR)) adr)
+					  (remhash (car (cdr instr)) (get vm 'TRA))))
+			    (setf (gethash (car (cdr instr)) (get vm 'TSR)) adr))
+			  (print "Creation du label"));(set-label instr)
+		  
+		  ('JMP (if (gethash (car (cdr instr)) (get vm 'TSR))
+			    (setf instr (list 'JMP (list :REF (gethash (car (cdr instr)) (get vm 'TSR)))))
+			  (setf (gethash (car (cdr instr)) (get vm 'TRA)) adr)));(get-label instr adr asm)
+		  
+		  ('JSR (if (gethash (car (cdr instr)) (get vm 'TSR))
+			    (setf instr (list 'JSR (list :REF (gethash (car (cdr instr)) (get vm 'TSR)))))
+			  (setf (gethash (car (cdr instr)) (get vm 'TRA)) adr)));(get-label instr)
+		  
+		  ('JGT (if (gethash (car (cdr instr)) (get vm 'TSR))
+			    (setf instr (list 'JGT (list :REF (gethash (car (cdr instr)) (get vm 'TSR)))))
+			  (setf (gethash (car (cdr instr)) (get vm 'TRA)) adr)));(get-label instr)
+		  
+		  ('JGE (if (gethash (car (cdr instr)) (get vm 'TSR))
+			    (setf instr (list 'JGE (list :REF (gethash (car (cdr instr)) (get vm 'TSR)))))
+			  (setf (gethash (car (cdr instr)) (get vm 'TRA)) adr)));(get-label instr)
+		  
+		  ('JLT (if (gethash (car (cdr instr)) (get vm 'TSR))
+			    (setf instr (list 'JLT (list :REF (gethash (car (cdr instr)) (get vm 'TSR)))))
+			  (setf (gethash (car (cdr instr)) (get vm 'TRA)) adr)));(get-label instr)
+		  
+		  ('JLE (if (gethash (car (cdr instr)) (get vm 'TSR))
+			    (setf instr (list 'JLE (list :REF (gethash (car (cdr instr)) (get vm 'TSR)))))
+			  (setf (gethash (car (cdr instr)) (get vm 'TRA)) adr)));(get-label instr)
+		  
+		  ('JEQ (if (gethash (car (cdr instr)) (get vm 'TSR))
+			    (setf instr (list 'JEQ (list :REF (gethash (car (cdr instr)) (get vm 'TSR)))))
+			  (setf (gethash (car (cdr instr)) (get vm 'TRA)) adr)));(get-label instr)
+		  
+		  ('JNE (if (gethash (car (cdr instr)) (get vm 'TSR))
+			    (setf instr (list 'JNE (list :REF (gethash (car (cdr instr)) (get vm 'TSR)))))
+			  (setf (gethash (car (cdr instr)) (get vm 'TRA)) adr)));(get-label instr)
+		  
+		  (otherwise )) ;pas sûr (sans-label vm instr adr)
+	    
+	    (if (eql (car instr) 'LABEL) ;si c'est un label on ne l'envoie pas en mémoire, tout le reste doit y aller.
+		(cons (setf code (cdr code))
+		      (setf adr (+ 1 adr)))
+	      (cons (setf code (cdr code))
+		    (cons (set-memory vm adr instr)
+			  (setf adr (+ 1 adr))))))))
+  
+  (if (eql (hash-table-count (get vm 'TRA)) 0)
+      (print "Tous les labels ont été résolus.")
+    (error"~s label(s) non résolu(s)." (hash-table-count (get vm 'TRA)))))
+	     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;RUN
+;Execution de la VM
+(defun vm-run (vm)
+  (print "############### EXECUTION ###############")
+  (set-halt vm 1);(set-register vm :ON 1)
+  (print "Interrupteur basculé sur marche.")
+  (loop while (eql (get-halt vm) 1);(get-memory vm (get-register vm 'CO));while (not (get-halt vm))
+	do
+	(vm-run-instr vm (get-memory vm (get-register vm 'CO)))))
+
+;appel les fonctions assembleur
+(defun vm-run-instr (vm instr)
+  (if (not (listp  instr)) ; il peut arriver qu'on coise une valeure ecrite à l'adresse d'un label (STORE...), dans ce cas on passe 
+      (increase-register vm 'CO)
+    (case (car instr)
+	 ;OK
+	 (move (print "Rentre dans MOVE -->")
+	       (asm-move vm instr)
+	       (increase-register vm 'CO))
+		     
+	 ;OK   
+  	 (push (print "Rentre dans PUSH -->")
+	       (asm-push vm  instr)
+	       (increase-register vm 'CO))
+	 ;ok
+	 (pop (print "Rentre dans POP -->")
+	      (asm-pop vm instr)
+	      (increase-register vm 'CO))
+  
+	 ;##
+	 (load (print "Rentre dans LOAD -->")
+	       (asm-load vm instr)
+	       (increase-register vm 'CO))
+  	 
+	 ;OK
+	 (store (print "Rentre dans STORE -->")
+		(asm-store vm instr) 
+		(increase-register vm 'CO))
+        	
+	 ;OK
+	 (add (print "Rentre dans ADD -->")
+	      (asm-add vm instr)
+	      (print "De retour du ADD -->")
+	      (increase-register vm 'CO))
+	 
+	 ;
+	 (sub (print "Rentre dans SUB -->")
+	      (asm-sub vm instr)
+	      (increase-register vm 'CO))
+
+	 ;
+	 (mult (print "Rentre dans MULT -->")
+	       (asm-mult vm instr)
+	       (increase-register vm 'CO))
+	  
+	 ;
+	 (div (print "Rentre dans DIV -->")
+	      (asm-div vm instr)
+	      (increase-register vm 'CO))
+	 
+	 (incr (print "Rentre dans INCR -->")
+	       (asm-incr vm instr)
+	       (increase-register vm 'CO))
+	 
+	 (decr (print "Rentre dans DECR -->")
+	       (asm-decr vm instr)
+	       (increase-register vm 'CO))
+
+	 (cmp (print "Rentre dans CMP -->")
+	      (asm-cmp vm instr)
+	      (increase-register vm 'CO))
+
+	 (jmp (print "Rentre dans JMP -->")
+	      (asm-jmp vm instr))
+	 
+	 (jsr (print "Rentre dans JSR -->")
+	      (asm-jsr vm instr))
+
+	 (jge (print "Rentre dans JGE -->")
+	      (asm-jge vm instr)) 
+
+	 (jlt (print "Rentre dans JLT -->")
+	      (asm-jlt vm instr))
+	 
+	 (jle (print "Rentre dans JLE -->")
+	      (asm-jle vm instr))
+	 
+	 (jeq (print "Rentre dans JEQ -->")
+	      (asm-jeq vm instr))
+
+	 (jgt (print "Rentre dans JGT -->")
+	      (asm-jgt vm instr))
+	 
+	 (jne (print "Rentre dans CMP -->")
+	      (asm-cmp vm instr)
+	      (increase-register vm 'CO))
+	 
+	 (halt (set-halt vm 0) ;(set-register vm :ON 0)
+	       (print "Interrupeur basculé sur arrêt.")
+	       (increase-register vm 'CO)
+	       (print "############### A BIENTOT ################"))
+	 
+	 (rtn (print "Rentre dans le RTN -->")
+	      (print (asm-rtn vm)))
+
+	 ('nil (increase-register vm 'CO)); nil est peut être un espace laissé par un label resolu, on passe à l'instruction suivante.  
+	 
+	 (otherwise (error"~s n'est pas une instruction ASM valable" (car instr))))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;ASM
+(defun asm-move (vm instr)
+  (if (eql (is-register vm (deuxieme instr)) 1)
+      (if (eql (is-register vm (premier instr)) 1)
+	  (set-register vm (deuxieme instr) (get-register vm (premier instr))) ; premier et deuxieme sont des registres
+	(if (listp (premier instr))
+	    (set-register vm (deuxieme instr) (get-val vm (premier instr))); premier est une liste
+	  (set-register vm (deuxieme instr) (premier instr))));deuxieme est un registre mais pas premier
+    (error"~s doit être un registre." (deuxieme instr)))); deuxieme n'est pas un registre cas impossible à traiter
+
+(defun asm-push (vm instr)
+  (if (eql (is-register vm (premier instr)) 1);(INCR 'SP) (STORE registre 'SP)
+      (cons (increase-register vm 'SP)(set-memory vm (get-register vm 'SP) (get-register vm (premier instr)))); Si on a un registre
+    (if (listp (premier instr))
+	(cons (increase-register vm 'SP) (set-memory vm (get-register vm 'SP) (get-val vm (premier instr)))); si c'est une liste on demande à get val la valeur
+      (error "Structure non reconnue : ~s" (premier instr)))))
+
+(defun asm-pop (vm instr)
+  (case (is-register vm (premier instr))
+	(1 (set-register vm (premier instr) (get-memory vm (get-register vm 'SP)))
+	   (decrease-register vm 'SP));(LOAD SP <dest>) (DECR SP)
+	(otherwise (error"~s doit être un registre." (premier instr)))))
+
+(defun asm-store (vm instr)
+  (if (listp (premier instr))
+      (if (listp (deuxieme instr))
+	  (set-memory vm (get-val vm (deuxieme instr)) (get-val vm (premier instr)));list list
+	(if (eql (is-register (deuxieme instr)) 1)
+	    (set-memory vm (get-register vm (deuxieme instr)) (get-val vm (premier instr)));list reg
+	  (set-memory vm (deuxieme instr) (get-val vm (premier instr)))));list adr
+    (if (eql (is-register vm (premier instr)) 1)
+	(if (listp (deuxieme instr))
+	    (set-memory vm (get-val vm (deuxieme instr)) (get-register vm (premier instr)));reg list
+	  (if (eql (is-register vm (deuxieme instr)) 1)
+	      (set-memory vm (get-register vm (deuxieme instr)) (get-register vm (premier instr)));reg reg
+	    (set-memory vm (deuxieme instr) (get-register vm (premier instr)))));reg adr
+      (error"Structure non reconnue : ~s"(premier instr)))))
+
+(defun asm-load (vm instr)
+  (if (eql (is-register vm (deuxieme instr)) 1)
+      (if (listp (premier instr))
+	  (set-register vm (deuxieme instr) (get-memory vm (get-val vm (premier instr)))); charge dans reg depuis une adresse labelisée
+	(if (eql (is-register vm (premier instr)) 1)
+	    (set-register vm (deuxieme instr) (get-memory vm (get-register vm (premier instr))));reg reg
+	  (set-register vm (deuxieme instr) (get-memory vm (premier instr)))));charge dans reg depuis une adresse ecrite en dur...
+    (error"~s doit être un registre." (deuxieme instr))))
+
+(defun asm-add (vm instr)  
+  (if (eql (is-register vm (deuxieme instr)) 1)
+      (if (listp (premier instr))
+	  (set-register vm (deuxieme instr) (calcule-liste vm (cons '+ (list (get-val vm (premier instr)) (get-register vm (deuxieme instr))))));liste
+	(if (eql (is-register vm (premier instr)) 1)
+	    (set-register vm (deuxieme instr) (calcule-liste vm (cons '+ (list (get-register vm (premier instr)) (get-register vm (deuxieme instr))))));reg
+	  (set-register vm (deuxieme instr) (calcule-liste vm (cons '+ (list (premier instr) (get-register vm (deuxieme instr))))))));val
+    (error"Structure non reconnue : ~s"(deuxieme instr))))
+
+(defun asm-sub (vm instr)
+  (if (eql (is-register vm (deuxieme instr)) 1)
+      (if (listp (premier instr))
+	  (set-register vm (deuxieme instr) (calcule-liste vm (cons '- (list (get-val vm (premier instr)) (get-register vm (deuxieme instr))))));liste
+	(if (eql (is-register vm (premier instr)) 1)
+	    (set-register vm (deuxieme instr) (calcule-liste vm (cons '- (list (get-register vm (premier instr)) (get-register vm (deuxieme instr))))));reg
+	  (set-register vm (deuxieme instr) (calcule-liste vm (cons '- (list (premier instr) (get-register vm (deuxieme instr))))))));val
+    (error"Structure non reconnue : ~s"(deuxieme instr))))
+
+(defun asm-div (vm instr)
+  (if (eql (is-register vm (deuxieme instr)) 1)
+      (if (listp (premier instr))
+	  (set-register vm (deuxieme instr) (calcule-liste vm (cons '/ (list (get-val vm (premier instr)) (get-register vm (deuxieme instr))))));liste
+	(if (eql (is-register vm (premier instr)) 1)
+	    (set-register vm (deuxieme instr) (calcule-liste vm (cons '/ (list (get-register vm (premier instr)) (get-register vm (deuxieme instr))))));reg
+	  (set-register vm (deuxieme instr) (calcule-liste vm (cons '/ (list (premier instr) (get-register vm (deuxieme instr))))))));val
+    (error"Structure non reconnue : ~s"(deuxieme instr))))
+
+(defun asm-mult (vm instr)
+  (if (eql (is-register vm (deuxieme instr)) 1)
+      (if (listp (premier instr))
+	  (set-register vm (deuxieme instr) (calcule-liste vm (cons '* (list (get-val vm (premier instr)) (get-register vm (deuxieme instr))))));liste
+	(if (eql (is-register vm (premier instr)) 1)
+	    (set-register vm (deuxieme instr) (calcule-liste vm (cons '* (list (get-register vm (premier instr)) (get-register vm (deuxieme instr))))));reg
+	  (set-register vm (deuxieme instr) (calcule-liste vm (cons '* (list (premier instr) (get-register vm (deuxieme instr))))))));val
+    (error"Structure non reconnue : ~s"(deuxieme instr))))
+
+(defun asm-incr (vm instr)
+  (if (eql (is-register vm (premier instr)) 1)
+      (increase-register vm (premier instr))
+    (error"~s doit être un registre." (premier instr))))
+
+(defun asm-decr (vm instr)
+  (if (eql (is-register vm (premier instr)) 1)
+      (decrease-register vm (premier instr))
+    (error"~s doit être un registre." (premier instr))))
+
+(defun asm-jmp (vm instr)
+  (set-register vm 'CO (get-val vm (premier instr))))
+
+(defun asm-jsr (vm instr)
+  (set-memory vm (get-register vm 'SP) (+ (get-register vm 'CO) 1))
+  (set-register vm 'CO (get-memory vm (get-val (premier instr)))))
+
+(defun asm-rtn (vm)
+  (set-register vm 'CO (get-memory vm (get-register vm 'SP)))
+  (decrease-register vm 'SP))
+
+(defun asm-cmp (vm instr)
+  (if (listp (premier instr))
+      (if (listp (deuxieme instr))
+	  (comp vm (car(cdr (premier instr))) (car(cdr(deuxieme instr))));list list
+	(if (is-register vm (deuxieme instr))
+	    (comp vm (car(cdr (premier instr))) (get-register vm (deuxieme instr)));list reg
+	  (comp vm (car(cdr (premier instr))) (get-memory vm (deuxieme instr)))));list val
+    (if (is-register vm (premier instr))
+	(if (listp (deuxieme instr))
+	    (comp vm (get-register vm (premier instr)) (car(cdr(deuxieme instr))));reg list
+	  (if (is-register vm (deuxieme instr))
+	      (comp vm (get-register vm (premier instr)) (get-register vm (deuxieme instr)));reg reg
+	    (comp vm (get-register vm (premier instr)) (get-memory vm (deuxieme instr)))));reg val
+      (if (listp (deuxieme instr))
+	  (comp vm (get-memory vm (premier instr)) (car(cdr(deuxieme instr))));val list
+	(if (is-register vm (deuxieme instr))
+	    (comp vm (get-memory vm (premier instr)) (get-register vm(deuxieme instr)));val reg
+	  (comp vm (get-memory vm (premier instr)) (get-memory vm (deuxieme instr))))))));val val
+
+(defun asm-jgt (vm instr)
+  (if (eql (can-I-jump (vm '0 '0 '1)) 1)
+      (set-register vm 'CO (get-val vm (premier instr)))
+    (increase-register vm 'CO)))
+
+(defun asm-jge (vm instr)
+  (if (eql (can-I-jump (vm '0 '1 '1)) 1)
+      (set-register vm 'CO (get-val vm (premier instr)))
+    (increase-register vm 'CO)))
+
+(defun asm-jlt (vm instr)
+  (if (eql (can-I-jump (vm '1 '0 '0)) 1)
+      (set-register vm 'CO (get-val vm (premier instr)))
+    (increase-register vm 'CO)))
+
+(defun asm-jle (vm instr)
+  (if (eql (can-I-jump (vm '1 '1 '0)) 1)
+      (set-register vm 'CO (get-val vm (premier instr)))
+    (increase-register vm 'CO)))
+
+(defun asm-jeq (vm instr)
+  (if (eql (can-I-jump (vm '0 '1 '0)) 1)
+      (set-register vm 'CO (get-val vm (premier instr)))
+    (increase-register vm 'CO)))
+
+(defun asm-jne (vm instr)
+  (if (eql (can-I-jump (vm '1 '0 '1)) 1)
+      (set-register vm 'CO (get-val vm (premier instr)))
+    (increase-register vm 'CO)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;LISTES
+;get-val prends une liste et retourne la constante, la ref, le symbole ou le calcule 
+(defun get-val (vm liste)
+  (case (car liste)
+	(:CONST (premier liste))
+	(:REF (gethash (premier liste) (get vm 'TSR)));:REF a été résolue lors du chargement on va donc le chercher dans la TRS. seule les jumps change le CO à cette adresse (pas ici)
+	(+ (calcule-liste vm liste))
+	(- (calcule-liste vm liste))
+	(/ (if (eql (deuxieme liste) 0)
+	       (error "Division par 0 impossible!")
+	     (calcule-liste vm liste)))
+	(* (calcule-liste vm liste))
+	(otherwise (error"Mot-clé non autorisé -> ~s" (car liste)))))
+
+(defun calcule-liste (vm liste)
+  (if (is-register vm (premier liste))
+      (if (is-register vm (deuxieme liste))
+	  (apply (car liste) (list (get-register vm (premier liste)) (get-register vm (deuxieme liste))));reg reg
+	(apply (car liste) (list (get-register vm (premier liste)) (deuxieme liste))));reg val
+    (if (is-register vm (deuxieme liste))
+	(apply (car liste) (list (premier liste) (get-register vm (deuxieme liste))));val reg
+      (apply (car liste) (list (premier liste) (deuxieme liste))))));val val
+
+;PREMIER et deuxieme sont les premier et deuxieme arguments après le car != first et second !!!!!
+;retourne R0 pour la liste '(ADD R0 R1)
+;OK
+(defun premier (liste)
+  (car (cdr liste)))
+					
+;retourne R1 pour la liste '(ADD R0 R1)
+;OK
+(defun deuxieme (liste)
+  (car (cddr liste)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;HALT   
+(defun get-halt (vm)
+  (get-register vm :ON))
+
+;joue le rôle d'un interrupteur ON OFF
+(defun set-halt (vm valeur)
+  (set-register vm :ON valeur))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;COMPARE
+(defun comp ( vm a b)
+  (if (< a b) 
+      (cons (set-register vm :FPP 1) ;1er < 2eme
+	    (cons (set-register vm :FPG 0)
+		  (set-register vm :FEQ 0)))
+    (if (> a b)
+	(cons (set-register vm :FPP 0) ;1er > 2eme
+	      (cons (set-register vm :FPG 1)
+		    (set-register vm :FEQ 0)))
+      (cons (set-register vm :FPP 0) ; 1er = 2eme
+	    (cons (set-register vm :FPG 0)
+		  (set-register vm :FEQ 1))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;REGISTRE
+;retourne 1 si source est un registre, nil si non
+;OK
+(defun is-register (nomvm source)
+  (if (eql (get-register nomvm source) 'nil)
+      ()
+    (+ 1 0)))
+
+;incremente le compteur ordinal de + 1
+;OK
+(defun increase-register (vm register)
+  (set-register vm register (+ 1 (get-register vm register))))
+
+;decremente le compteur ordinal de - 1
+;OK
+(defun decrease-register (vm register)
+  (set-register vm register (- (get-register vm register) 1 )))
+;enmagasine la valeur val dans 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;LABEL
+;va chercher en memoire à l'adresse contenue dans le TRA le label en avance et le resout avec l'adr courante
+;(defun set-label-avant (vm instr adr)
+;  (set-memory vm (gethash (car (cdr instr)) (get vm 'TRA)) (list (car (get-memory vm (gethash (car (cdr instr)) (get vm 'TRA)))) (list :REF adr)))
+;  (setf (gethash (car (cdr instr)) (get vm 'TSR)) adr)
+;  (remhash (car (cdr instr)) (get vm 'TRA)))
+;  (set-memory vm adr instr)
+;  (setf adr (+ 1 adr)))
+
+;(defun get-label (vm instr adr asm)
+;  (if (gethash (car (cdr instr)) (get vm 'TSR))
+;      (setf instr (list asm (list :REF (gethash (car (cdr instr)) (get vm 'TSR)))))
+;    (setf (gethash (car (cdr instr)) (get vm 'TRA)) adr)))
+;  (set-memory vm adr instr)
+;  (setf adr (+ 1 adr)))
+
+;(defun sans-label (vm instr adr))
+;  (set-memory vm adr instr)
+;  (setf adr (+ 1 adr)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;SAUTS CONDITIONNELS
+;retourne le tableau qui correspon au saut demandé
+(defun can-I-jump (vm pp eg pg) ;attend en paramettre les drapeaux souhaité pour sauter renvoie 1 si oui 0 si non
+  (if (and (eql pp 1) (eql (get-register vm  1 :FPP) 1))
+      (+ 1 0)
+    (if (and (eql eq 1) (eql (get-register vm  1 :FEQ) 1))
+	(+ 1 0)
+      (if (and (eql pg 1) (eql (get-register vm  1 :FPG) 1))
+	  (+ 1 0)
+	(+ 0 0)))))
+
+  
+  
