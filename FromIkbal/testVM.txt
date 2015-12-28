@@ -1,0 +1,100 @@
+/**************** cas des lit **************/
+>(li2asm '(:LIT 2) 0)
+1. Trace: (LI2ASM '(:LIT 2) '0)
+1. Trace: LI2ASM ==> (MOVE (:LIT 2) R0)
+(MOVE (:LIT 2) R0)
+
+
+/**************** cas des var **************/
+> (li2asm '(:VAR . 2) 3)
+1. Trace: (LI2ASM '(:VAR . 2) '3)
+1. Trace: LI2ASM ==> (LOAD (- FP 2) R0)
+(LOAD (- FP 2) R0)
+
+> (li2asm '(:VAR . 5) 3)
+1. Trace: (LI2ASM '(:VAR . 5) '3)
+1. Trace: LI2ASM ==> (LOAD (+ FP 5) R0)
+(LOAD (+ FP 5) R0)
+
+
+/**************** cas des if **************/
+> (lisp2li '(if (= 1 1) (+ 1 1) (+ 1 3)) nil)
+(:IF (:CALL = (:LIT . 1) (:LIT . 1)) (:CALL + (:LIT . 1) (:LIT . 1)) :CALL +
+ (:LIT . 1) (:LIT . 3))
+
+
+/*************** cas du plus **************/
+> (lisp2li '(+ 1 2) nil)
+(:CALL + (:LIT . 1) (:LIT . 1))
+> (li2asm (lisp2li '(+ 1 1) nil) 0)
+1. Trace: (LI2ASM '(:CALL + (:LIT . 1) (:LIT . 1)) '0)
+1. Trace: LI2ASM ==> (ADD (:LIT 1) (:LIT 1))
+(ADD (:LIT 1) (:LIT 1))
+
+> (lisp2li '(+ 1 2) nil)
+(:CALL + (:LIT . 1) (:LIT . 2))
+
+> (lisp2li '(+ (+ 1 2) (+ 1 2)) nil)
+(:CALL + (:CALL + (:LIT . 1) (:LIT . 2)) (:CALL + (:LIT . 1) (:LIT . 2)))
+> (li2asm '(:CALL + (:CALL + (:LIT . 1) (:LIT . 2)) (:CALL + (:LIT . 1) (:LIT . 2))) 0)
+1. Trace: 
+(LI2ASM
+ '(:CALL + (:CALL + (:LIT . 1) (:LIT . 2)) (:CALL + (:LIT . 1) (:LIT . 2))) '0)
+2. Trace: 
+(LI2ASM-ADD '((:CALL + (:LIT . 1) (:LIT . 2)) (:CALL + (:LIT . 1) (:LIT . 2)))
+ '0)
+3. Trace: (LI2ASM '(:CALL + (:LIT . 1) (:LIT . 2)) '0)
+4. Trace: (LI2ASM-ADD '((:LIT . 1) (:LIT . 2)) '0)
+4. Trace: LI2ASM-ADD ==> ((MOVE (:LIT . 2) RO) (ADD (:LIT . 1) R0))
+3. Trace: LI2ASM ==> ((MOVE (:LIT . 2) RO) (ADD (:LIT . 1) R0))
+3. Trace: (LI2ASM '(:CALL + (:LIT . 1) (:LIT . 2)) '0)
+4. Trace: (LI2ASM-ADD '((:LIT . 1) (:LIT . 2)) '0)
+4. Trace: LI2ASM-ADD ==> ((MOVE (:LIT . 2) RO) (ADD (:LIT . 1) R0))
+3. Trace: LI2ASM ==> ((MOVE (:LIT . 2) RO) (ADD (:LIT . 1) R0))
+2. Trace: LI2ASM-ADD ==> 
+(((MOVE (:LIT . 2) RO) (ADD (:LIT . 1) R0)) (MOVE R0 R1)
+ ((MOVE (:LIT . 2) RO) (ADD (:LIT . 1) R0)) (ADD R1 R0))
+1. Trace: LI2ASM ==> 
+(((MOVE (:LIT . 2) RO) (ADD (:LIT . 1) R0)) (MOVE R0 R1)
+ ((MOVE (:LIT . 2) RO) (ADD (:LIT . 1) R0)) (ADD R1 R0))
+
+
+(((MOVE (:LIT . 2) RO) (ADD (:LIT . 1) R0)) (MOVE R0 R1)
+ ((MOVE (:LIT . 2) RO) (ADD (:LIT . 1) R0)) (ADD R1 R0))
+
+
+
+
+
+> (li2asm '(:CALL + (:CALL + (:LIT . 1) (:LIT . 2)) (:LIT . 3)) nil)
+1. Trace: (LI2ASM '(:CALL + (:CALL + (:LIT . 1) (:LIT . 2)) (:LIT . 3)) 'NIL)
+2. Trace: (LI2ASM-ADD '((:CALL + (:LIT . 1) (:LIT . 2)) (:LIT . 3)) 'NIL)
+3. Trace: (LI2ASM '(:CALL + (:LIT . 1) (:LIT . 2)) 'NIL)
+4. Trace: (LI2ASM-ADD '((:LIT . 1) (:LIT . 2)) 'NIL)
+4. Trace: LI2ASM-ADD ==> ((MOVE (:LIT . 2) RO) (ADD (:LIT . 1) R0))
+3. Trace: LI2ASM ==> ((MOVE (:LIT . 2) RO) (ADD (:LIT . 1) R0))
+3. Trace: (LI2ASM '(:LIT . 3) 'NIL)
+3. Trace: LI2ASM ==> (MOVE (:LIT . 3) R0)
+2. Trace: LI2ASM-ADD ==> 
+(((MOVE (:LIT . 2) RO) (ADD (:LIT . 1) R0)) (MOVE R0 R1) (MOVE (:LIT . 3) R0)
+ (ADD R1 R0))
+1. Trace: LI2ASM ==> 
+(((MOVE (:LIT . 2) RO) (ADD (:LIT . 1) R0)) (MOVE R0 R1) (MOVE (:LIT . 3) R0)
+ (ADD R1 R0))
+(((MOVE (:LIT . 2) RO) (ADD (:LIT . 1) R0)) (MOVE R0 R1) (MOVE (:LIT . 3) R0)
+ (ADD R1 R0))
+
+
+
+
+ (:CALL + ((:CALL + (:LIT . 1) (:LIT . 2)) (:LIT . 3)) 
+
+
+(li2asm '(:CALL + (:CALL + (:LIT . 1) (:LIT . 2)) (:LIT . 3)) nil)
+
+(((MOVE (:LIT . 2) RO)
+ (ADD (:LIT . 1) R0)) 
+(MOVE R0 R1) 
+(MOVE (:LIT . 3) R0)
+ (ADD R1 R0))
+
