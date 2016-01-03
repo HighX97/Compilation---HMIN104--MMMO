@@ -1,5 +1,5 @@
 ;=============================================================================================================
-;											LISP_TO_LI
+;											LI_TO_ASM
 ;	<expr-li>
 ;	(:const . <expr>)
 ;	(:var . <int>)
@@ -20,112 +20,109 @@
 ;=============================================================================================================
 
 ;==========================
-(defun LISP_TO_LI_noAtom_lcall (args env)
+(defun LI_TO_ASM_noAtom_lcall (args env)
 	)
 ;==========================
-(defun LISP_TO_LI_noAtom_set-cvar (args env)
+(defun LI_TO_ASM_noAtom_set-cvar (args env)
 	)
 ;==========================
-(defun LISP_TO_LI_noAtom_cvar (args env)
+(defun LI_TO_ASM_noAtom_cvar (args env)
 	)
 ;==========================
-(defun LISP_TO_LI_noAtom_apply (args env)
+(defun LI_TO_ASM_noAtom_apply (args env)
 	)
 ;==========================
-(defun LISP_TO_LI_noAtom_set-fun (args env)
+(defun LI_TO_ASM_noAtom_set-fun (args env)
 	)
 ;==========================
-(defun LISP_TO_LI_noAtom_lclosure (args env)
+(defun LI_TO_ASM_noAtom_lclosure (args env)
 	)
 ;==========================
-(defun LISP_TO_LI_noAtom_let (args env)
+(defun LI_TO_ASM_noAtom_let (args env)
 	)
 ;==========================
-(defun LISP_TO_LI_noAtom_mcall (args env)
+(defun LI_TO_ASM_noAtom_mcall (args env)
 	)
 ;==========================
-(defun LISP_TO_LI_noAtom_call (args env)
+(defun LI_TO_ASM_noAtom_call (args env)
 	)
 ;==========================
-(defun LISP_TO_LI_noAtom_set-var (args env)
+(defun LI_TO_ASM_noAtom_set-var (args env)
 	)
 ;==========================
-(defun LISP_TO_LI_noAtom_progn (args env)
+(defun LI_TO_ASM_noAtom_progn (args env)
 	)
 ;==========================
-(defun LISP_TO_LI_noAtom_if (args env)
+(defun LI_TO_ASM_noAtom_if (args env)
 	)
 ;==========================
-(defun LISP_TO_LI_noAtom_quote (args env)
+(defun LI_TO_ASM_noAtom_quote (args env)
 	)
 ;==========================
-(defun LISP_TO_LI_noAtom (expr env)
+(defun LI_TO_ASM_noAtom (expr env)
 	;
 	(let ((fun (car expr)) 
-   (args (cdr expr)))
+	  (args (cdr expr)))
 	;
 	(cond
-   ((eq 'quote fun)
-    (LISP_TO_LI_noAtom_quote (args env)))
+       ((eq 'quote fun)
+       	(LI_TO_ASM_noAtom_quote (args env)))
        ;
        ((eq 'if fun)
-       	(LISP_TO_LI_noAtom_if (args env)))
+       	(LI_TO_ASM_noAtom_if (args env)))
        ;
        ((eq 'progn fun)
-       	(LISP_TO_LI_noAtom_progn (args env)))
+       	(LI_TO_ASM_noAtom_progn (args env)))
        ;
        ((eq 'set-var fun)
-       	(LISP_TO_LI_noAtom_set-var (args env)))
+       	(LI_TO_ASM_noAtom_set-var (args env)))
        ;
        ((eq 'call fun)
-       	(LISP_TO_LI_noAtom_call (args env)))
+       	(LI_TO_ASM_noAtom_call (args env)))
        ;
        ((eq 'mcall fun)
-       	(LISP_TO_LI_noAtom_mcall (args env)))
+       	(LI_TO_ASM_noAtom_mcall (args env)))
        ;
        ((eq 'let fun)
-         (LISP_TO_LI_noAtom_let (args env)))
+       (LI_TO_ASM_noAtom_let (args env)))
        ;       	
        ((eq 'lclosure fun)
-       	(LISP_TO_LI_noAtom_lclosure (args env)))
+       	(LI_TO_ASM_noAtom_lclosure (args env)))
        ;
        ((eq 'set-var fun)
-       	(LISP_TO_LI_noAtom_set-var (args env)))
+       	(LI_TO_ASM_noAtom_set-var (args env)))
        ;
        ((eq 'set-fun fun)
-       	(LISP_TO_LI_noAtom_set-fun (args env)))
+       	(LI_TO_ASM_noAtom_set-fun (args env)))
        ;
        ((eq 'apply fun)
-       	(LISP_TO_LI_noAtom_apply (args env)))
+       	(LI_TO_ASM_noAtom_apply (args env)))
        ;
        ((eq 'cvar fun)
-       	(LISP_TO_LI_noAtom_cvar (args env)))
+       	(LI_TO_ASM_noAtom_cvar (args env)))
        ;
        ((eq 'set-cvar fun)
-       	(LISP_TO_LI_noAtom_cvar (args env)))
+       	(LI_TO_ASM_noAtom_cvar (args env)))
        ;
        ((eq 'lcall fun)
-         (LISP_TO_LI_noAtom_lcall (args env))))))
+       (LI_TO_ASM_noAtom_lcall (args env))))))
 
 ;==========================
-(defun LISP_TO_LI_atom_var (expr env)
+(defun LI_TO_ASM_atom_var (expr env)
 	)
 ;==========================
-(defun LISP_TO_LI_atom_const (expr env)
-	(cons :lit expr))
+(defun LI_TO_ASM_atom_const (expr env)
+	
+	)
 ;==========================
-(defun LISP_TO_LI_Atom (expr env)
+(defun LI_TO_ASM_atom (expr env)
 	(if (constantp expr) 
-    (LISP_TO_LI_atom_const (expr env))
-    (LISP_TO_LI_atom_var (expr env))))
+		  (LI_TO_ASM_atom_const (expr env))
+		  (LI_TO_ASM_atom_var (expr env))   
+	))
 
 ;==========================
-(defun LISP_TO_LI (expr env) 
+(defun LI_TO_ASM (expr env) 
   (if (atom expr) 
-    (LISP_TO_LI_Atom (expr env))
-    (LISP_TO_LI_noAtom (expr env)))   
-
-
-
-
-
+      (LI_TO_ASM_Atom (expr env))
+      (LI_TO_ASM_noAtom (expr env))) 
