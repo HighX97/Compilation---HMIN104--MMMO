@@ -151,7 +151,7 @@
        ;
        ((eq 'lcall fun)
          (LISP_TO_LI_noAtom_lcall args env))
-       ;
+       ;;
        ((fboundp fun) 
         (LISP_TO_LI_noAtom_call fun args env))
        ;
