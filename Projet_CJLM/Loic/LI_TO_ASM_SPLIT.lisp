@@ -1,14 +1,14 @@
 ;=============================================================================================================
 ;											LI_TO_ASM
 ;	<expr-li>
-;	(:const . <expr>)
-;	(:var . <int>)
-;	(:if <expr-li> <expr-li> . <expr-li>)
-;	(:progn <expr-li> <expr-li>+)
-;	(:set-var <int> . <expr-li>)
-;	(:call <symbol> <expr-li>*)
-;	(:mcall <symbol> <expr-li>*)
-;	(:unknown <expr-eval> . <environ>)
+;	(:lit . <expr>) 						
+;	(:var . <int>) 							
+;	(:if <expr-li> <expr-li> . <expr-li>)	
+;	(:progn <expr-li> <expr-li>+)			
+;	(:set-var <int> . <expr-li>)			
+;	(:call <symbol> <expr-li>*)				
+;	(:mcall <symbol> <expr-li>*)			
+;	(:unknown <expr-eval> . <environ>)		
 ;
 ;	(:let <int> <expr-li> <expr-li>+)
 ;	(:lclosure . <lambda-fun>)
@@ -20,109 +20,176 @@
 ;=============================================================================================================
 
 ;==========================
-(defun LI_TO_ASM_noAtom_lcall (args env)
-	)
+(defun LI_TO_ASM (expr nbArgs) 
+  	(ecase (car expr)
+            (:LIT
+                  (LI_TO_ASM_const expr))
+            (:VAR 
+                  (LI_TO_ASM_var expr nbArgs))
+            (:SET_VAR 
+                  (LI_TO_ASM_set_var expr nbArgs))
+            (:IF 
+                  (LI_TO_ASM_if expr nbArgs))
+            (:CALL 
+                  (LI_TO_ASM_call expr))
+            (:MCALL 
+                  (LI_TO_ASM_mcall expr))
+            (:PROGN 
+                  (LI_TO_ASM_progn expr nbArgs))
+            (:LET 
+                  (LI_TO_ASM_let expr))
+            (:LCLOSURE 
+                  (LI_TO_ASM_lclosure expr))
+            (:SET_FUN 
+                  (LI_TO_ASM_set_fun expr))
+            (:APPLY 
+                  (LI_TO_ASM_apply expr))
+            (:CVAR 
+                  (LI_TO_ASM_cvar expr))
+            (:SET_CVAR 
+                  (LI_TO_ASM_set_cvar expr))
+            (:LCALL 
+                  (LI_TO_ASM_lcall expr))
+            (:UNKNOWN 
+                  (LI_TO_ASM_unknown expr))))
+(trace LI_TO_ASM)
 ;==========================
-(defun LI_TO_ASM_noAtom_set-cvar (args env)
-	)
-;==========================
-(defun LI_TO_ASM_noAtom_cvar (args env)
-	)
-;==========================
-(defun LI_TO_ASM_noAtom_apply (args env)
-	)
-;==========================
-(defun LI_TO_ASM_noAtom_set-fun (args env)
-	)
-;==========================
-(defun LI_TO_ASM_noAtom_lclosure (args env)
-	)
-;==========================
-(defun LI_TO_ASM_noAtom_let (args env)
-	)
-;==========================
-(defun LI_TO_ASM_noAtom_mcall (args env)
-	)
-;==========================
-(defun LI_TO_ASM_noAtom_call (args env)
-	)
-;==========================
-(defun LI_TO_ASM_noAtom_set-var (args env)
-	)
-;==========================
-(defun LI_TO_ASM_noAtom_progn (args env)
-	)
-;==========================
-(defun LI_TO_ASM_noAtom_if (args env)
-	)
-;==========================
-(defun LI_TO_ASM_noAtom_quote (args env)
-	)
-;==========================
-(defun LI_TO_ASM_noAtom (expr env)
-	;
-	(let ((fun (car expr)) 
-	  (args (cdr expr)))
-	;
-	(cond
-       ((eq 'quote fun)
-       	(LI_TO_ASM_noAtom_quote (args env)))
-       ;
-       ((eq 'if fun)
-       	(LI_TO_ASM_noAtom_if (args env)))
-       ;
-       ((eq 'progn fun)
-       	(LI_TO_ASM_noAtom_progn (args env)))
-       ;
-       ((eq 'set-var fun)
-       	(LI_TO_ASM_noAtom_set-var (args env)))
-       ;
-       ((eq 'call fun)
-       	(LI_TO_ASM_noAtom_call (args env)))
-       ;
-       ((eq 'mcall fun)
-       	(LI_TO_ASM_noAtom_mcall (args env)))
-       ;
-       ((eq 'let fun)
-       (LI_TO_ASM_noAtom_let (args env)))
-       ;       	
-       ((eq 'lclosure fun)
-       	(LI_TO_ASM_noAtom_lclosure (args env)))
-       ;
-       ((eq 'set-var fun)
-       	(LI_TO_ASM_noAtom_set-var (args env)))
-       ;
-       ((eq 'set-fun fun)
-       	(LI_TO_ASM_noAtom_set-fun (args env)))
-       ;
-       ((eq 'apply fun)
-       	(LI_TO_ASM_noAtom_apply (args env)))
-       ;
-       ((eq 'cvar fun)
-       	(LI_TO_ASM_noAtom_cvar (args env)))
-       ;
-       ((eq 'set-cvar fun)
-       	(LI_TO_ASM_noAtom_cvar (args env)))
-       ;
-       ((eq 'lcall fun)
-       (LI_TO_ASM_noAtom_lcall (args env))))))
 
 ;==========================
-(defun LI_TO_ASM_atom_var (expr env)
-	)
+(defun MAP_LI_TO_ASM (lexpr) 
+  (if (atom lexpr)  
+    NIL 
+    (list* (LI_TO_ASM (first lexpr)) (MAP_LI_TO_ASM (rest lexpr)))))
+;(trace MAP_LI_TO_ASM)
 ;==========================
-(defun LI_TO_ASM_atom_const (expr env)
-	
-	)
+
+;==========================                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+(defun MAP_LI_TO_ASM_PROGN (expr nbArgs)
+  (if (atom  expr) 
+      NIL 
+      (list* (LI_TO_ASM (first expr) nbArgs)
+      (MAP_LI_TO_ASM_PROGN (rest expr) nbArgs))))
+(trace MAP_LI_TO_ASM_PROGN)
 ;==========================
-(defun LI_TO_ASM_atom (expr env)
-	(if (constantp expr) 
-		  (LI_TO_ASM_atom_const (expr env))
-		  (LI_TO_ASM_atom_var (expr env))   
-	))
 
 ;==========================
-(defun LI_TO_ASM (expr env) 
-  (if (atom expr) 
-      (LI_TO_ASM_Atom (expr env))
-      (LI_TO_ASM_noAtom (expr env))) 
+;(:LIT . 0)
+;MOVE  #<cste> R0
+(defun LI_TO_ASM_const  (expr)
+  (list 'MOVE expr ''R0))
+;(trace LI_TO_ASM_const)
+;==========================
+
+;==========================
+;(:VAR . 0)
+;LOAD  @<varg> R0
+(defun LI_TO_ASM_var  (expr nbArgs)
+  (if (> (cdr expr) nbArgs)
+  	(warn "")
+  	(let ((decalage (- nbArgs (cdr expr))))
+  		(list 'LOAD  (list '- ''FP decalage) ''R0))))
+;(trace LI_TO_ASM_var)
+;==========================
+
+;==========================
+;(:IF (:LIT . T) (:LIT . 1) (:LIT . 2))
+;
+(defun LI_TO_ASM_if  (expr nbArgs)
+  (list
+  	(list 'LABEL 'IF)
+  	(list 'TEST (LI_TO_ASM (second expr) nbArgs))
+  	(list 'JNIL 'ELSE)
+  	(list (LI_TO_ASM (third expr) nbArgs))
+  	(list 'JMP 'FI)
+  	(list 'LABEL 'ELSE)
+  	(list (LI_TO_ASM (third expr) nbArgs))
+  	(list 'LABEL 'FI)))
+;(trace LI_TO_ASM_if)
+;==========================
+
+;==========================
+;(:PROGN (:LIT . 1) (:LIT . 2) (:LIT . 3))
+
+(defun LI_TO_ASM_progn  (expr nbArgs)
+  (MAP_LI_TO_ASM_PROGN (cdr expr) nbArgs))
+(trace LI_TO_ASM_progn)
+;==========================
+
+;==========================
+;(:SET_VAR 0 (:LIT . 1))
+(defun LI_TO_ASM_set_var (expr nbArgs)
+  (if (> (second expr) nbArgs)
+  	(warn "")
+  	(let ((decalage (- nbArgs (second expr))))
+  		(list
+  		(list 'MOVE (third expr) ''R0)
+  		(list 'STORE ''R0 (list '- ''FP decalage))))))
+;(trace LI_TO_ASM_set_var)
+;==========================
+
+;==========================
+(defun LI_TO_ASM_mcall  (expr)
+  )
+;(trace LI_TO_ASM_mcall)
+;==========================
+
+;==========================
+(defun LI_TO_ASM_call  (expr)
+  )
+;(trace LI_TO_ASM_call)
+;==========================
+
+;==========================
+(defun LI_TO_ASM_unknown  (expr)
+  )
+;(trace LI_TO_ASM_unknown)
+;==========================
+
+;==========================
+(defun LI_TO_ASM_let  (expr)
+  )
+;(trace LI_TO_ASM_let)
+;==========================
+
+;==========================
+(defun LI_TO_ASM_lclosure  (expr)
+  )
+;(trace LI_TO_ASM_lclosure)
+;==========================
+
+;==========================
+(defun LI_TO_ASM_set_fun  (expr)
+  )
+;(trace LI_TO_ASM_set_fun)
+;==========================
+
+;==========================
+(defun LI_TO_ASM_apply  (expr)
+  )
+;(trace LI_TO_ASM_apply)
+;==========================
+
+;==========================
+(defun LI_TO_ASM_cvar  (expr)
+  )
+;(trace LI_TO_ASM_cvar)
+;==========================
+
+;==========================
+(defun LI_TO_ASM_set_cvar  (expr)
+  )
+;(trace LI_TO_ASM_set_cvar)
+;==========================
+
+;==========================
+(defun LI_TO_ASM_lcall  (expr)
+  )
+;(trace LI_TO_ASM_lcall)
+;==========================
+
+
+
+
+
+
+

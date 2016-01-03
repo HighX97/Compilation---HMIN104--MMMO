@@ -1,7 +1,7 @@
 ;=============================================================================================================
 ;											EVAL_LI
 ;	<expr-li>
-;	(:const . <expr>)
+;	(:lit . <expr>)
 ;	(:var . <int>)
 ;	(:if <expr-li> <expr-li> . <expr-li>)
 ;	(:progn <expr-li> <expr-li>+)
@@ -20,112 +20,193 @@
 ;=============================================================================================================
 
 ;==========================
-(defun EVAL_LI_noAtom_lcall (args env)
-	)
-;==========================
-(defun EVAL_LI_noAtom_set-cvar (args env)
-	)
-;==========================
-(defun EVAL_LI_noAtom_cvar (args env)
-	)
-;==========================
-(defun EVAL_LI_noAtom_apply (args env)
-	)
-;==========================
-(defun EVAL_LI_noAtom_set-fun (args env)
-	)
-;==========================
-(defun EVAL_LI_noAtom_lclosure (args env)
-	)
-;==========================
-(defun EVAL_LI_noAtom_let (args env)
-	)
-;==========================
-(defun EVAL_LI_noAtom_mcall (args env)
-	)
-;==========================
-(defun EVAL_LI_noAtom_call (args env)
-	)
-;==========================
-(defun EVAL_LI_noAtom_set-var (args env)
-	)
-;==========================
-(defun EVAL_LI_noAtom_progn (args env)
-	)
-;==========================
-(defun EVAL_LI_noAtom_if (args env)
-	)
-;==========================
-(defun EVAL_LI_noAtom_quote (args env)
-	)
-;==========================
-(defun EVAL_LI_noAtom (expr env)
-	;
-	(let ((fun (car expr)) 
-	  (args (cdr expr)))
-	;
-	(cond
-       ((eq 'quote fun)
-       	(EVAL_LI_noAtom_quote (args env)))
-       ;
-       ((eq 'if fun)
-       	(EVAL_LI_noAtom_if (args env)))
-       ;
-       ((eq 'progn fun)
-       	(EVAL_LI_noAtom_progn (args env)))
-       ;
-       ((eq 'set-var fun)
-       	(EVAL_LI_noAtom_set-var (args env)))
-       ;
-       ((eq 'call fun)
-       	(EVAL_LI_noAtom_call (args env)))
-       ;
-       ((eq 'mcall fun)
-       	(EVAL_LI_noAtom_mcall (args env)))
-       ;
-       ((eq 'let fun)
-       (EVAL_LI_noAtom_let (args env)))
-       ;       	
-       ((eq 'lclosure fun)
-       	(EVAL_LI_noAtom_lclosure (args env)))
-       ;
-       ((eq 'set-var fun)
-       	(EVAL_LI_noAtom_set-var (args env)))
-       ;
-       ((eq 'set-fun fun)
-       	(EVAL_LI_noAtom_set-fun (args env)))
-       ;
-       ((eq 'apply fun)
-       	(EVAL_LI_noAtom_apply (args env)))
-       ;
-       ((eq 'cvar fun)
-       	(EVAL_LI_noAtom_cvar (args env)))
-       ;
-       ((eq 'set-cvar fun)
-       	(EVAL_LI_noAtom_cvar (args env)))
-       ;
-       ((eq 'lcall fun)
-       (EVAL_LI_noAtom_lcall (args env))))))
-
-;==========================
-(defun EVAL_LI_atom_var (expr env)
-	)
-;==========================
-(defun EVAL_LI_atom_const (expr env)
-	
-	)
-;==========================
-(defun EVAL_LI_atom (expr env)
-	(if (constantp expr) 
-		  (EVAL_LI_atom_const (expr env))
-		  (EVAL_LI_atom_var (expr env))   
-	))
-
-;==========================
 (defun EVAL_LI (expr env) 
+  (ecase (car expr)
+            (:LIT 
+                  (EVAL_LI_const expr env))
+            (:VAR 
+                  (EVAL_LI_var expr env))
+            (:SET_VAR 
+                  (EVAL_LI_set_var expr env))
+            (:IF 
+                  (EVAL_LI_if expr env))
+            (:CALL 
+                  (EVAL_LI_call expr env))
+            (:MCALL 
+                  (EVAL_LI_mcall expr env))
+            (:PROGN 
+                  (EVAL_LI_progn expr env))
+            (:LET 
+                  (EVAL_LI_let expr env))
+            (:LCLOSURE 
+                  (EVAL_LI_lclosure expr env))
+            (:SET_FUN 
+                  (EVAL_LI_set_fun expr env))
+            (:APPLY 
+                  (EVAL_LI_apply expr env))
+            (:CVAR 
+                  (EVAL_LI_cvar expr env))
+            (:SET_CVAR 
+                  (EVAL_LI_set_cvar expr env))
+            (:LCALL 
+                  (EVAL_LI_lcall expr env))
+            (:UNKNOWN 
+                  (EVAL_LI_unknown expr env))))
+(trace EVAL_LI)
+;==========================
+
+;==========================
+(defun MAP_EVAL_LI (lexpr env) 
+  (if (atom lexpr)  
+    NIL 
+    (list* (EVAL_LI (first lexpr) env) (MAP_EVAL_LI (rest lexpr) env))))
+(trace MAP_EVAL_LI)
+;==========================
+
+;==========================                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+(defun MAP_EVAL_LI_PROGN (expr env)
   (if (atom expr) 
-      (EVAL_LI_Atom (expr env))
-      (EVAL_LI_noAtom (expr env)))   
+      NIL 
+      (if (atom (rest expr))
+            (EVAL_LI (first expr) env)
+            (MAP_EVAL_LI_PROGN (rest expr) env))))
+(trace MAP_EVAL_LI_PROGN)
+;==========================
+
+;==========================                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+(defun MAKE_ENV_EVAL_LI (nbArgs listArgs)
+  (make_env_rec listArgs 0 (make-array (+ nbArgs 1))))
+;(trace MAKE_ENV_EVAL_LI)
+;==========================
+
+;==========================
+(defun MAKE_ENV_REC (listArgs pos envGenerated)
+      (when listArgs
+            (setf (aref envGenerated pos) (car listArgs))
+            (make_env_rec (cdr listArgs) (+ pos 1) envGenerated))
+      envGenerated)
+;==========================
+
+;==========================                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+(defun DISPLACE (cell1 cell2)
+      (setf (car cell2) (car cell1)
+            (cdr cell2) (car cell1))
+      cell2)
+;==========================
+
+
+;==========================
+;;Get-Defun
+(defun get_defun (symb)
+  (get symb :defun))
+;(trace get_defun)
+;==========================
+
+;==========================
+;;Set-Defun
+;;symb : expression evaluable mais pas evaluee
+;;expr-lambda : expression evaluable evaluee
+(defun set_defun (symb expr-lambda)
+  (setf (get symb :defun)
+    expr-lambda))
+;(trace set_defun)
+;========================== 
+
+;==========================
+(defun EVAL_LI_const  (expr env)
+  (cdr expr))
+(trace EVAL_LI_const)
+;==========================
+
+;==========================
+(defun EVAL_LI_var  (expr env)
+  (aref env (cdr expr)))
+(trace EVAL_LI_var)
+;==========================
+
+;==========================
+(defun EVAL_LI_if  (expr env)
+  (if (EVAL_LI (second expr) env) 
+                        (EVAL_LI (third expr) env)
+                        (EVAL_LI (cadddr expr) env)))
+;(trace EVAL_LI_if)
+;==========================
+
+;==========================
+(defun EVAL_LI_progn  (expr env)
+  (MAP_EVAL_LI_PROGN (cdr expr) env))
+(trace EVAL_LI_progn)
+;==========================
+
+;==========================
+(defun EVAL_LI_set_var  (expr env)
+  (setf (aref env (cadr expr)) 
+      (EVAL_LI (caddr expr) env)))
+(trace EVAL_LI_set_var)
+;==========================
+
+;==========================
+(defun EVAL_LI_mcall  (expr env)
+  )
+;(trace EVAL_LI_mcall)
+;==========================
+
+;==========================
+(defun EVAL_LI_call  (expr env)
+  (apply (second expr)
+      (MAP_EVAL_LI (cddr expr) env)))
+(trace EVAL_LI_call)
+;==========================
+
+;==========================
+(defun EVAL_LI_unknown  (expr env)
+  )
+;(trace EVAL_LI_unknown)
+;==========================
+
+;==========================
+(defun EVAL_LI_let  (expr env)
+  )
+;(trace EVAL_LI_let)
+;==========================
+
+;==========================
+(defun EVAL_LI_lclosure  (expr env)
+  )
+;(trace EVAL_LI_lclosure)
+;==========================
+
+;==========================
+(defun EVAL_LI_set_fun  (expr env)
+  )
+;(trace EVAL_LI_set_fun)
+;==========================
+
+;==========================
+(defun EVAL_LI_apply  (expr env)
+  )
+;(trace EVAL_LI_apply)
+;==========================
+
+;==========================
+(defun EVAL_LI_cvar  (expr env)
+  )
+;(trace EVAL_LI_cvar)
+;==========================
+
+;==========================
+(defun EVAL_LI_set_cvar  (expr env)
+  )
+;(trace EVAL_LI_set_cvar)
+;==========================
+
+;==========================
+(defun EVAL_LI_lcall  (expr env)
+  )
+;(trace EVAL_LI_lcall)
+;==========================
+
+
 
 
 
