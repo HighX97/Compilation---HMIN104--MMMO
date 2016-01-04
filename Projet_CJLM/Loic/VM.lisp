@@ -289,7 +289,7 @@
             (if (not getSrc)
               (warn "ERR : <src> l'emplacement mémoire est vide")
               (vm_set_register  vm dest getSrc))))))))
-;(trace vm_load) 
+(trace vm_load) 
 ;======================================================  
 
 ;======================================================  
@@ -300,12 +300,12 @@
       (if (not (or (constantp dest) (is_register_? dest)))
         (warn "ERR : <dest> doit être un registre ou une adresse mémoire (int)")
         (if (is_register_? dest)
-          (setf (aref (get vm :memory) (vm_get_register vm dest) (vm_get_register vm src)))
-        (if (< (- (get vm :memory_size) 1) dest)
-          (warn (concatenate 'string "ERR : <dest> l'adresse mémoire @" (write-to-string dest) " est hors limites [0 , " (write-to-string (- (get vm :memory_size) 1)) "]"))
-          (let ((oldV (vm_get_register vm src))
-            (getDest (svref (get vm :memory) dest)))
-          (setf (aref (get vm :memory) dest) (vm_get_register vm src))))))))
+          (setf (aref (get vm :memory) (vm_get_register vm dest)) (vm_get_register vm src))
+          (if (< (- (get vm :memory_size) 1) dest)
+            (warn (concatenate 'string "ERR : <dest> l'adresse mémoire @" (write-to-string dest) " est hors limites [0 , " (write-to-string (- (get vm :memory_size) 1)) "]"))
+            (let ((oldV (vm_get_register vm src))
+              (getDest (svref (get vm :memory) dest)))
+              (setf (aref (get vm :memory) dest) (vm_get_register vm src))))))))
 ;(trace vm_store) 
 ;======================================================  
 
