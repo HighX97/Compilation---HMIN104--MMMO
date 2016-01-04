@@ -87,7 +87,11 @@
   (if (> (cdr expr) nbArgs)
   	(warn "")
   	(let ((decalage (- nbArgs (cdr expr))))
-  		(list 'LOAD  (list '- ''FP decalage) ''R0))))
+  		(list
+  			(list 'MOVE decalage ''R2)
+  			(list 'MOVE ''FP ''R1)
+  			(list 'SUB ''R2 ''R1)
+  			(list 'LOAD  ''R1 ''R0)))))
 ;(trace LI_TO_ASM_var)
 ;==========================
 
@@ -123,7 +127,10 @@
   	(let ((decalage (- nbArgs (second expr))))
   		(list
   		(list 'MOVE (third expr) ''R0)
-  		(list 'STORE ''R0 (list '- ''FP decalage))))))
+  		(list 'MOVE decalage ''R2)
+		(list 'MOVE ''FP ''R1)
+		(list 'SUB ''R2 ''R1)
+  		(list 'STORE ''R0 ''R1)))))
 ;(trace LI_TO_ASM_set_var)
 ;==========================
 

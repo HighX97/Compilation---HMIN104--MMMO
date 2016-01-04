@@ -289,13 +289,15 @@
   (defun vm_store (vm src dest)
     (if (not (is_register_? src))
       (warn "ERR : <src> doit être un registre")
-      (if (not (constantp dest))
-        (warn "ERR : <dest> doit être une adresse mémoire (int)")
+      (if (not (or (constantp dest) (is_register_? dest)))
+        (warn "ERR : <dest> doit être un registre ou une adresse mémoire (int)")
+        (if (is_register_? dest)
+          (setf (aref (get vm :memory) (vm_get_register vm dest) (vm_get_register vm src)))
         (if (< (- (get vm :memory_size) 1) dest)
           (warn (concatenate 'string "ERR : <dest> l'adresse mémoire @" (write-to-string dest) " est hors limites [0 , " (write-to-string (- (get vm :memory_size) 1)) "]"))
           (let ((oldV (vm_get_register vm src))
             (getDest (svref (get vm :memory) dest)))
-          (setf (aref (get vm :memory) dest) (vm_get_register vm src)))))))
+          (setf (aref (get vm :memory) dest) (vm_get_register vm src))))))))
 ;(trace vm_store) 
 ;======================================================  
 
@@ -565,16 +567,137 @@
 (trace vm_jnil) 
 ;====================================================== 
 
-;====================================================== 
+;====================================================== TO DO
 ; (NOP)         = rien
 (defun vm_nop (vm)
   )
 (trace vm_nop) 
 ;====================================================== 
 
-;====================================================== 
+;====================================================== TO DO
 ; (HALT)        = arrêt
 (defun vm_halt (vm)
   )
+;(trace vm_halt)
+;======================================================  
+
+;====================================================== TO DO
+; (HALT)        = arrêt
+(defun vm_read_asm (vm asm)
+  (if (atom asm)
+    nil
+    (let ((fun (caar asm)) 
+      (args (cdar asm))
+      (rest (cdr asm)))
+    ;
+    (cond
+      ((eq fun 'LOAD)
+        (progn
+          (vm_load vm (first args) (second args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'STORE)
+        (progn
+          (vm_store vm (first args) (second args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'MOVE)
+        (progn
+          (vm_move vm (first args) (second args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'ADD)
+        (progn
+          (vm_add vm (first args) (second args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'SUB)
+        (progn
+          (vm_sub vm (first args) (second args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'MUL)
+        (progn
+          (vm_mul vm (first args) (second args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'DIV)
+        (progn
+          (vm_div vm (first args) (second args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'INCR)
+        (progn
+          (vm_incr vm (first args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'DECR)
+        (progn
+          (vm_decr vm (first args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'PUSH)
+        (progn
+          (vm_push vm (first args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'POP)
+        (progn
+          (vm_pop vm (first args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'LABEL)
+        (progn
+          (vm_label vm (first args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'JMP)
+        (progn
+          (vm_jmp vm (first args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'JSR)
+        (progn
+          (vm_jsr vm (first args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'RTN)
+        (progn
+          (vm_rtn vm)
+          (vm_read_asm vm rest)))
+      ((eq fun 'CMP)
+        (progn
+          (vm_cmp vm (first args) (second args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'JGT)
+        (progn
+          (vm_jgt vm (first args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'JGE)
+        (progn
+          (vm_jge vm (first args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'JLT)
+        (progn
+          (vm_jlt vm (first args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'JLE)
+        (progn
+          (vm_jle vm (first args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'JEQ)
+        (progn
+          (vm_jeq vm (first args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'JNE)
+        (progn
+          (vm_jne vm (first args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'TEST)
+        (progn
+          (vm_test vm (first args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'JTRUE)
+        (progn
+          (vm_jtrue vm (first args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'JNIL)
+        (progn
+          (vm_jnil vm (first args))
+          (vm_read_asm vm rest)))
+      ((eq fun 'NOP)
+        (progn
+          (vm_nop vm)
+          (vm_read_asm vm rest)))
+      ((eq fun 'HALT)
+        (progn
+          (vm_halt vm)
+          (vm_read_asm vm rest)))))))
 ;(trace vm_halt)
 ;======================================================  
