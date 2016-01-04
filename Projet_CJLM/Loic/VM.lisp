@@ -272,15 +272,23 @@
 (defun vm_load (vm src dest)
   (if (not (is_register_? dest))
     (warn "ERR : <dest> doit être un registre")
-    (if (not (constantp src))
-      (warn "ERR : <src> doit être une adresse mémoire (int)")
-      (if (< (- (get vm :memory_size) 1) src)
-        (warn (concatenate 'string "ERR : <src> l'adresse mémoire @" (write-to-string src) " est hors limites [0 , " (write-to-string (- (get vm :memory_size) 1)) "]"))
-        (let ((getSrc
-          (svref (get vm :memory) src))) 
-        (if (not getSrc)
-          (warn "ERR : <src> l'emplacement mémoire est vide")
-          (vm_set_register  vm dest getSrc)))))))
+    (if (not (or (constantp src) (is_register_? src)))
+      (warn "ERR : <dest> doit être un registre ou une adresse mémoire (int)")
+      (if (is_register_? src)
+        (if (< (- (get vm :memory_size) 1) (vm_get_register src))
+          (warn (concatenate 'string "ERR : <src> l'adresse mémoire @" (write-to-string src) " est hors limites [0 , " (write-to-string (- (get vm :memory_size) 1)) "]"))
+          (let ((getSrc
+            (svref (get vm :memory) (vm_get_register src)))) 
+            (if (not getSrc)
+              (warn "ERR : <src> l'emplacement mémoire est vide")
+              (vm_set_register  vm dest getSrc))))
+        (if (< (- (get vm :memory_size) 1) src)
+          (warn (concatenate 'string "ERR : <src> l'adresse mémoire @" (write-to-string src) " est hors limites [0 , " (write-to-string (- (get vm :memory_size) 1)) "]"))
+          (let ((getSrc
+            (svref (get vm :memory) src))) 
+            (if (not getSrc)
+              (warn "ERR : <src> l'emplacement mémoire est vide")
+              (vm_set_register  vm dest getSrc))))))))
 ;(trace vm_load) 
 ;======================================================  
 
