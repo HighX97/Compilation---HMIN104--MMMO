@@ -1,5 +1,5 @@
 ;=============================================================================================================
-;											EVAL_LI  
+;											EVAL_LI
 ;	<expr-li>
 ;	(:lit . <expr>)
 ;	(:var . <int>)
@@ -17,9 +17,6 @@
 ;	(:cvar <int> . <int>)
 ;	(:set-cvar <int> <int> . <expr-li>*)
 ;	(:lcall <int> <int> <expr-li>*)
-
-;(LISP_TO_LI <LISP>) ---> <LI>
-;(EVAL_LI <LI> = RESULT = (EVAL <LISP>)
 ;=============================================================================================================
 
 ;==========================
@@ -102,7 +99,7 @@
 ;;Get-Defun
 (defun get_defun (symb)
   (get symb :defun))
-(trace get_defun)
+;(trace get_defun)
 ;==========================
 
 ;==========================
@@ -112,7 +109,7 @@
 (defun set_defun (symb expr-lambda)
   (setf (get symb :defun)
     expr-lambda))
-(trace set_defun)
+;(trace set_defun)
 ;========================== 
 
 ;==========================
@@ -150,21 +147,15 @@
 
 ;==========================
 (defun EVAL_LI_mcall  (expr env)
-  (let ((fun (get-defun (second expr)))
-      (args (map-eval-li (cddr expr) env)))
-                                                ;(thrid de fun) : corp de la fonction
-                                                ;(second fun) : parametres
-                                                ;(get-defun 'fibo') : 
-      (eval-LI (cddr fun)
-        (make-env-eval-LI (second fun) args))))
-(trace EVAL_LI_mcall)
+  )
+;(trace EVAL_LI_mcall)
 ;==========================
 
 ;==========================
 (defun EVAL_LI_call  (expr env)
   (apply (second expr)
       (MAP_EVAL_LI (cddr expr) env)))
-;(trace EVAL_LI_call)
+(trace EVAL_LI_call)
 ;==========================
 
 ;==========================

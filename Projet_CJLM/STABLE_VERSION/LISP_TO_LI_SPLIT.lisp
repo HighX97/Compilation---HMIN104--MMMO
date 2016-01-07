@@ -158,14 +158,11 @@
        ((eq 'setf fun)
         (LISP_TO_LI_noAtom_set_var args env))
        ;
-       ((get_defun fun)
-          (LISP_TO_LI_noAtom_mcall fun args env))
-       ;
        ((eq 'defun fun)
         (LISP_TO_LI_noAtom_defun args env))
        ;
        ((eq 'mcall fun)
-        (LISP_TO_LI_noAtom_mcall fun args env))
+        (LISP_TO_LI_noAtom_mcall args env))
        ;
        ((eq 'let fun)
          (LISP_TO_LI_noAtom_let args env))
@@ -248,10 +245,17 @@
 ;==========================V
 
 ;==========================X
-(defun LISP_TO_LI_noAtom_mcall (fun args env)
-  (list* :mcall fun (MAP_LISP_TO_LI args env)))
-(trace LISP_TO_LI_noAtom_mcall)
+(defun LISP_TO_LI_noAtom_mcall (args env)
+  )
+;(trace LISP_TO_LI_noAtom_mcall)
 ;==========================X
+
+;==========================X
+(defun LISP_TO_LI_noAtom_mcall (args env)
+  )
+;(trace LISP_TO_LI_noAtom_mcall)
+;==========================X
+
 
 ;==========================X
 (defun LISP_TO_LI_noAtom_lcall (args env)
