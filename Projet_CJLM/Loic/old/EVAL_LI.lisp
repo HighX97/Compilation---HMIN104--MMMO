@@ -165,7 +165,8 @@
 
 		(map-eval-LI-progn (rest expr) env))))
 																								;
-																								;
+																	
+							;
 																								;
 																								;
 																								;
@@ -192,7 +193,7 @@
 
 		;;TEST eval-LI
 
-(load "../02-Generation_Langage_Intermediaire/LISP_to_LI.lisp")
+(load "LISP_TO_LI.lisp")
 
 ;Make_env
 (setf env (make-array 14))
@@ -229,13 +230,13 @@
 ;(eval-LI (LISP2LI '(IF (EQ 1 2) 3 7) env) env) 
 
 ;Cas CALL _ Valid
-;(eval-LI (LISP2LI '(EQ 1 1) env) env)
+(eval-LI (LISP2LI '(EQ 1 1) env) env)
 
 ;Cas MCALL 
-(set-defun 'looc '(+ x 1))
-(eval-LI (LISP2LI '(looc 4) env) env)
+;(set-defun 'looc '(+ x 1))
+;(eval-LI (LISP2LI '(looc 4) env) env)
 
-(eval-LI '(:MCALL + ((:VAR . 0) (:LIT . 1))) #(3))
+;(eval-LI '(:MCALL + ((:VAR . 0) (:LIT . 1))) #(3))
 ;(eval-LI '(:CALL + ((:VAR . 0) (:LIT . 1))) #(3))
 ;30. Trace: (EVAL-LI '(:CALL + ((:VAR . 0) (:LIT . 1))) '#(3))
 ;31. Trace: (EVAL-LI '(:VAR . 0) '#(3))
