@@ -9,31 +9,36 @@
 
 1- Exemple de langage intermédiaire (sur 6)
 
+;DEFUN EST UNE "FORME SPECIAL" | "MACRO" MAIS PAS UNE FONCTION
 1-1
 (defun mc (x)
     (if (> x 100)
         (- x 10)
-        (mc (mc (+ x 100)))))
+        (mc (mc (+ x 11)))))
 
 1-2
 (:LIT :LAMBDA 1
- (:IF (:CALL > (:VAR . 1) (:LIT . 100))
-     (:CALL - (:VAR . 1) (:LIT . 10))
-  (:CALL MC (:CALL MC (:CALL + (:VAR . 1) (:LIT . 100))))))
+  (:IF (:CALL > (:VAR . 1) (:LIT . 100))
+    (:CALL - (:VAR . 1) (:LIT . 10))
+    ;(:UNKNOWN (MC (MC (+ X 11))) (1))))
+    (:UNKNOWN (MC (MC (+ X 11))) (X))))
+    ;(:UNKNOWN mc (:UNKNOWN mc (:call + (:var . 1) (:lit 11))))
 
  1-3
 (SET_DEFUN 'MC
 '(:LIT :LAMBDA 1
- (:IF (:CALL > (:VAR . 1) (:LIT . 100))
-     (:CALL - (:VAR . 1) (:LIT . 10))
-  (:MCALL MC (:MCALL MC (:CALL + (:VAR . 1) (:LIT . 100)))))))
+  (:IF (:CALL > (:VAR . 1) (:LIT . 100))
+    (:CALL - (:VAR . 1) (:LIT . 10))
+    ;(:UNKNOWN (MC (MC (+ X 11))) (1))))
+    (:UNKNOWN (MC (MC (+ X 11))) (X)))))
+    ;(:UNKNOWN mc (:UNKNOWN mc (:call + (:var . 1) (:lit 11)))) False
 
 1-4
-(SET_DEFUN 'MCA
- '(:LIT :LAMBDA 1
-   (:IF (:CALL > (:VAR . 1) (:LIT . 100))
-       (:CALL - (:VAR . 1) (:LIT . 10))
-       (:UNKNOWN (MCA (MCA (+ X 100))) (X)))))
+(SET_DEFUN 'MC
+'(:LIT :LAMBDA 1
+  (:IF (:CALL > (:VAR . 1) (:LIT . 100))
+    (:CALL - (:VAR . 1) (:LIT . 10))
+    (:MCALL MC (:MCALL MC (:CALL + (:VAR . 1) (:LIT . 11)))))))
 
 
 
@@ -54,7 +59,7 @@
                    (progn (warn ":VAR doit être suivi par un entier naturel") nil)
                    (if (> 'args (array-dimensions env))
                        (progn (warn ":VAR la position de la variable est hors de l'environnement") nil)
-                       (print ":VAR ok"))))
+                       (progn (print ":VAR ok") T))))
     (:SET_VAR
       (if (not (atom (car args)))
            (warn "trop d'arguments pour le cas :SET-VAR"))
@@ -139,32 +144,31 @@
     (:VAR
         (if (verifier_syntaxe_li expr_li env)
             (if (get_elt env (first args))
-            	(get_elt env (first args))
-            	(progn (set_elt env (first args) (lispgensym)) (get_elt env (first args))))))
+              (get_elt env (first args))
+              (progn (set_elt env (first args) (lispgensym)) (get_elt env (first args))))))
     (:SET_VAR
         (if (verifier_syntaxe_li expr_li env)
             (list 'setf (get_elt env (first args)) (li_to_lisp_var (rest args) env)))))))
+
+;env dictionnaire
+;env = ((1.toto1) (2.toto2) (3.toto3))
+;watch lispgensym documentation
+
+(defun li_to_lisp_fun (nom_Fonction)
+  (let  ((vf (get_defun nom_Fonction)
+        ((env ((setf env (creer_env (cdr vf))))))
+    (list 'defun nom_Fonction (creer_param env) (li_to_lisp (car vf)))))))
 
 
 
 3-3
 
-(defun li_to_lisp_var_local (expr_li env)
-    (let ((fun (car expr))
-   (args (cdr expr)))
-    (ecase (fun)
-    (:UNKNOWN
-    	))))
-
+nbVariableLocale + nbParametre = taille de l'environnement
 
 
 3-4
 
-(defun li_to_lisp_unknown (expr_li env)
-    (let ((fun (car expr))
-   (args (cdr expr)))
-    (ecase (fun)
-    (:UNKNOWN
-    	))))
+cas UNKNOWN
+(li_to_lisp (lisp_to_li (cadr expr_li) (cddr expr_li)))
 
 
