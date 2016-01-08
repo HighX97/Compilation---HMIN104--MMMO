@@ -31,7 +31,7 @@
             (:IF 
                   (LI_TO_ASM_if expr nbArgs))
             (:CALL 
-                  (LI_TO_ASM_call expr))
+                  (LI_TO_ASM_call expr nbArgs))
             (:MCALL 
                   (LI_TO_ASM_mcall expr))
             (:PROGN 
@@ -141,9 +141,43 @@
 ;==========================
 
 ;==========================
-(defun LI_TO_ASM_call  (expr)
-  )
-;(trace LI_TO_ASM_call)
+(defun LI_TO_ASM_call  (expr nbArgs)
+  (ecase (second expr)
+    (+
+      (LI_TO_ASM_call_add expr))
+    (-
+      (LI_TO_ASM_call_sub expr))
+    (*
+      (LI_TO_ASM_call_mul expr))
+    (/
+      (LI_TO_ASM_call_div expr))))
+(trace LI_TO_ASM_call)
+;==========================
+
+;==========================
+(defun LI_TO_ASM_call_add  (expr)
+  (print "LI_TO_ASM_call_add"))
+(trace LI_TO_ASM_call_add)
+;==========================
+
+;==========================
+(defun LI_TO_ASM_call_sub  (expr)
+  (print "LI_TO_ASM_call_sub"))
+(trace LI_TO_ASM_call_sub)
+;==========================
+
+;==========================
+(defun LI_TO_ASM_call_mul  (expr)
+  (print "LI_TO_ASM_call_mul"))
+(trace LI_TO_ASM_call_mul)
+;==========================
+
+;==========================
+(defun LI_TO_ASM_call_div  (expr)
+  (print "LI_TO_ASM_call_div"))
+(trace LI_TO_ASM_call_div)
+;==========================
+
 ;==========================
 
 ;==========================

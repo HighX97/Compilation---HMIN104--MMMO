@@ -22,33 +22,33 @@
 ;	(:lcall <int> <int> <expr-li>*)
 ;=============================================================================================================
 ;Make_env
-(setf env (make-array 26))
-(setf (aref env 0) 'A)
-(setf (aref env 1) 'B)
-(setf (aref env 2) 'C)
-(setf (aref env 3) 'D)
-(setf (aref env 4) 'E)
-(setf (aref env 5) 'F)
-(setf (aref env 6) 'G)
-(setf (aref env 7) 'H)
-(setf (aref env 8) 'I)
-(setf (aref env 9) 'J)
-(setf (aref env 10) 'K)
-(setf (aref env 11) 'L)
-(setf (aref env 12) 'M)
-(setf (aref env 13) 'N)
-(setf (aref env 14) 'O)
-(setf (aref env 15) 'P)
-(setf (aref env 16) 'Q)
-(setf (aref env 17) 'R)
-(setf (aref env 18) 'S)
-(setf (aref env 19) 'T)
-(setf (aref env 20) 'U)
-(setf (aref env 21) 'V)
-(setf (aref env 22) 'W)
-(setf (aref env 23) 'X)
-(setf (aref env 24) 'Y)
-(setf (aref env 25) 'Z)
+(setf env_lisp_to_li (make-array 26))
+(setf (aref env_lisp_to_li 0) 'A)
+(setf (aref env_lisp_to_li 1) 'B)
+(setf (aref env_lisp_to_li 2) 'C)
+(setf (aref env_lisp_to_li 3) 'D)
+(setf (aref env_lisp_to_li 4) 'E)
+(setf (aref env_lisp_to_li 5) 'F)
+(setf (aref env_lisp_to_li 6) 'G)
+(setf (aref env_lisp_to_li 7) 'H)
+(setf (aref env_lisp_to_li 8) 'I)
+(setf (aref env_lisp_to_li 9) 'J)
+(setf (aref env_lisp_to_li 10) 'K)
+(setf (aref env_lisp_to_li 11) 'L)
+(setf (aref env_lisp_to_li 12) 'M)
+(setf (aref env_lisp_to_li 13) 'N)
+(setf (aref env_lisp_to_li 14) 'O)
+(setf (aref env_lisp_to_li 15) 'P)
+(setf (aref env_lisp_to_li 16) 'Q)
+(setf (aref env_lisp_to_li 17) 'R)
+(setf (aref env_lisp_to_li 18) 'S)
+(setf (aref env_lisp_to_li 19) 'T)
+(setf (aref env_lisp_to_li 20) 'U)
+(setf (aref env_lisp_to_li 21) 'V)
+(setf (aref env_lisp_to_li 22) 'W)
+(setf (aref env_lisp_to_li 23) 'X)
+(setf (aref env_lisp_to_li 24) 'Y)
+(setf (aref env_lisp_to_li 25) 'Z)
 
 ;(setf (aref env 0) '(A . 1))
 ;(setf (aref env 1) '(B . 1))
@@ -110,6 +110,23 @@
 ;(trace set_defun)
 ;========================== 
 
+;==========================
+;;Get-Defun
+(defun get_defun (symb)
+  (get symb :defun))
+(trace get_defun)
+;==========================
+
+;==========================
+;;Set-Defun
+;;symb : expression evaluable mais pas evaluee
+;;expr-lambda : expression evaluable evaluee
+(defun set_defun (symb expr-lambda)
+  (setf (get symb :defun)
+    expr-lambda))
+(trace set_defun)
+;========================== 
+
 ;==========================V
 (defun LISP_TO_LI_Atom (expr env)
   (if (constantp expr) 
@@ -131,7 +148,7 @@
    (position expr env)))
   ; 
   (if pos 
-    (cons :var pos) 
+    (cons :var (+ 1 pos)) 
     (error "La variable ~s n'est pas connu dans l'environnement ~s" expr env))))
 ;(trace LISP_TO_LI_atom_var)
 ;==========================V
@@ -211,7 +228,7 @@
 ;==========================V~
 (defun LISP_TO_LI_noAtom_cond (expr env)
   (LISP_TO_LI (macroexpand-1 expr) env))
-;(trace LISP_TO_LI_noAtom_if)
+;(trace LISP_TO_LI_noAtom_cond)
 ;==========================V~
 
 ;==========================V
@@ -242,9 +259,15 @@
 
 
 ;==========================V
+(defun LISP_TO_LI_noAtom_defun_1 (args env)
+  (list ':call 'set_defun (cons ':lit (first args)) (list ':lit ':lambda (length (second args)) (LISP_TO_LI (third args) (second args)))))
+;(trace LISP_TO_LI_noAtom_defun)
+;==========================V
+
+;==========================V
 (defun LISP_TO_LI_noAtom_defun (args env)
-  (list ':call 'set_defun (cons ':lit (first args)) (list ':lit ':lambda (length (second args)) (LISP_TO_LI (third args) env))))
-(trace LISP_TO_LI_noAtom_defun)
+  (set_defun (first args) (list ':lit ':lambda (length (second args)) (LISP_TO_LI (third args) (second args)))))
+;(trace LISP_TO_LI_noAtom_defun)
 ;==========================V
 
 ;==========================X
