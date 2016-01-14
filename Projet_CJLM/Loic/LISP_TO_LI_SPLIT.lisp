@@ -78,12 +78,7 @@
 ;(setf (aref env 25) '(Z . 1))
 
 ;==========================
-(defun LISP_TO_LI (expr env) 
-  (if (atom expr) 
-    (LISP_TO_LI_Atom expr env)
-    (LISP_TO_LI_noAtom expr env)))
-(trace LISP_TO_LI)
-;==========================
+
 
 ;==========================
 (defun MAP_LISP_TO_LI (lexpr env) 
@@ -125,7 +120,14 @@
   (setf (get symb :defun)
     expr-lambda))
 (trace set_defun)
+
 ;========================== 
+(defun LISP_TO_LI (expr env) 
+  (if (atom expr) 
+    (LISP_TO_LI_Atom expr env)
+    (LISP_TO_LI_noAtom expr env)))
+(trace LISP_TO_LI)
+;==========================
 
 ;==========================V
 (defun LISP_TO_LI_Atom (expr env)
@@ -160,6 +162,7 @@
    (args (cdr expr)))
   ;
   (cond
+    ;Cas obligatoire
    ((eq 'quote fun)
     (LISP_TO_LI_noAtom_quote args env))
        ;
@@ -183,6 +186,7 @@
        ;
        ((eq 'mcall fun)
         (LISP_TO_LI_noAtom_mcall fun args env))
+       ;Cas optionnel
        ;
        ((eq 'let fun)
          (LISP_TO_LI_noAtom_let args env))
@@ -241,7 +245,9 @@
 (defun LISP_TO_LI_noAtom_set_var (args env)
   (if (symbolp (first args)) 
     (list :set_var (cdr (LISP_TO_LI (first args) env)) (LISP_TO_LI (second args) env)) 
-    (list* :setf (LISP_TO_LI (first args ) env))))
+    (list* :setf (LISP_TO_LI (first args ) env))
+  )
+)
 ;(trace LISP_TO_LI_noAtom_set_var)
 ;==========================V ~
 

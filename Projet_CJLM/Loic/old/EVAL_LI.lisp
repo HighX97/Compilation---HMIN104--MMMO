@@ -171,8 +171,6 @@
 																								;
 																								;
 																								;																																																																																																																								
-(defun make-env-eval-LI (nbArgs listArgs)
-  (make_env_rec listArgs 0 (make-array (+ nbArgs 1))))
 
 (defun make_env_rec (listArgs pos envGenerated)
 	(when listArgs
@@ -180,6 +178,8 @@
 		(make_env_rec (cdr listArgs) (+ pos 1) envGenerated))
 	envGenerated)
 																								;
+(defun make-env-eval-LI (nbArgs listArgs)
+  (make_env_rec listArgs 0 (make-array (+ nbArgs 1))))
 																								;
 																								;
 																								;
