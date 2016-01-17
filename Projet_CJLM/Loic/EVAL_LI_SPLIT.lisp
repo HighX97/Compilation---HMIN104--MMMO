@@ -21,34 +21,95 @@
 ;(LISP_TO_LI <LISP>) ---> <LI>
 ;(EVAL_LI <LI> = RESULT = (EVAL <LISP>)
 ;=============================================================================================================
+;Make_env
+(setf env_eval_li_args (make-array 26))
+(setf (aref env_eval_li_args 0) (make-array 26))
+(setf (aref env_eval_li_args 0) 'A)
+(setf (aref env_eval_li_args 1) 'B)
+(setf (aref env_eval_li_args 2) 'C)
+(setf (aref env_eval_li_args 3) 'D)
+(setf (aref env_eval_li_args 4) 'E)
+(setf (aref env_eval_li_args 5) 'F)
+(setf (aref env_eval_li_args 6) 'G)
+(setf (aref env_eval_li_args 7) 'H)
+(setf (aref env_eval_li_args 8) 'I)
+(setf (aref env_eval_li_args 9) 'J)
+(setf (aref env_eval_li_args 10) 'K)
+(setf (aref env_eval_li_args 11) 'L)
+(setf (aref env_eval_li_args 12) 'M)
+(setf (aref env_eval_li_args 13) 'N)
+(setf (aref env_eval_li_args 14) 'O)
+(setf (aref env_eval_li_args 15) 'P)
+(setf (aref env_eval_li_args 16) 'Q)
+(setf (aref env_eval_li_args 17) 'R)
+(setf (aref env_eval_li_args 18) 'S)
+(setf (aref env_eval_li_args 19) 'T)
+(setf (aref env_eval_li_args 20) 'U)
+(setf (aref env_eval_li_args 21) 'V)
+(setf (aref env_eval_li_args 22) 'W)
+(setf (aref env_eval_li_args 23) 'X)
+(setf (aref env_eval_li_args 24) 'Y)
+(setf (aref env_eval_li_args 25) 'Z)
 
-(setf env_eval_li (make-array 26))
-(setf (aref env_eval_li 0) 'A)
-(setf (aref env_eval_li 1) 'B)
-(setf (aref env_eval_li 2) 'C)
-(setf (aref env_eval_li 3) 'D)
-(setf (aref env_eval_li 4) 'E)
-(setf (aref env_eval_li 5) 'F)
-(setf (aref env_eval_li 6) 'G)
-(setf (aref env_eval_li 7) 'H)
-(setf (aref env_eval_li 8) 'I)
-(setf (aref env_eval_li 9) 'J)
-(setf (aref env_eval_li 10) 'K)
-(setf (aref env_eval_li 11) 'L)
-(setf (aref env_eval_li 12) 'M)
-(setf (aref env_eval_li 13) 'N)
-(setf (aref env_eval_li 14) 'O)
-(setf (aref env_eval_li 15) 'P)
-(setf (aref env_eval_li 16) 'Q)
-(setf (aref env_eval_li 17) 'R)
-(setf (aref env_eval_li 18) 'S)
-(setf (aref env_eval_li 19) 'T)
-(setf (aref env_eval_li 20) 'U)
-(setf (aref env_eval_li 21) 'V)
-(setf (aref env_eval_li 22) 'W)
-(setf (aref env_eval_li 23) 'X)
-(setf (aref env_eval_li 24) 'Y)
-(setf (aref env_eval_li 25) 'Z)
+(setf env_eval_li_varLocales (make-array 26))
+(setf (aref env_eval_li_varLocales 0) (make-array 26))
+(setf (aref env_eval_li_varLocales 0) 'AA)
+(setf (aref env_eval_li_varLocales 1) 'BA)
+(setf (aref env_eval_li_varLocales 2) 'CA)
+(setf (aref env_eval_li_varLocales 3) 'DA)
+(setf (aref env_eval_li_varLocales 4) 'EA)
+(setf (aref env_eval_li_varLocales 5) 'FA)
+(setf (aref env_eval_li_varLocales 6) 'GA)
+(setf (aref env_eval_li_varLocales 7) 'HA)
+(setf (aref env_eval_li_varLocales 8) 'IA)
+(setf (aref env_eval_li_varLocales 9) 'JA)
+(setf (aref env_eval_li_varLocales 10) 'KA)
+(setf (aref env_eval_li_varLocales 11) 'LA)
+(setf (aref env_eval_li_varLocales 12) 'MA)
+(setf (aref env_eval_li_varLocales 13) 'NA)
+(setf (aref env_eval_li_varLocales 14) 'OA)
+(setf (aref env_eval_li_varLocales 15) 'PA)
+(setf (aref env_eval_li_varLocales 16) 'QA)
+(setf (aref env_eval_li_varLocales 17) 'RA)
+(setf (aref env_eval_li_varLocales 18) 'SA)
+(setf (aref env_eval_li_varLocales 19) 'TA)
+(setf (aref env_eval_li_varLocales 20) 'UA)
+(setf (aref env_eval_li_varLocales 21) 'VA)
+(setf (aref env_eval_li_varLocales 22) 'WA)
+(setf (aref env_eval_li_varLocales 23) 'XA)
+(setf (aref env_eval_li_varLocales 24) 'YA)
+(setf (aref env_eval_li_varLocales 25) 'ZA)
+
+(setf env_eval_li (make-array 3))
+(setf (aref env_eval_li 0) env_eval_li_args)
+(setf (aref env_eval_li 1) env_eval_li_varLocales)
+;(setf env_eval_li (make-array 26))
+;(setf (aref env_eval_li 0) 'A)
+;(setf (aref env_eval_li 1) 'B)
+;(setf (aref env_eval_li 2) 'C)
+;(setf (aref env_eval_li 3) 'D)
+;(setf (aref env_eval_li 4) 'E)
+;(setf (aref env_eval_li 5) 'F)
+;(setf (aref env_eval_li 6) 'G)
+;(setf (aref env_eval_li 7) 'H)
+;(setf (aref env_eval_li 8) 'I)
+;(setf (aref env_eval_li 9) 'J)
+;(setf (aref env_eval_li 10) 'K)
+;(setf (aref env_eval_li 11) 'L)
+;(setf (aref env_eval_li 12) 'M)
+;(setf (aref env_eval_li 13) 'N)
+;(setf (aref env_eval_li 14) 'O)
+;(setf (aref env_eval_li 15) 'P)
+;(setf (aref env_eval_li 16) 'Q)
+;(setf (aref env_eval_li 17) 'R)
+;(setf (aref env_eval_li 18) 'S)
+;(setf (aref env_eval_li 19) 'T)
+;(setf (aref env_eval_li 20) 'U)
+;(setf (aref env_eval_li 21) 'V)
+;(setf (aref env_eval_li 22) 'W)
+;(setf (aref env_eval_li 23) 'X)
+;(setf (aref env_eval_li 24) 'Y)
+;(setf (aref env_eval_li 25) 'Z)
 
 ;==========================
 (defun EVAL_LI (expr env) 
@@ -177,9 +238,22 @@
 ;==========================
 
 ;==========================
+(defun EVAL_LI_var_  (expr env)
+  (aref env (- (cdr expr) 1)))
+;(trace EVAL_LI_var)
+;==========================
+
+;==========================
 (defun EVAL_LI_var  (expr env)
-  (aref env (cdr expr)))
+  (aref (aref env 0) (- (cdr expr) 1)))
 (trace EVAL_LI_var)
+;==========================
+
+;==========================
+(defun EVAL_LI_cvar  (expr env)
+  (aref (aref env (- (cadr expr) 1)) (- (cddr expr) 1)))
+;(trace EVAL_LI_cvar)
+;(:CVAR 2 . 21)
 ;==========================
 
 ;==========================
@@ -197,9 +271,19 @@
 ;==========================
 
 ;==========================
-(defun EVAL_LI_set_var  (expr env)
+(defun EVAL_LI_set_var_1  (expr env)
   (setf (aref env (- (cadr expr) 1)) 
       (EVAL_LI (caddr expr) env)))
+;(trace EVAL_LI_set_var_)
+;==========================
+
+;==========================
+(defun EVAL_LI_set_var  (expr env)
+  (if (atom (cadr expr))
+    (setf (aref (aref env 0) (- (cadr expr) 1)) 
+      (EVAL_LI (caddr expr) env))
+    (setf (aref (aref env (- (caadr expr) 1)) (- (cdadr expr) 1))
+      (EVAL_LI (caddr expr) env))))
 (trace EVAL_LI_set_var)
 ;==========================
 
@@ -270,12 +354,6 @@
 (defun EVAL_LI_apply  (expr env)
   )
 ;(trace EVAL_LI_apply)
-;==========================
-
-;==========================
-(defun EVAL_LI_cvar  (expr env)
-  )
-;(trace EVAL_LI_cvar)
 ;==========================
 
 ;==========================

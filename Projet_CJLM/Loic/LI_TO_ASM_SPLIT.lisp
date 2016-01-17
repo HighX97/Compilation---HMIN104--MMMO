@@ -76,7 +76,9 @@
 ;(:LIT . 0)
 ;MOVE  #<cste> R0
 (defun LI_TO_ASM_const  (expr)
-  (list 'MOVE expr ''R0))
+  (list 
+    (list 'MOVE expr 'R0)
+    (list 'PUSH 'R0)))
 ;(trace LI_TO_ASM_const)
 ;==========================
 
@@ -93,6 +95,12 @@
   			(list 'SUB ''R2 ''R1)
   			(list 'LOAD  ''R1 ''R0)))))
 ;(trace LI_TO_ASM_var)
+;==========================
+
+;==========================
+(defun LI_TO_ASM_cvar  (expr)
+  )
+;(trace LI_TO_ASM_cvar)
 ;==========================
 
 ;==========================
@@ -134,48 +142,20 @@
 ;(trace LI_TO_ASM_set_var)
 ;==========================
 
-;==========================
-(defun LI_TO_ASM_mcall  (expr)
-  )
-;(trace LI_TO_ASM_mcall)
-;==========================
 
 ;==========================
+;(:CALL + (:LIT . 1) (:LIT . 2))
+;(apply #'+ '(1 2 3))
+
 (defun LI_TO_ASM_call  (expr nbArgs)
-  (ecase (second expr)
-    (+
-      (LI_TO_ASM_call_add expr))
-    (-
-      (LI_TO_ASM_call_sub expr))
-    (*
-      (LI_TO_ASM_call_mul expr))
-    (/
-      (LI_TO_ASM_call_div expr))))
+  )
 (trace LI_TO_ASM_call)
 ;==========================
 
 ;==========================
-(defun LI_TO_ASM_call_add  (expr)
-  (print "LI_TO_ASM_call_add"))
-(trace LI_TO_ASM_call_add)
-;==========================
-
-;==========================
-(defun LI_TO_ASM_call_sub  (expr)
-  (print "LI_TO_ASM_call_sub"))
-(trace LI_TO_ASM_call_sub)
-;==========================
-
-;==========================
-(defun LI_TO_ASM_call_mul  (expr)
-  (print "LI_TO_ASM_call_mul"))
-(trace LI_TO_ASM_call_mul)
-;==========================
-
-;==========================
-(defun LI_TO_ASM_call_div  (expr)
-  (print "LI_TO_ASM_call_div"))
-(trace LI_TO_ASM_call_div)
+(defun LI_TO_ASM_mcall  (expr)
+  )
+;(trace LI_TO_ASM_mcall)
 ;==========================
 
 ;==========================
@@ -211,12 +191,6 @@
 ;==========================
 
 ;==========================
-(defun LI_TO_ASM_cvar  (expr)
-  )
-;(trace LI_TO_ASM_cvar)
-;==========================
-
-;==========================
 (defun LI_TO_ASM_set_cvar  (expr)
   )
 ;(trace LI_TO_ASM_set_cvar)
@@ -227,6 +201,7 @@
   )
 ;(trace LI_TO_ASM_lcall)
 ;==========================
+
 
 
 
