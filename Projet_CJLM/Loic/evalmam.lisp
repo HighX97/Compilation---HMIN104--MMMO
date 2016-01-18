@@ -1,12 +1,13 @@
 																																																																																																																																																
 (defun eval-LI (expr env)
 	(ecase (car expr)
-																								
+																							
 		(:LIT (cdr expr))
 																								
 		(:VAR (aref env (cdr expr)))
 																							
 		(:SET-VAR (setf (aref env (cadr expr)) (eval-LI (cddr expr) env )))
+		
 		(:LET-VAR (setf (aref env (cadr expr)) (eval-LI (cddr expr) env )))
 																								
 		(:IF (if (eval-LI (second expr) env) 
@@ -19,8 +20,6 @@
 																								
 																								
 		(:MCALL (let* ((fun (get-defun (second expr))))
-			;(args (map-eval-LI (cddr expr) env)))
-			;
 			(if (eq (car (cddr expr)) :LIT)
 				(let ((args (eval-LI (cddr expr) env))) 
 					(eval-LI (third fun) (make-env-eval-li args env (make-array (+ 1 (cadr fun))) 1)))
@@ -35,23 +34,29 @@
 		 ;      (args (map-eval-Li (cddr expr) env))
 		  ;     (nenv (make-array (+ 1 (cadr fun)))))
 		 ; (evalLi (third fun) (make-env-eval-li args env nenv 1)))) se
-		
+		(:LET 
+			;(let ( (p (cddr expr)) ) 
+				(map-eval-li (caddr expr) env)
+				(map-eval-li (cdddr expr) env)
+			;)
+		)
 		
 		(:LAMBDA 
-			(map-eval-li (cddr expr) env))
-																								
+			
+			(eval-li (third expr) env))
+			
+				
 		(:PROGN (map-eval-LI-progn (PROGN (cdr expr)) env))
 
-		(:lclosure (:closure env (length env) expr))
+		;(:lclosure (:closure env (length env) expr))
 
 		(:UNKNOWN (let ((nexpr (lisp2li (second expr) (caddr expr))))
 		    (if (eq (car nexpr) :UNKNOWN)
-			(error "eval-li ~s" expr)
+			(error "ICI l'erreur: eval-li ~s" expr)
 		      (eval-LI (displace expr nexpr) env))))
 																						
 		
-		))
-																								
+		))																		
 																																																																																																																																																
 (defun map-eval-LI (expr env)
 	
@@ -77,15 +82,22 @@
 																																																																																																																																																
 (defun displace (l ln)
 	(RPLACA l (CAR ln))
-    (RPLACD l (CDR ln))
-      l) 
+   (RPLACD l (CDR ln))
+     l) 
+(defun make-env-eval-LIA (nbArgs listArgs)
+  (make_env_rec listArgs 0 (make-array (+ nbArgs 1))))
+
+(defun make_env_rec (listArgs pos envGenerated) 
+	(when listArgs
+		(setf (aref envGenerated pos) (car listArgs))
+		(make_env_rec (cdr listArgs) (+ pos 1) envGenerated))
+	envGenerated)	
 
 	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
 	(defun LISP2LI (expr env) 
-	
-	(if (atom expr) 
+	 (if (atom expr) 
 		
 		(if	(constantp expr) 
 			
@@ -175,15 +187,24 @@
 				)
 
 				((eq 'cond fun) 
-						 
-						
+						;On concatène :if et on fait un MAPLISP2LI des arguments avec 
+						;l'environnement pour faire le LI de l'expression
 					;((rplace fun 'if) (LISP2LI expr env)))
 					(LISP2LI (macroexpand-1 expr) env))
 						;(cons :cond (MAPLISP2LI args env)))
 				((eq 'case fun) 
 						
 					(LISP2LI (macroexpand-1 expr) env))
+				
+						;-----cas Loop-----
+					
+				((eq 'loop fun) 
+					(list* :While 
+						(if (atom (second args)) (second args) (LISP2LI  (second args) env))
+								(MAPLISP2LI (list (fourth args)) env))
+					)
        					;-----Cas Macro-----
+				
 				 ((eq 'macro-function fun)
        				;
     				(cons :macro-function (LISP2LI (macroexpand-1 expr) env))) 
@@ -195,7 +216,8 @@
 			)
 		)
 	)
-)      
+)    
+
 
 (defun set-defun (symb lambda)
   (setf (get symb :defun) lambda))
@@ -211,7 +233,7 @@
 		)
 	)
 )
-(lisp2li '(defun mfi (l) (if (atom l) 0 (+ 1 (mfi (rest l))))) nil)
+(lisp2li '(defun mfi (l) (if (atom l) 0 (+ 1 (mf (rest l))))) nil)
 (defun l2liLet(expr env)
   (let* ((mam (car expr)))
   (if (atom expr)
@@ -229,4 +251,4 @@
 (defun factorielle(n) (if (<= n 0) 1 (* n (factorielle (- 1 n)))))
 (defun facto(n) (if (= n 0) 1 2)) 
 (trace displace make-env-eval-li map-eval-LI-progn map-eval-LI eval-LI)
-(trace newenv l2lilet MAPLISP2LI get-defun set-defun LISP2LI)
+(trace newenv l2lilet MAPLISP2LI get-defun set-defun LISP2LI)-
