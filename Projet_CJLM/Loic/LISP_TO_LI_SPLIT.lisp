@@ -22,6 +22,8 @@
 ;	(:lcall <int> <int> <expr-li>*)
 ;=============================================================================================================
 ;Make_env
+
+
 (setf env_lisp_to_li_args (make-array 26))
 (setf (aref env_lisp_to_li_args 0) (make-array 26))
 (setf (aref env_lisp_to_li_args 0) 'A)
@@ -162,7 +164,7 @@
 (defun LISP_TO_LI_Atom (expr env)
   (if (constantp expr) 
     (LISP_TO_LI_atom_const expr env)
-    (LISP_TO_LI_atom_var_cvar expr env)))
+    (LISP_TO_LI_atom_var expr env)))
 (trace LISP_TO_LI_Atom)
 ;==========================V
 
@@ -285,7 +287,7 @@
 
 ;==========================X
 (defun LISP_TO_LI_noAtom_unknown (fun args env)
-  (list :unknown (cons fun args) env))
+  (list :unknown (cons fun args) args))
 (trace LISP_TO_LI_noAtom_unknown)
 ;==========================V
 
@@ -297,7 +299,7 @@
 
 
 ;==========================V
-(defun LISP_TO_LI_noAtom_defun_1 (args env)
+(defun LISP_TO_LI_noAtom_defun_ (args env)
   (list ':call 'set_defun (cons ':lit (first args)) (list ':lit ':lambda (length (second args)) (LISP_TO_LI (third args) (second args)))))
 ;(trace LISP_TO_LI_noAtom_defun)
 ;==========================V
@@ -308,11 +310,11 @@
 (trace LISP_TO_LI_noAtom_defun)
 ;==========================V
 
-;==========================X
+;==========================V
 (defun LISP_TO_LI_noAtom_mcall (fun args env)
   (list* :mcall fun (MAP_LISP_TO_LI args env)))
 (trace LISP_TO_LI_noAtom_mcall)
-;==========================X
+;==========================V
 
 ;==========================X
 (defun LISP_TO_LI_noAtom_let (args env)
