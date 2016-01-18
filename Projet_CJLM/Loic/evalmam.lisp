@@ -53,10 +53,11 @@
 		(:UNKNOWN (let ((nexpr (lisp2li (second expr) (caddr expr))))
 		    (if (eq (car nexpr) :UNKNOWN)
 			(error "ICI l'erreur: eval-li ~s" expr)
-		      (eval-LI (displace expr nexpr) env))))
-																						
+		      (eval-LI (displace expr nexpr) env)))
+		)
 		
-		))																		
+	)
+)																		
 																																																																																																																																																
 (defun map-eval-LI (expr env)
 	
@@ -96,7 +97,7 @@
 	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
-	(defun LISP2LI (expr env) 
+(defun LISP2LI (expr env) 
 	 (if (atom expr) 
 		
 		(if	(constantp expr) 
