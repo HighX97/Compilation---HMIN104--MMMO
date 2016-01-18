@@ -31,7 +31,7 @@
             (:IF 
                   (LI_TO_ASM_if expr nbArgs))
             (:CALL 
-                  (LI_TO_ASM_call expr nbArgs))
+                  (LI_TO_ASM_call (cdr expr) nbArgs))
             (:MCALL 
                   (LI_TO_ASM_mcall expr))
             (:PROGN 
@@ -145,13 +145,28 @@
 
 ;==========================
 ;(:CALL + (:LIT . 1) (:LIT . 2))
-;(apply #'+ '(1 2 3))
+;(+ (:LIT . 1) (:LIT . 2))
+;(apply #'+ '(1 2))
 
 (defun LI_TO_ASM_call  (expr nbArgs)
-  )
+    ;Push function name
+    (append (list (list 'MOVE (list* :call (first expr)) 'R0)
+    (list 'PUSH 'R0))
+    ;Push args
+    (MAP_LI_TO_ASM_CALL (cdr expr))
+    ;Push nb_args
+    (list (list 'MOVE (length (cdr expr)) 'R0)
+    (list 'PUSH 'R0)
+    (list 'MOVE 'SP 'FP))))
 (trace LI_TO_ASM_call)
 ;==========================
-
+(defun MAP_LI_TO_ASM_CALL (expr)
+  (if (not (atom expr))
+    (list*
+      (list 'MOVE (car expr) 'R0)
+      (list 'PUSH 'R0)
+      (MAP_LI_TO_ASM_CALL (cdr expr)))))
+(trace MAP_LI_TO_ASM_CALL)
 ;==========================
 (defun LI_TO_ASM_mcall  (expr)
   )
