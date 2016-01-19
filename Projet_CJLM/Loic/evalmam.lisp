@@ -6,14 +6,14 @@
 																								
 		(:VAR 
 			(aref env 
-				(- (cdr expr) 1)
+				(- (cdr expr) 0)
 			)
 		)
 																							
 		(:SET-VAR 
 			(setf 
 				(aref env 
-					(- (second expr) 1)
+					(- (second expr) 0)
 				) 
 				(eval-LI (third expr) env )
 			)
