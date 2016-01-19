@@ -215,6 +215,8 @@
 ;(apply #'+ '(1 2))
 
 (defun LI_TO_ASM_call  (expr nbArgs)
+  (if (eq (first expr) 'SET-DEFUN)
+    (LI_TO_ASM_defun (cdr expr) nbArgs)
     ;Push function name
     (append (list (list 'MOVE (list* :call (first expr)) 'R0)
     (list 'PUSH 'R0))
@@ -223,7 +225,7 @@
     ;Push nb_args
     (list (list 'MOVE (length (cdr expr)) 'R0)
     (list 'PUSH 'R0)
-    (list 'MOVE 'SP 'FP))))
+    (list 'MOVE 'SP 'FP)))))
 (trace LI_TO_ASM_call)
 
 (defun MAP_LI_TO_ASM_CALL (expr)
@@ -234,6 +236,11 @@
       (MAP_LI_TO_ASM_CALL (cdr expr)))))
 (trace MAP_LI_TO_ASM_CALL)
 ;==========================
+;(:CALL SET-DEFUN (:LIT . ADD) (:LIT :LAMBDA 2 (:CALL + (:VAR . 1) (:VAR . 2))))
+(defun LI_TO_ASM_defun  (expr nbArgs)
+  )
+(trace LI_TO_ASM_defun)
+
 (defun LI_TO_ASM_mcall  (expr)
   )
 ;(trace LI_TO_ASM_mcall)
