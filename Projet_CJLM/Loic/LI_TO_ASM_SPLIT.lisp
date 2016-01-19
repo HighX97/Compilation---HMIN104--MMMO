@@ -39,7 +39,7 @@
             (:LET 
                   (LI_TO_ASM_let (cdr expr) nbArgs))
             (:WHILE 
-                  (LI_TO_ASM_while expr))
+                  (LI_TO_ASM_while (cdr expr) nbArgs))
             (:LCLOSURE 
                   (LI_TO_ASM_lclosure expr))
             (:SET_FUN 
@@ -82,10 +82,10 @@
   	(warn "")
   	(let ((decalage (- nbArgs (cdr expr))))
   		(list
-  			(list 'MOVE decalage ''R2)
-  			(list 'MOVE ''FP ''R1)
-  			(list 'SUB ''R2 ''R1)
-  			(list 'LOAD  ''R1 ''R0)))))
+  			(list 'MOVE decalage 'R2)
+  			(list 'MOVE 'FP 'R1)
+  			(list 'SUB 'R2 'R1)
+  			(list 'LOAD  'R1 'R0)))))
 ;(trace LI_TO_ASM_var)
 ;==========================
 
@@ -139,23 +139,23 @@
         (cond
           ((eq (second (first expr)) '<)
               ;
-              (list 'JLT 'R0 'R1 ))
+              (list 'JLT (concatenate 'string "ELSE" (write-to-string id_label_if))))
               ;
           ((eq (second (first expr)) '<=)
               ;
-              (list 'JLE 'R0 'R1 ))
+              (list 'JLE (concatenate 'string "ELSE" (write-to-string id_label_if))))
           ((or (eq (second (first expr)) '=) (eq (second (first expr)) 'eql) (eq (second (first expr)) 'eq)
               ;
-              (list 'JEQ 'R0 'R1 )))
+              (list 'JEQ (concatenate 'string "ELSE" (write-to-string id_label_if)))))
          ((eq (second (first expr)) '>=)
               ;
-              (list 'JGE 'R0 'R1 ))
+              (list 'JGE (concatenate 'string "ELSE" (write-to-string id_label_if))))
           ((eq (second (first expr)) '>)
               ;
-              (list 'JGT 'R0 'R1 ))
+              (list 'JGT (concatenate 'string "ELSE" (write-to-string id_label_if))))
           ((eq (second (first expr)) '/=)
               ;
-              (list 'JNE 'R0 'R1 ))))
+              (list 'JNE (concatenate 'string "ELSE" (write-to-string id_label_if))))))
           (append (LI_TO_ASM (second expr) nbArgs)
           (list (list 'JMP (concatenate 'string "FI" (write-to-string id_label_if)))
           (list 'LABEL (concatenate 'string "ELSE" (write-to-string id_label_if))))
@@ -256,9 +256,66 @@
 
 ;==========================
 ;(:WHILE (:CALL > (:VAR . 24) (:LIT . 0)) (:SET-VAR 24 :CALL - (:VAR . 24) (:LIT . 1)))
-(defun LI_TO_ASM_while (expr)
-  )
-;(trace LI_TO_ASM_let)
+
+;(:WHILE (:CALL < (:VAR . 24) (:VAR . 25)) (:SET_VAR 24 (:CALL - (:VAR . 24) (:LIT . 1))))
+
+(defun LI_TO_ASM_while (expr nbArgs)
+  (setf id_label_if (get_id_label))
+  (append 
+    (list
+    (list 'LABEL (concatenate 'string "WHILE" (write-to-string id_label_if))))
+    (if (eq (first (first expr)) ':call)
+      (if (or (eq (second (first expr)) '<) 
+              (eq (second (first expr)) '<=) 
+              (eq (second (first expr)) '=) 
+              (eq (second (first expr)) 'eq) 
+              (eq (second (first expr)) 'eql) 
+              (eq (second (first expr)) '>=) 
+              (eq (second (first expr)) '>)
+              (eq (second (first expr)) '/=))
+        (append 
+          ;(list 
+          ;
+          (LI_TO_ASM (third (first expr)) nbArgs)
+          (list
+          (list 'PUSH 'R0))
+          ;
+          (append  (LI_TO_ASM (fourth (first expr)) nbArgs)
+          (list (list 'PUSH 'R0)
+          ;
+          (list 'MOVE 'SP 'R0)
+          (list 'SUB 1 'R0)
+          (list 'MOVE 'SP 'R1)
+          (list 'SUB 2 'R1)
+          ;
+          (list 'CMP 'R0 'R1 )
+        (cond
+          ((eq (second (first expr)) '<)
+              ;
+              (list 'JLT (concatenate 'string "CWHILE" (write-to-string id_label_if))))
+              ;
+          ((eq (second (first expr)) '<=)
+              ;
+              (list 'JLE (concatenate 'string "CWHILE" (write-to-string id_label_if))))
+          ((or (eq (second (first expr)) '=) (eq (second (first expr)) 'eql) (eq (second (first expr)) 'eq)
+              ;
+              (list 'JEQ (concatenate 'string "CWHILE" (write-to-string id_label_if)))))
+         ((eq (second (first expr)) '>=)
+              ;
+              (list 'JGE (concatenate 'string "CWHILE" (write-to-string id_label_if))))
+          ((eq (second (first expr)) '>)
+              ;
+              (list 'JGT (concatenate 'string "CWHILE" (write-to-string id_label_if))))
+          ((eq (second (first expr)) '/=)
+              ;
+              (list 'JNE (concatenate 'string "CWHILE" (write-to-string id_label_if)))))
+          (list 'JMP (concatenate 'string "FWHILE" (write-to-string id_label_if)))
+          (list 'LABEL (concatenate 'string "CWHILE" (write-to-string id_label_if))))
+          (append (LI_TO_ASM (second expr) nbArgs)
+            (list
+              (list 'JMP (concatenate 'string "CWHILE" (write-to-string id_label_if)))
+              (list 'LABEL (concatenate 'string "FWHILE" (write-to-string id_label_if)))))))))))
+(trace LI_TO_ASM_while)
 ;==========================
 ;==========================
 
