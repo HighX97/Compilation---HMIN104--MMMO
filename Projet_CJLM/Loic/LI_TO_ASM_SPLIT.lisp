@@ -23,23 +23,23 @@
 (defun LI_TO_ASM (expr nbArgs) 
   	(ecase (car expr)
             (:LIT
-                  (LI_TO_ASM_const expr))
+                  (LI_TO_ASM_const expr));
             (:VAR 
-                  (LI_TO_ASM_var expr nbArgs))
+                  (LI_TO_ASM_var expr nbArgs));
             (:SET_VAR 
-                  (LI_TO_ASM_set_var expr nbArgs))
+                  (LI_TO_ASM_set_var expr nbArgs));
             (:IF 
-                  (LI_TO_ASM_if (cdr expr) nbArgs))
+                  (LI_TO_ASM_if (cdr expr) nbArgs));TODO
             (:CALL 
-                  (LI_TO_ASM_call (cdr expr) nbArgs))
+                  (LI_TO_ASM_call (cdr expr) nbArgs));
             (:MCALL 
-                  (LI_TO_ASM_mcall expr))
+                  (LI_TO_ASM_mcall (cdr expr) nbArgs));TODO
             (:PROGN 
-                  (LI_TO_ASM_progn expr nbArgs))
+                  (LI_TO_ASM_progn expr nbArgs));
             (:LET 
-                  (LI_TO_ASM_let (cdr expr) nbArgs))
+                  (LI_TO_ASM_let (cdr expr) nbArgs));
             (:WHILE 
-                  (LI_TO_ASM_while (cdr expr) nbArgs))
+                  (LI_TO_ASM_while (cdr expr) nbArgs));TODO
             (:LCLOSURE 
                   (LI_TO_ASM_lclosure expr))
             (:SET_FUN 
@@ -231,18 +231,49 @@
 (defun MAP_LI_TO_ASM_CALL (expr)
   (if (not (atom expr))
     (list*
-      (list 'MOVE (car expr) 'R0)
+      (LI_TO_ASM (car expr) 0)
       (list 'PUSH 'R0)
       (MAP_LI_TO_ASM_CALL (cdr expr)))))
 (trace MAP_LI_TO_ASM_CALL)
+
+(defun MAP_LI_TO_ASM_CALL_old (expr)
+  (if (not (atom expr))
+    (list*
+      (list 'MOVE (car expr) 'R0)
+      (list 'PUSH 'R0)
+      (MAP_LI_TO_ASM_CALL (cdr expr)))))
+;(trace MAP_LI_TO_ASM_CALL)
 ;==========================
 ;(:CALL SET-DEFUN (:LIT . ADD) (:LIT :LAMBDA 2 (:CALL + (:VAR . 1) (:VAR . 2))))
+;(:CALL SET-DEFUN (:LIT . F) (:LIT :LAMBDA 1 (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) :CALL * (:VAR . 1) (:MCALL F (:CALL - (:VAR . 1) (:LIT . 1))))))
+;(:CALL SET-DEFUN (:LIT . F) (:LIT :LAMBDA 1 (:IF (:CALL = (:VAR . 1) (:LIT . 0)) (:LIT . 1) (:CALL * (:VAR . 1) (:MCALL F (:CALL - (:VAR . 1) (:LIT . 1)))))))
+
 (defun LI_TO_ASM_defun  (expr nbArgs)
-  )
+  (let (
+    (fun (cdar expr))
+    (nbArgs (third (second expr)))
+    (corpsF (fourth (second expr))))
+  (append
+    (LI_TO_ASM corpsF nbArgs)
+    (list (list 'LABEL fun)))))
 (trace LI_TO_ASM_defun)
 
-(defun LI_TO_ASM_mcall  (expr)
-  )
+(defun LI_TO_ASM_mcall (expr nbArgs)
+  (let (
+    (fun (car expr))
+    (args (cdr expr)))
+    (setf l (list 
+      (list 'JMP fun)))
+      (loop while (> nbArgs 0) do
+        (setf l (append l 
+          (list (list 'MOVE 'FP 'R0)
+        (list 'SUB nbArgs 'R0)
+        (list 'MOVE (car args) 'R1)
+        (list 'STORE 'R1 'R0))))
+        (progn 
+          (setf args (cdr args))
+          (setf nbArgs (- nbArgs 1))))
+      l))
 ;(trace LI_TO_ASM_mcall)
 ;==========================
 

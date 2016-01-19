@@ -497,10 +497,10 @@
 (defun vm_push (vm src)
   (if (is_register_? src)
     (progn (vm_incr vm 'SP)
-      (vm_store vm src 'SP)))
+      (vm_store vm src 'SP))
     (progn (vm_incr vm 'SP)
       (vm_move vm src 'R0)
-      (vm_store vm 'R0 (vm_get_register vm 'SP))))
+      (vm_store vm 'R0 (vm_get_register vm 'SP)))))
 ;(trace vm_push) 
 
 (defun vm_push_old (vm src)
