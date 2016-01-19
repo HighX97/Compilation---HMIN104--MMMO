@@ -256,7 +256,7 @@
 ;(IF (EQ 1 1) 3 7)
 ;(COND ((EQ 1 1) 3) ((NOT (EQ 1 1)) 7))
 
-;(LISP2LI '(IF (EQ 1 1) 3 7) env)
+	;(LISP2LI '(IF (EQ 1 1) 3 7) env)
 ;==> (:IF (:CALL EQ ((:LIT . 1) (:LIT . 1))) (:LIT . 3) (:LIT . 7))
 
 ;(LISP2LI '(IF (EQ A B) 3 7) env)

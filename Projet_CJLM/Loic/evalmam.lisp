@@ -6,7 +6,11 @@
 																								
 		(:VAR (aref env (cdr expr)))
 																							
-		(:SET-VAR (setf (aref env (cadr expr)) (eval-LI (cddr expr) env )))
+		(:SET-VAR 
+			(setf (aref env (cadr expr)) 
+				(eval-LI (cddr expr) env )
+			)
+		)
 		
 		(:LET-VAR (setf (aref env (cadr expr)) (eval-LI (cddr expr) env )))
 																								
@@ -52,12 +56,11 @@
 
 		(:UNKNOWN (let ((nexpr (lisp2li (second expr) (caddr expr))))
 		    (if (eq (car nexpr) :UNKNOWN)
-			(error "ICI l'erreur: eval-li ~s" expr)
-		      (eval-LI (displace expr nexpr) env)))
-		)
+			(error "eval-li ~s" expr)
+		      (eval-LI (displace expr nexpr) env))))
+																						
 		
-	)
-)																		
+		))																		
 																																																																																																																																																
 (defun map-eval-LI (expr env)
 	
@@ -97,7 +100,7 @@
 	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
-(defun LISP2LI (expr env) 
+	(defun LISP2LI (expr env) 
 	 (if (atom expr) 
 		
 		(if	(constantp expr) 
@@ -124,7 +127,7 @@
 				 
 				((not (fboundp fun)) 
 					
-					(list* :unknown 
+					(list :unknown 
 
 						(cons fun args) env)
 				) 
@@ -156,14 +159,14 @@
 					(let ((pos (position (first args) env))) 
 				          	(if pos 
 					           (if (symbolp (second expr)) 
-						           (list* :set-var (cdr (LISP2LI (second expr) env)) 
+						           (list :set-var (cdr (LISP2LI (second expr) env)) 
 							       (LISP2LI (third expr) env)
 						                 ) 
 						
 						(cons :setf (LISP2LI (second expr) env)
 						)
 					)
-					  (warn "~s est non existante dans l'environnement" (first args))          
+					(warn "~s est non existante dans l'environnement" (first args))          
 				
 				          	))) 
 				
@@ -175,7 +178,7 @@
 				 
 				((eq 'if fun)
 					;(cons :if (MAPLISP2LI args env)
-					(list* :if (LISP2LI (first args) env)
+					(list :if (LISP2LI (first args) env)
 					 		  (LISP2LI (second args) env)
 							  (LISP2LI (third args) env)
 					)
@@ -200,10 +203,14 @@
 						;-----cas Loop-----
 					
 				((eq 'loop fun) 
-					(list* :While 
-						(if (atom (second args)) (second args) (LISP2LI  (second args) env))
-								(MAPLISP2LI (list (fourth args)) env))
+					(if (eq (first args) 'while)
+						(list* :While 
+							(if (atom (second args)) (second args) (LISP2LI  (second args) env))
+									(MAPLISP2LI (list (fourth args)) env)
+						)
+						(warn "~s Loop non traite " (first args))
 					)
+				)
        					;-----Cas Macro-----
 				
 				 ((eq 'macro-function fun)
@@ -239,7 +246,7 @@
   (let* ((mam (car expr)))
   (if (atom expr)
     ()
-      (cons (list* :set-var (position (car mam) env)
+      (cons (list :set-var (position (car mam) env)
         (lisp2li (cadr mam) env)) (l2liLet (cdr expr) env)
         ))))
 

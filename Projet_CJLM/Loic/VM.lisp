@@ -365,10 +365,10 @@
     ((atom src)
       (if (not (is_register_? src))
         (warn "ERR : <src> doit être un registre ou '(:LIT . n)")
-        (vm_set_registervm (+ (vm_get_register vm src) (vm_get_register vm dest)) dest)))
+        (vm_set_register vm (+ (vm_get_register vm src) (vm_get_register vm dest)) dest)))
     ((not (atom src))
       (if (and (eq (car src) ':LIT) (integerp (cdr src)))
-        (vm_set_registervm (+ (cdr src) (vm_get_register vm dest)) dest)
+        (vm_set_register vm (+ (cdr src) (vm_get_register vm dest)) dest)
         (warn "ERR : <src> doit être un registre ou (:LIT n) avec n entier")))))
 ;(trace vm_add) 
 ;====================================================== 
@@ -382,10 +382,10 @@
     ((atom src)
       (if (not (is_register_? src))
         (warn "ERR : <src> doit être un registre ou '(:LIT . n)")
-        (vm_set_registervm (- (vm_get_register vm dest) (vm_get_register vm src)) dest)))
+        (vm_set_register vm (- (vm_get_register vm dest) (vm_get_register vm src)) dest)))
     ((not (atom src))
       (if (and (eq (car src) ':LIT) (integerp (cdr src)))
-        (vm_set_registervm (- (vm_get_register vm dest) (cdr src)) dest)
+        (vm_set_register vm (- (vm_get_register vm dest) (cdr src)) dest)
         (warn "ERR : <src> doit être un registre ou (:LIT n) avec n entier")))))
 ;(trace vm_sub) 
 ;====================================================== 
@@ -399,10 +399,10 @@
     ((atom src)
       (if (not (is_register_? src))
         (warn "ERR : <src> doit être un registre ou '(:LIT . n)")
-        (vm_set_registervm (* (vm_get_register vm src) (vm_get_register vm dest)) dest)))
+        (vm_set_register vm (* (vm_get_register vm src) (vm_get_register vm dest)) dest)))
     ((not (atom src))
       (if (and (eq (car src) ':LIT) (integerp (cdr src)))
-        (vm_set_registervm (* (cdr src) (vm_get_register vm dest)) dest)
+        (vm_set_register vm (* (cdr src) (vm_get_register vm dest)) dest)
         (warn "ERR : <src> doit être un registre ou (:LIT n) avec n entier")))))
 ;(trace vm_mul) 
 ;======================================================  
@@ -418,12 +418,12 @@
         (warn "ERR : <src> doit être un registre ou '(:LIT . n)")
         (if (eq (vm_get_register vm src) 0)
           (warn "ERR : DIVISION PAR 0:<src> ")
-          (vm_set_registervm (/ (vm_get_register vm dest) (vm_get_register vm src)) dest))))
+          (vm_set_register vm (/ (vm_get_register vm dest) (vm_get_register vm src)) dest))))
     ((not (atom src))
       (if (and (eq (car src) ':LIT) (integerp (cdr src)))
         (if (eq 0 (cdr src))
           (warn "ERR : DIVISION PAR 0:<src> ")
-          (vm_set_registervm (/ (vm_get_register vm dest) (cdr src)) dest))
+          (vm_set_register vm (/ (vm_get_register vm dest) (cdr src)) dest))
         (warn "ERR : <src> doit être un registre ou (:LIT n) avec n entier")))))
 ;(trace vm_div) 
 ;====================================================== 
@@ -449,6 +449,15 @@
 ;======================================================   
 ; (PUSH <src>)      = empiler
 (defun vm_push (vm src)
+  (if (is_register_? src)
+    (progn (vm_incr vm 'SP)
+      (vm_store vm src 'SP)))
+    (progn (vm_incr vm 'SP)
+      (vm_move vm src 'R0)
+      (vm_store vm 'R0 (vm_get_register vm 'SP))))
+;(trace vm_push) 
+
+(defun vm_push_old (vm src)
   (if (atom src)
     (if (not (is_register_? src))
       (warn "ERR : <src> doit être un registre ou '(:LIT . n)")
@@ -466,8 +475,8 @@
 ; (POP <dest>)      = dépiler
 (defun vm_pop (vm dest)
   (if (not (is_register_? dest))
-    (warn "ERR : <dest> doit être un registre ou '(:LIT . n)")
-    (and (vm_load vm (vm_get_register vm 'SP) dest)
+    (warn "ERR : <dest> doit être un registre")
+    (progn (vm_load vm 'SP dest)
       (vm_decr vm 'SP))))
 ;(trace vm_pop) 
 ;======================================================  
@@ -503,7 +512,7 @@
 (defun vm_rtn (vm)
   (and (vm_move vm (cons :lit (vm_get_register vm 'SP)) 'R0)
     (vm_decr vm 'SP)
-    (vm_jmp vm (vm_get_register vm 'RO))))
+    (vm_jmp vm (vm_get_register vm 'R0))))
 ;;(trace vm_rtn) 
 ;====================================================== 
 
@@ -638,6 +647,7 @@
 
 ;====================================================== TO DO
 ; (HALT)        = arrêt
+;Chargeur
 (defun vm_read_asm (vm asm)
   (loop 
     while (not (atom asm))
@@ -756,4 +766,32 @@
           (vm_halt vm)
           (setf asm rest))))))))
 ;;(trace vm_halt)
-;====================================================== 
+;======================================================
+
+;Run 
+(defun vm_run (vm)
+  (loop 
+    while (<= (vm_get_register vm 'BP) (vm_get_register vm 'PC))
+    do
+      (progn (print (concatenate 'string "PC : "(write-to-string (vm_get_register vm 'PC))))
+        (vm_load vm 'PC 'R2)
+        (print (vm_get_register vm 'R2))
+        (vm_decr vm 'PC)
+        (if (not (atom (vm_get_register vm 'R2)))
+         (if (eq (car (vm_get_register vm 'R2)) ':call)
+          (progn 
+            (print "Cas call" )
+            (vm_load vm 'FP 'R1);nbArgs -> R1
+            (let ((i (vm_get_register vm 'R1)) (l nil))
+              (loop while (> i 0) do
+                (progn 
+                  (vm_load vm (- (vm_get_register vm 'FP) i) 'R0)
+                  (print (vm_get_register vm 'R0))
+                  (setf l (append l (list (cdr (vm_get_register vm 'R0)))))
+                  (print l)
+                  (setf i (- i 1))
+                ))
+              (vm_move vm (apply (cdr (vm_get_register vm 'R2)) l) 'R0)
+            )))))))
+
+;(apply #'+ '(1 2))
