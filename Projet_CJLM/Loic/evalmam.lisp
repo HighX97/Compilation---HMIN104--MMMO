@@ -4,33 +4,67 @@
 																							
 		(:LIT (cdr expr))
 																								
-		(:VAR (aref env (cdr expr)))
+		(:VAR 
+			(aref env 
+				(- (cdr expr) 1)
+			)
+		)
 																							
 		(:SET-VAR 
-			(setf (aref env (cadr expr)) 
-				(eval-LI (cddr expr) env )
+			(setf 
+				(aref env 
+					(- (second expr) 1)
+				) 
+				(eval-LI (third expr) env )
 			)
 		)
 		
 		(:LET-VAR (setf (aref env (cadr expr)) (eval-LI (cddr expr) env )))
 																								
-		(:IF (if (eval-LI (second expr) env) 
-			     (eval-LI (third expr) env)
-			     (eval-LI (cdddr expr) env)))
+		(:IF 
+			(if (eval-LI (second expr) env) 
+				(eval-LI (third expr) env)
+				(eval-LI (cadddr expr) env)
+			)
+		)
 																							
 		(:CALL (apply (second expr)
-			(map-eval-li (cddr expr) env)))
+			(map-eval-li (cddr expr) env))
+		)
 																								
-																								
-																								
-		(:MCALL (let* ((fun (get-defun (second expr))))
-			(if (eq (car (cddr expr)) :LIT)
-				(let ((args (eval-LI (cddr expr) env))) 
-					(eval-LI (third fun) (make-env-eval-li args env (make-array (+ 1 (cadr fun))) 1)))
-      			(let ((args (cons (eval-LI (car (cddr expr)) env)
-	    				(map-eval-LI (cdr (cddr expr)) env))))
-							(eval-LI (third fun)
-				(make-env-eval-li args env (make-array (+ 1 (cadr fun))) 1))))))
+		(:MCALL 
+			(let* (
+					(fun (get-defun (second expr)))
+				)
+				(if (eq (car (cddr expr)) :LIT)
+					(let (
+							(args (eval-LI (cddr expr) env))
+						) 
+						(eval-LI (third fun) 
+							( make-env-eval-li args env 
+								(make-array (+ 1 (cadr fun))) 
+								1
+							)
+						)
+					)
+	      			(let (
+		      				(args 
+		      					(cons 
+		      						(eval-LI (car (cddr expr)) env)
+			    					(map-eval-LI (cdr (cddr expr)) env)
+			    				)
+		      				)
+	      				)
+						(eval-LI (third fun)
+							( make-env-eval-li args env 
+								(make-array (+ 1 (cadr fun)))
+								1 
+							)
+						)
+					)
+				)
+			)
+		)
 			;(eval-LI (cddr fun)
 			;	(make-env-eval-LI (second fun) args))))
 		
@@ -46,8 +80,8 @@
 		)
 		
 		(:LAMBDA 
-			
-			(eval-li (third expr) env))
+			(eval-li (third expr) env)
+		)
 			
 				
 		(:PROGN (map-eval-LI-progn (PROGN (cdr expr)) env))
@@ -57,50 +91,60 @@
 		(:UNKNOWN (let ((nexpr (lisp2li (second expr) (caddr expr))))
 		    (if (eq (car nexpr) :UNKNOWN)
 			(error "eval-li ~s" expr)
-		      (eval-LI (displace expr nexpr) env))))
-																						
-		
-		))																		
-																																																																																																																																																
+		      (eval-LI (displace expr nexpr) env)))
+		)
+	)
+)																																																																																																																																															
+
 (defun map-eval-LI (expr env)
-	
-  (IF (atom expr)
-       nil
-  	    (cons
-          (eval-LI (first expr) env)
-          (map-eval-LI (rest expr) env))))
+	(if (atom expr)
+	    nil
+	  	(cons
+			(eval-LI (first expr) env)
+			(map-eval-LI (rest expr) env)
+	    )
+	)
+)
 																																																																																																																																																
 (defun map-eval-LI-progn (expr env)
-	(car (last (map-eval-LI expr env))))
+	(car (last (map-eval-LI expr env)))
+)
 																								
 (defun make-env-eval-li (args env nenv index) 
-  (if	
-    (null args)
-    nenv
-    (progn
-      (setf (aref nenv index) (car args))
-      (make-env-eval-li (cdr args) env nenv (+ 1 index))
-      )))	
- 
-    																						
+	(if	
+		(null args)
+		nenv
+		(progn
+			(setf (aref nenv index) (car args))
+			(make-env-eval-li (cdr args) env nenv (+ 1 index))
+		)
+	)
+)	
 																																																																																																																																																
 (defun displace (l ln)
 	(RPLACA l (CAR ln))
-   (RPLACD l (CDR ln))
-     l) 
+	(RPLACD l (CDR ln))
+    l
+)
+
 (defun make-env-eval-LIA (nbArgs listArgs)
-  (make_env_rec listArgs 0 (make-array (+ nbArgs 1))))
+	(make_env_rec listArgs 0 
+		(make-array (+ nbArgs 1))
+	)
+)
 
 (defun make_env_rec (listArgs pos envGenerated) 
 	(when listArgs
 		(setf (aref envGenerated pos) (car listArgs))
-		(make_env_rec (cdr listArgs) (+ pos 1) envGenerated))
-	envGenerated)	
+		(make_env_rec (cdr listArgs) (+ pos 1) envGenerated)
+	)
+	envGenerated
+)	
 
 	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
-	(defun LISP2LI (expr env) 
+(defun LISP2LI (expr env) 
 	 (if (atom expr) 
 		
 		(if	(constantp expr) 
@@ -122,7 +166,7 @@
 				
     			((get-defun fun) 
 					
-					(list* :mcall fun (MAPLISP2LI args env))
+					(list* :mcall fun (MAPLISP2LI args env) )
 				) 
 				 
 				((not (fboundp fun)) 
