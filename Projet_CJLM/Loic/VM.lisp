@@ -152,7 +152,8 @@
     (vm_set_flag_OFF vm 'FGT);drapeau >
     (vm_set_flag_OFF vm 'FNIL);drapeau test
     ;(vm_set_register vm 'CO (- size (* (floor (/ size 3)) 2)))
-  	(vm_init_hashTab_etq vm)) ;table pour les ref en avance
+  	(vm_init_hashTab_etq_resolu vm) ;table pour les ref en avance
+    (vm_init_hashTab_etq_non_resolu vm)) ;table pour les ref en avance
   	;(setf (get vm 'TSR) (make-hash-table))
 ;;(trace vm_init)
 ;======================================================  
@@ -177,7 +178,8 @@
     (print "=====Memory=====")
     (print (concatenate 'string "memory : (vm_state_memory '" (write-to-string vm) ")"))
     (print "=====HashTab_etq=====")
-    (print (concatenate 'string "hashTab_etq : (vm_state_hashTab_etq '" (write-to-string vm) ")"))
+    (print (concatenate 'string "hashTab_etq : (vm_state_hashTab_etq_resolu '" (write-to-string vm) ")"))
+    (print (concatenate 'string "hashTab_etq : (vm_state_hashTab_etq_non_resolu '" (write-to-string vm) ")"))
     (print "")))
 ;;(trace vm_state) 
 ;======================================================  
@@ -222,36 +224,70 @@
 ;======================================================  
 
 ;======================================================  
-(defun vm_init_hashTab_etq (vm)
-  (setf (get vm :hashTab_etq) (make-hash-table)))
+(defun vm_init_hashTab_etq_resolu (vm)
+  (setf (get vm :hashTab_etq_resolu) (make-hash-table)))
 ;;(trace vm_init_hashTab_etq)
 ;======================================================  
 
 ;======================================================  
-(defun vm_get_hashTab_etq (vm)
-  (get vm :hashTab_etq))
+(defun vm_get_hashTab_etq_resolu (vm)
+  (get vm :hashTab_etq_resolu))
 ;;(trace vm_get_hashTab_etq)
 ;======================================================  
 
 ;======================================================  
-(defun vm_get_hashTab_etq_val (vm etq)
-  (gethash etq (vm_get_hashTab_etq vm)))
+(defun vm_get_hashTab_etq_resolu_val (vm etq)
+  (gethash etq (vm_get_hashTab_etq_resolu vm)))
 ;;(trace vm_get_hashTab_etq_val)
 ;======================================================  
 
 ;======================================================  
-(defun vm_set_hashTab_etq (vm etq valeur)
-  (setf (gethash etq (vm_get_hashTab_etq vm)) valeur))
+(defun vm_set_hashTab_etq_resolu (vm etq valeur)
+  (setf (gethash etq (vm_get_hashTab_etq_resolu vm)) valeur))
 ;;(trace vm_set_hashTab_etq)
 ;======================================================  
 
 ;======================================================  
-(defun vm_state_hashTab_etq (vm)
+(defun vm_state_hashTab_etq_resolu (vm)
   (and 
     (print "hashTab_etq :")
-    (vm_get_hashTab_etq vm)))
+    (vm_get_hashTab_etq_resolu vm)))
 ;;(trace vm_state_hashTab_etq)
-;======================================================   
+;======================================================
+
+;======================================================  
+(defun vm_init_hashTab_etq_non_resolu (vm)
+  (setf (get vm :hashTab_etq_non_resolu ) (make-hash-table)))
+;;(trace vm_init_hashTab_etq)
+;======================================================  
+
+;======================================================  
+(defun vm_get_hashTab_etq_non_resolu (vm)
+  (get vm :hashTab_etq_non_resolu ))
+;;(trace vm_get_hashTab_etq)
+;======================================================  
+
+;======================================================  
+(defun vm_get_hashTab_etq_non_resolu_val (vm etq)
+  (gethash etq (vm_get_hashTab_etq_non_resolu  vm)))
+;;(trace vm_get_hashTab_etq_val)
+;======================================================  
+
+;======================================================  
+(defun vm_set_hashTab_etq_non_resolu (vm etq valeur)
+  (setf (gethash etq (vm_get_hashTab_etq_non_resolu vm)) valeur))
+;;(trace vm_set_hashTab_etq)
+;======================================================  
+
+;======================================================  
+(defun vm_state_hashTab_etq_non_resolu (vm)
+  (and 
+    (print "hashTab_etq :")
+    (vm_get_hashTab_etq_non_resolu vm)))
+;;(trace vm_state_hashTab_etq)
+;======================================================
+
+
 
 ;======================================================  
 ; (MOVE <src> <dest>) = mouvement de registre à registre
@@ -364,12 +400,14 @@
       (warn "ERR : <dest> doit être un registre"))
     ((atom src)
       (if (not (is_register_? src))
-        (warn "ERR : <src> doit être un registre ou '(:LIT . n)")
-        (vm_set_register vm (+ (vm_get_register vm src) (vm_get_register vm dest)) dest)))
+        (if (integerp src)
+          (vm_move vm (+ (vm_get_register vm dest) src) dest)
+          (warn "ERR : <src> doit être un registre ou '(:LIT . n) ou n avec n entier"))
+        (vm_move vm (+ (vm_get_register vm src) (vm_get_register vm dest)) dest)))
     ((not (atom src))
       (if (and (eq (car src) ':LIT) (integerp (cdr src)))
-        (vm_set_register vm (+ (cdr src) (vm_get_register vm dest)) dest)
-        (warn "ERR : <src> doit être un registre ou (:LIT n) avec n entier")))))
+        (vm_move vm (+ (cdr src) (vm_get_register vm dest)) dest)
+        (warn "ERR : <src> doit être un registre ou (:LIT . n) ou n avec n entier")))))
 ;(trace vm_add) 
 ;====================================================== 
 
@@ -381,11 +419,13 @@
       (warn "ERR : <dest> doit être un registre"))
     ((atom src)
       (if (not (is_register_? src))
-        (warn "ERR : <src> doit être un registre ou '(:LIT . n)")
-        (vm_set_register vm (- (vm_get_register vm dest) (vm_get_register vm src)) dest)))
+        (if (integerp src)
+          (vm_move vm (- (vm_get_register vm dest) src) dest)
+          (warn "ERR : <src> doit être un registre ou '(:LIT . n) ou n avec n entier"))
+        (vm_move vm (- (vm_get_register vm dest) (vm_get_register vm src)) dest)))
     ((not (atom src))
       (if (and (eq (car src) ':LIT) (integerp (cdr src)))
-        (vm_set_register vm (- (vm_get_register vm dest) (cdr src)) dest)
+        (vm_move vm (- (vm_get_register vm dest) (cdr src)) dest)
         (warn "ERR : <src> doit être un registre ou (:LIT n) avec n entier")))))
 ;(trace vm_sub) 
 ;====================================================== 
@@ -398,11 +438,13 @@
       (warn "ERR : <dest> doit être un registre"))
     ((atom src)
       (if (not (is_register_? src))
-        (warn "ERR : <src> doit être un registre ou '(:LIT . n)")
-        (vm_set_register vm (* (vm_get_register vm src) (vm_get_register vm dest)) dest)))
+        (if (integerp src)
+          (vm_move vm (* src (vm_get_register vm dest)) dest)
+          (warn "ERR : <src> doit être un registre ou '(:LIT . n) ou n avec n entier"))
+        (vm_move vm (* (vm_get_register vm src) (vm_get_register vm dest)) dest)))
     ((not (atom src))
       (if (and (eq (car src) ':LIT) (integerp (cdr src)))
-        (vm_set_register vm (* (cdr src) (vm_get_register vm dest)) dest)
+        (vm_move vm (* (cdr src) (vm_get_register vm dest)) dest)
         (warn "ERR : <src> doit être un registre ou (:LIT n) avec n entier")))))
 ;(trace vm_mul) 
 ;======================================================  
@@ -415,15 +457,19 @@
       (warn "ERR : <dest> doit être un registre"))
     ((atom src)
       (if (not (is_register_? src))
-        (warn "ERR : <src> doit être un registre ou '(:LIT . n)")
+        (if (integerp src)
+          (if (eq src 0)
+            (warn "ERR : DIVISION PAR 0:<src> ")
+            (vm_move vm (/ (vm_get_register vm dest) src) dest))
+          (warn "ERR : <src> doit être un registre ou '(:LIT . n) ou n avec n entier"))
         (if (eq (vm_get_register vm src) 0)
           (warn "ERR : DIVISION PAR 0:<src> ")
-          (vm_set_register vm (/ (vm_get_register vm dest) (vm_get_register vm src)) dest))))
+          (vm_move vm (/ (vm_get_register vm dest) (vm_get_register vm src)) dest))))
     ((not (atom src))
       (if (and (eq (car src) ':LIT) (integerp (cdr src)))
         (if (eq 0 (cdr src))
           (warn "ERR : DIVISION PAR 0:<src> ")
-          (vm_set_register vm (/ (vm_get_register vm dest) (cdr src)) dest))
+          (vm_move vm (/ (vm_get_register vm dest) (cdr src)) dest))
         (warn "ERR : <src> doit être un registre ou (:LIT n) avec n entier")))))
 ;(trace vm_div) 
 ;====================================================== 
@@ -486,17 +532,29 @@
 ;Peut-on décclaré deux fois la même étiquette ? 
 ; (LABEL <label>)   = déclaration d’étiquette
 (defun vm_label (vm label)
-  (vm_set_hashTab_etq vm label (vm_get_register vm 'SP)))
-;(trace vm_label) 
+  (vm_set_hashTab_etq_resolu vm label (vm_get_register vm 'SP))
+  (if (vm_get_hashTab_etq_non_resolu_val vm label)
+    (vm_move vm (vm_get_hashTab_etq_resolu_val vm label) 'PC)))
+
+(defun vm_label_old (vm label)
+  (vm_set_hashTab_etq_resolu vm label (vm_get_register vm 'SP)))
+(trace vm_label) 
 ;======================================================
 
 ;====================================================== 
 ; (JMP <label>)     = saut inconditionnel à une étiquette ou une adresse
 (defun vm_jmp (vm label)
   (if (integerp label)
+    (vm_move vm label 'PC)
+    (if (vm_get_hashTab_etq_resolu_val vm label)
+      (vm_move vm (vm_get_hashTab_etq_resolu_val vm label) 'PC)
+      (vm_set_hashTab_etq_non_resolu vm label (vm_get_register vm 'SP)))))
+
+(defun vm_jmp_old (vm label)
+  (if (integerp label)
     (vm_move vm (cons :lit label) 'PC)
     (vm_move vm (cons :lit (vm_get_hashTab_etq_val vm label)) 'PC)))
-;(trace vm_jmp) 
+(trace vm_jmp) 
 ;====================================================== 
 
 ;====================================================== 
@@ -504,7 +562,7 @@
 (defun vm_jsr (vm label)
   (and (vm_push vm 'PC)
     (vm_jmp vm label)))
-;(trace vm_jsr) 
+(trace vm_jsr) 
 ;====================================================== 
 
 ;====================================================== 
@@ -513,14 +571,34 @@
   (and (vm_move vm (cons :lit (vm_get_register vm 'SP)) 'R0)
     (vm_decr vm 'SP)
     (vm_jmp vm (vm_get_register vm 'R0))))
-;;(trace vm_rtn) 
+(trace vm_rtn) 
 ;====================================================== 
 
 (defun vm_test_constante (src)
   (and (eq (car src) ':LIT) (integerp (cdr src))))
 ;====================================================== 
 ; (CMP <src1> <src2>) = comparaison
+; (CMP R0 R1)
+; (CMP R0 1)
+; (CMP R0 (:lit . 1))
 (defun vm_cmp (vm src1 src2)
+  (if (and (is_register_? src1) (is_register_? src2))
+    (cond
+      ((< (vm_get_register vm src1) (vm_get_register vm src2))
+        (vm_set_flag_ON vm 'FLT)
+        (vm_set_flag_OFF vm 'FEQ)
+        (vm_set_flag_OFF vm 'FGT))
+      ((= (vm_get_register vm src1) (vm_get_register vm src2))
+        (vm_set_flag_OFF vm 'FLT)
+        (vm_set_flag_ON vm 'FEQ)
+        (vm_set_flag_OFF vm 'FGT))
+      ((> (vm_get_register vm src1) (vm_get_register vm src2))
+        (vm_set_flag_OFF vm 'FLT)
+        (vm_set_flag_OFF vm 'FEQ)
+        (vm_set_flag_ON vm 'FGT)))))    
+(trace vm_cmp) 
+
+(defun vm_cmp_old (vm src1 src2)
   (if (and (vm_test_constante src1) (vm_test_constante src2))
     (cond
       ((< (cdr src1) (cdr src2))
@@ -534,74 +612,73 @@
       ((> (cdr src1) (cdr src2))
         (vm_set_flag_OFF vm 'FLT)
         (vm_set_flag_OFF vm 'FEQ)
-        (vm_set_flag_ON vm 'FGT)))))    
-;;(trace vm_cmp) 
+        (vm_set_flag_ON vm 'FGT)))))     
 ;====================================================== 
 
 ;====================================================== 
 ; (JGT <label>)     = saut si plus grand
 (defun vm_jgt (vm label)
-  (if (and  (not (vm_get_flag vm FLT)) 
-            (not (vm_get_flag vm FEQ)) 
-            (vm_get_flag vm FGT))
+  (if (and  (not (vm_get_flag vm 'FLT)) 
+            (not (vm_get_flag vm 'FEQ)) 
+            (vm_get_flag vm 'FGT))
     (vm_jmp vm label)
     (vm_incr vm 'PC)))
-;(trace vm_jgt) 
+(trace vm_jgt) 
 ;====================================================== 
 
 ;====================================================== 
 ; (JGE <label>)     = saut si plus grand ou égal
 (defun vm_jge (vm label)
-  (if (and  (not (vm_get_flag vm FLT)) 
-            (or (vm_get_flag vm FEQ) 
-                (vm_get_flag vm FGT)))
+  (if (and  (not (vm_get_flag vm 'FLT)) 
+            (or (vm_get_flag vm 'FEQ) 
+                (vm_get_flag vm 'FGT)))
     (vm_jmp vm label)
     (vm_incr vm 'PC)))
-;(trace vm_jge) 
+(trace vm_jge) 
 ;====================================================== 
 
 ;====================================================== 
 ; (JLT <label>)     = saut si plus petit
 (defun vm_jlt (vm label)
-  (if (and  (vm_get_flag vm FLT) 
-            (not (vm_get_flag vm FEQ)) 
-            (not (vm_get_flag vm FGT)))
+  (if (and  (vm_get_flag vm 'FLT) 
+            (not (vm_get_flag vm 'FEQ)) 
+            (not (vm_get_flag vm 'FGT)))
     (vm_jmp vm label)
     (vm_incr vm 'PC)))
-;(trace vm_jlt) 
+(trace vm_jlt) 
 ;====================================================== 
 
 ;====================================================== 
 ; (JLE <label>)     = saut si plus petit ou égal
 (defun vm_jle (vm label)
-  (if (and  (or (vm_get_flag vm FLT) 
-                (vm_get_flag vm FEQ)) 
-            (not (vm_get_flag vm FGT)))
+  (if (and  (or (vm_get_flag vm 'FLT) 
+                (vm_get_flag vm 'FEQ)) 
+            (not (vm_get_flag vm 'FGT)))
     (vm_jmp vm label)
     (vm_incr vm 'PC)))
-;(trace vm_jle) 
+(trace vm_jle) 
 ;====================================================== 
 
 ;====================================================== 
 ; (JEQ <label>)     = saut si égal
 (defun vm_jeq (vm label)
-  (if (and  (not (vm_get_flag vm FLT)) 
-            (vm_get_flag vm FEQ) 
-            (not (vm_get_flag vm FGT)))
+  (if (and  (not (vm_get_flag vm 'FLT)) 
+            (vm_get_flag vm 'FEQ) 
+            (not (vm_get_flag vm 'FGT)))
     (vm_jmp vm label)
     (vm_incr vm 'PC)))
-;(trace vm_jeq) 
+(trace vm_jeq) 
 ;====================================================== 
 
 ;====================================================== 
 ; (JNE <label>)     = saut si différent
 (defun vm_jne (vm label)
-  (if (and  (vm_get_flag vm FLT) 
-            (not (vm_get_flag vm FEQ)) 
-            (vm_get_flag vm FGT))
+  (if (and  (vm_get_flag vm 'FLT) 
+            (not (vm_get_flag vm 'FEQ)) 
+            (vm_get_flag vm 'FGT))
     (vm_jmp vm label)
     (vm_incr vm 'PC)))
-;(trace vm_jne) 
+(trace vm_jne) 
 ;====================================================== 
 
 ;====================================================== 
@@ -610,25 +687,25 @@
   (if src
     vm_set_flag_ON 'FNIL
     vm_set_flag_OFF 'FNIL))
-;(trace vm_test) 
+(trace vm_test) 
 ;====================================================== 
 
 ;====================================================== 
 ; (JTRUE <label>)   = saut si non-NIL
 (defun vm_jtrue (vm label)
-  (if (vm_get_flag vm FNIL)
+  (if (vm_get_flag vm 'FNIL)
     (vm_jmp vm label)
     (vm_incr vm 'PC)))
-;(trace vm_jtrue) 
+(trace vm_jtrue) 
 ;====================================================== 
 
 ;====================================================== 
 ; (JNIL <label>)      = saut si NIL
 (defun vm_jnil (vm label)
-  (if (not (vm_get_flag vm FNIL))
+  (if (not (vm_get_flag vm 'FNIL))
     (vm_jmp vm label)
     (vm_incr vm 'PC)))
-;(trace vm_jnil) 
+(trace vm_jnil) 
 ;====================================================== 
 
 ;====================================================== TO DO
@@ -655,6 +732,7 @@
     (progn (let ((fun (caar asm)) 
       (args (cdar asm))
       (rest (cdr asm)))
+    (print (car asm))
     ;
     (cond
       ((eq fun 'LOAD)
@@ -765,7 +843,7 @@
         (progn
           (vm_halt vm)
           (setf asm rest))))))))
-;;(trace vm_halt)
+(trace vm_read_asm)
 ;======================================================
 
 ;Run 

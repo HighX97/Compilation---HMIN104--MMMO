@@ -144,9 +144,9 @@
           ((eq (second (first expr)) '<=)
               ;
               (list 'JLE (concatenate 'string "ELSE" (write-to-string id_label_if))))
-          ((or (eq (second (first expr)) '=) (eq (second (first expr)) 'eql) (eq (second (first expr)) 'eq)
+          ((or (eq (second (first expr)) '=) (eq (second (first expr)) 'eql) (eq (second (first expr)) 'eq))
               ;
-              (list 'JEQ (concatenate 'string "ELSE" (write-to-string id_label_if)))))
+              (list 'JEQ (concatenate 'string "ELSE" (write-to-string id_label_if))))
          ((eq (second (first expr)) '>=)
               ;
               (list 'JGE (concatenate 'string "ELSE" (write-to-string id_label_if))))
