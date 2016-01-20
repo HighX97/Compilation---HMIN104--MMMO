@@ -126,14 +126,15 @@
           ;(list 
           ;
           (LI_TO_ASM (third (first expr)) nbArgs)
-          (list
-            (list 'PUSH 'R0))
+          ;(list
+          ;  (list 'PUSH 'R0))
           ;
           (append  (LI_TO_ASM (fourth (first expr)) nbArgs)
-            (list (list 'PUSH 'R0)
-          ;
+          ;  (list (list 'PUSH 'R0)
+          ;VAR1
           (list 'MOVE 'SP 'R0)
           (list 'SUB 1 'R0)
+          ;VAR2
           (list 'MOVE 'SP 'R1)
           (list 'SUB 2 'R1)
           ;
@@ -348,6 +349,20 @@
 (defun LI_TO_ASM_call  (expr nbArgs)
   (if (eq (first expr) 'SET-DEFUN)
     (LI_TO_ASM_defun (cdr expr) nbArgs)
+    ;Push args
+    (append
+      (MAP_LI_TO_ASM_CALL (cdr expr) nbArgs)
+    ;Push nb_args
+    (list 
+      ;(list 'MOVE (length (cdr expr)) 'R0)
+      ;(list 'PUSH 'R0)
+    ;(list 'MOVE 'SP 'FP)
+    (list 'APPLY (first expr) (length (cdr expr)))
+    (list 'RTN)))))
+
+(defun LI_TO_ASM_call_old  (expr nbArgs)
+  (if (eq (first expr) 'SET-DEFUN)
+    (LI_TO_ASM_defun (cdr expr) nbArgs)
     ;Push function name
     (append (list (list 'MOVE (list* :call (first expr)) 'R0)
       (list 'PUSH 'R0))
@@ -359,12 +374,12 @@
       (list 'MOVE 'SP 'FP)))))
 (trace LI_TO_ASM_call)
 
-(defun MAP_LI_TO_ASM_CALL (expr)
+(defun MAP_LI_TO_ASM_CALL (expr nbArgs)
   (if (not (atom expr))
-    (list*
-      (LI_TO_ASM (car expr) 0)
-      (list 'PUSH 'R0)
-      (MAP_LI_TO_ASM_CALL (cdr expr)))))
+    (append
+      (LI_TO_ASM (car expr) nbArgs)
+      ;(list (list 'PUSH 'R0))
+      (MAP_LI_TO_ASM_CALL (cdr expr) nbArgs))))
 (trace MAP_LI_TO_ASM_CALL)
 
 (defun MAP_LI_TO_ASM_CALL_old (expr)
@@ -385,11 +400,28 @@
     (nbArgs (third (second expr)))
     (corpsF (fourth (second expr))))
   (append
-    (LI_TO_ASM corpsF nbArgs)
-    (list (list 'LABEL fun)))))
+    (list (list 'LABEL fun))
+    (LI_TO_ASM corpsF nbArgs))))
 (trace LI_TO_ASM_defun)
 
 (defun LI_TO_ASM_mcall (expr nbArgs)
+  (let (
+    (fun (car expr))
+    (args (cdr expr)))
+  (append
+    (MAP_LI_TO_ASM_MCALL args 0)
+    (list
+      (list 'MOVE 'SP 'FP)
+      (list 'JSR fun)))))
+
+(defun MAP_LI_TO_ASM_MCALL (expr nbArgs)
+  (if (atom expr)
+    (list (list 'PUSH nbArgs))
+    (append
+      (list (list 'PUSH (car expr)))
+      (MAP_LI_TO_ASM_MCALL (cdr expr) (+ nbArgs 1)))))
+
+(defun LI_TO_ASM_mcall_old (expr nbArgs)
   (let (
     (fun (car expr))
     (args (cdr expr)))
@@ -405,7 +437,8 @@
       (setf args (cdr args))
       (setf nbArgs (- nbArgs 1))))
   l))
-;(trace LI_TO_ASM_mcall)
+(trace LI_TO_ASM_mcall)
+(trace MAP_LI_TO_ASM_MCALL)
 ;==========================
 
 ;==========================

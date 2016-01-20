@@ -1,252 +1,214 @@
-;Évalutation du LI
+;TEST - FACT:
+; (eval-li (lisp2li '(defun fact-j (n)  (if (< n 1)  1  (* n (fact-j (- n 1))))) '()) #())
+; (eval-li (lisp2li '(fact-j 3) '()) #())
+; (eval-li '(:MCALL FACT-J (:LIT . 3)) #())
 
-;		Méthodes
-;1-make-array
-;2-(aref <tab> <i>)
-;
-;Fonction peuvent être passé en argument
-;Apply
-;	*(+ 1 2 3 4)
-;	*fonction résultat d'un calcul
-;	*argument résultat d'un calcul
-;	(apply #'+ '(1 2 3 4))
-;	(apply #'+ 1 '(1 2 3 4))
-;	(apply function argsumentsConnu argumentsInconnu(calculable))
-																								;
-																								;
-																								;
-																								;
-																								;
-																								;																																																																																																																								
-(defun eval-LI (expr env)
+;TEST -FIBO:
+; (eval-li (lisp2li '(defun fibonae (n) (if (< n 2) n (+ (fibonae (- n 1)) (fibonae (- n 2)))))'() ) ())
+; (eval-li (lisp2li '(defun fibonae (n) (if (< n 2) n (+ (fibonae (- n 1)) (fibonae (- n 2)))))'() ) ())																																																																																																																																													
+; (eval-li (lisp2li '(fibonae 5) '()) ())
+
+
+(load "LISP2LI.lisp")
+
+(defun eval-li (expr env)
+	;:LIT, :VAR, :SET-VAR, :IF, :CALL, :MCALL, :LET, :PROGN , :UNKNOWN 
 	(ecase (car expr)
-																								;(:LIT . 1)
-		(:LIT 
-			(cdr expr))
-																								;(:VAR )
-		(:VAR 
-			(aref env (cdr expr)))
-																								;(:SETVAR )
+		
+		; (cdr expr) -> 99
+		;(eval-li '(:LIT . 99) #()) -> 99																				
+		(:LIT (cdr expr))
+		
+		; (eval-LI '(:VAR . 0) #(A)) -> A																					
+		(:VAR
+			(aref env 
+				(- (cdr expr) 0)
+			)
+		)
+		
+		;(eval-li '(:SET-VAR 1 (:LIT . 4)) #(1 2))	-> 4																				
 		(:SET-VAR 
-			(setf (aref env (cadr expr)) 
-				(eval-LI (caddr expr) env)))
-
-																								;(:IF)
+			(setf 
+				;(second '(:SET-VAR 1 (:LIT . 4))) -> 1 
+				(aref env 
+					(- (second expr) 0)
+				)
+				;(third '(:SET-VAR 1 (:LIT . 4))) -> (:LIT . 4) 
+				(eval-li (third expr) env )
+			)
+		)
+		
+		;(:LET-VAR (setf (aref env (cadr expr)) (eval-li (cddr expr) env )))
+		
+		;(eval-li '(:IF (:CALL = (:LIT . 1) (:LIT . 2)) (:LIT . 1) (:VAR . 2)) #(1 2 3 4 5) )
 		(:IF 
-			(if (eval-LI (second expr) env) 
-				(eval-LI (third expr) env)
-				(eval-LI (cadddr expr) env)))
-																								;(:CALL + (:LIT . 1)(:LIT . 2))
-		(:CALL (apply (second expr)
-			(map-eval-li (caddr expr) env)))
-																								;(:MCALL FIBO (:LIT . 30))
-																								;fun :
-																								;args
+			;(second '(:IF (:CALL = (:LIT . 1) (:LIT . 2)) (:LIT . 1) (:VAR . 2)) )
+			(if (eval-li (second expr) env) ; -> (:CALL = (:LIT . 1) (:LIT . 2))
+				(eval-li (third expr) env) ;-> (:LIT . 2)
+				(eval-li (cadddr expr) env) ; -> (:LIT . 1)
+			)
+		)
+		
+		;(eval-li (lisp2li '(+ a b) '(a b)) #(1 2 3) ) -> 3	
+		; (:CALL + (:VAR . 1) (:VAR . 2))																			
+		(:CALL 
+			(apply 
+				;(second '(:CALL + (:VAR . 1) (:VAR . 2))) 
+				; +
+				(second expr) 
+				; (cddr '(:CALL + (:VAR . 1) (:VAR . 2)))
+				; ((:VAR . 1) (:VAR . 2))
+				(map-eval-li (cddr expr) env)
+			)
+		)
+		
+		; (eval-li '(:MCALL FACT-J (:LIT . 3)) #())																				
 		(:MCALL 
-			(let ((fun (get-defun (second expr)))
-			(args (map-eval-li (cddr expr) env)))
-																								;(thrid de fun) : corp de la fonction
-																								;(second fun) : parametres
-																								;(get-defun 'fibo') : 
-			(eval-LI (cddr fun)
-				(make-env-eval-LI (second fun) args))))
-																								;(:PROGN )
+			(let* (
+					(fun (get-defun (second expr))) ; (:LAMBDA 1 (:IF (:CALL < (:VAR . 1) (:LIT . 1)) (:LIT . 1) (:CALL * (:VAR . 1) (:MCALL FACT-J (:CALL - (:VAR . 1) (:LIT . 1))))))
+				)
+				(if (eq (car (cddr expr)) :LIT)
+					(let (
+							; args = ((:LIT . 3))
+							(args (eval-li (cddr expr) env))
+						) 
+						(eval-li (third fun) ;  (:CALL * (:VAR . 1) (:MCALL FACT-J (:CALL - (:VAR . 1) (:LIT . 1)))))
+							(make-env-eval-li 
+								args ; args = ((:LIT . 3))
+								env ; 
+								(make-array (+ 1 (cadr fun))) ;(cadr fun) = 1 ; Nombre d'arguments
+								1
+							)
+						)
+					)
+	      			(let (
+		      				(args 
+		      					(cons 
+		      						;(car (cddr '(:MCALL FACT-J (:LIT . 3))) 
+		      						; (:LIT . 3)
+		      						(eval-li (car (cddr expr)) env)
+		      						;(cdr (cddr '(:MCALL FACT-J (:LIT . 3))))
+		      						; NIL
+			    					(map-eval-li (cdr (cddr expr)) env)
+			    				)
+		      				)
+	      				)
+						(eval-li (third fun) ;  (:CALL * (:VAR . 1) (:MCALL FACT-J (:CALL - (:VAR . 1) (:LIT . 1)))))
+							(make-env-eval-li 
+								args ; args = ((:LIT . 3))
+								env ;
+								(make-array (+ 1 (cadr fun))) ;(cadr fun) = 1 ; Nombre d'arguments
+								1 
+							)
+						)
+					)
+				)
+			)
+		)
+
+		;(eval-li (lisp2li '(let ((x 1)) (+ 1 x) ) '(A B)) #(1 2 3 4 5) )
+		;(:LET 1 ((:SET-VAR 2 (:LIT . 1))) (:CALL + (:LIT . 1) (:VAR . 3))) -> 6
+		(:LET 
+			;(let ( (p (cddr expr)) ) 
+				;
+				(map-eval-li (caddr expr) env) ; ((:SET-VAR 2 (:LIT . 1)))
+				(map-eval-li (cdddr expr) env) ; ((:CALL + (:LIT . 1) (:VAR . 3)))
+			;)
+		)
+		
+		;(:LAMBDA 
+		;	(eval-li (third expr) env)
+		;)
+			
+		;(eval-li '(:PROGN (:CALL + (:LIT . 1) (:LIT . 2)) (:CALL * (:LIT . 1) (:LIT . 6))) #())
 		(:PROGN 
-			(map-eval-LI-progn PROGN (cdr expr)))
-																						;(:UNKNOWN (FIBO (- n 1))) . (n))
+			(map-eval-li-progn 
+				(PROGN 
+					(cdr expr) ; ((:CALL + (:LIT . 1) (:LIT . 2)) (:CALL * (:LIT . 1) (:LIT . 6)))
+				) 
+				env
+			)
+		)
+
+		;(:lclosure (:closure env (length env) expr))
+		; (eval-li (lisp2li '(myfun 1 2) '(a b c)) #(1 2 3 4 5) )
+		; ->  - Error: eval-li (:UNKNOWN (MYFUN 1 2) (A B C))
 		(:UNKNOWN 
-			(let (
-				(nexpr (lisp2li (seond expr) (cddr expr))))
-			(if (eq (car expr) :UNKNOWN)
-				(error "eval-LI: ~s" expr)
-				(eval-LI (displace expr nexpr) env))))))
-																								; expr [ | ]{:UNKNWOWN     |     ((fibo (- n 1)) . (n)))}
-																								; (defun displace (cell1 cell2)
-																								;			(set-f (car cell2) (car cell1)
-																								;				(cdr cell2) (car cell1)
-																								;			cell2)			
-																								;
-																								;
-																								;
-																								;map-eval-LI
-																								;map-env-eval-LI																								
-																								;
-																								;
-																								;
-																								;
-																								;		JAVASCRIPT
-																								;	fermetures
-																								;(DEFUN FOO (X Y Z)
-																								;	((lambda (u v w)
-																								;		)))
-																								;
-																								;fonction d'ordre supérieur
-																								;
-																								;fermeture =  	|lambda-function   																							;																																																																																																																	
-																								;				| passée comme valeur
-																								;				| exécutée ailleur(plustard)
-																								;				| capture l'environement courant 	
-																								;				|	les variables de l'env lexical englobant
-																								;				|	leurs valeurs au moment de la laison entre les deux captures
-																								;
-																								;		COMPTEUR
-																								;	(let ((n 0))
-																								;	(defun compteur () n)  --> (set-defun 'compteur'
-																								;								(make-closure (lambda() n) {n -> 0}))
-																								;	(defun compteur++ ()
-																								;		(setf n (+ 1 n)))
-																								;	(defun compteur-resert ()
-																								;		(setf n 0)))
-																								;
-																								;	RECURSION ENVELOPPÉE | TERMINALE | TERMINALE PAR CONTINUATION
-																								;	(defun length-re(l)
-																								;		(if (atom l)
-																								;			0
-																								;			(+ 1 (length-re (cdr l)))))
-																								;	(defun length-rt (l r)
-																								;		(if (atom l)
-																								;			r
-																								;			(length-rt (cdr l) (+ 1 r))))
-																								;	(defun length-rc (lc)
-																								;		(if (atom l)
-																								;			(apply c 0 ())
-																								;			(length-rc (cdr l)
-																								;				#'(lambda (x)
-																								;					(+ 1 (apply c x () ))))
-																								;											l1:(1 2 3)		c1:(lambda (x) x) {}
-																								;											l2:(2 3)		c2:(lambda (x) (+ 1 ..)) {l1 c1}
-																								;											l3:(3)			c3:(lambda (x) (+ 1 ..)) {l2 c2}
-																								;											l4:()			c4:(lambda (x) (+ 1 ..)) {l3 c3}
-																								;											APPLY
-																								;
-																								;
-																								;
-																								;	(defun foo-re (agrs)
-																								;		(if (<arret args)
-																								;			<init>
-																								;			(<env> (foo-re (<next> args))))
-																								;
-																								;	(defun foo-rc (args c)
-																								;		(if (<arret> args)
-																								;			(apply c <init> ())
-																								;			(foo-rc (<next args)
-																								;				#'(lambda (x) 	(<env> (appli c x ())))
-																								;								(apply c (<env> x) ()))
-																								;
-																								;
-																								;
-																								;
-																								;
-																								;																																																																																																																								
-(defun map-eval-LI (expr env)
-	
-						;Si c'est un atome 
-  (if (atom expr) 
-					;On ne fait rien 
-      NIL 
-					;Sinon on transcrit en LI le premier élément 
-					;et on réalise une récursion sur le reste 
-    (cons (eval-LI (first expr) env) (map-eval-LI (rest expr) env))))
-																								;
-																								;
-																								;
-																								;
-																								;
-																								;																																																																																																																								
-(defun map-eval-LI-progn (expr env)
-						;Si c'est un atome 
-  (if (atom expr) 
-					;On ne fait rien 
-	NIL 
-					;Sinon on transcrit en LI le premier élément 
-					;et on réalise une récursion sur le reste
-	(if (atom (rest expr))
-		(eval-LI (first expr) env)
+			(let 
+				(
+					(nexpr 
+						(  lisp2li (second expr) ; (MYFUN 1 2)
+							(caddr expr) ; (A B C)
+						)
+					)
+					; nexpr = (lisp2li '(MYFUN 1 2) '(A B C))
+					; nexpr = (:UNKNOWN (MYFUN 1 2) (A B C))
+				)
+			    (if (eq (car nexpr) :UNKNOWN)
+					(error "Error: eval-li ~s" expr)
+			      	; (displace '(:UNKNOWN (MYFUN 1 2) (A B C)) '(:UNKNOWN (MYFUN 1 2) (A B C)) )
+			      	(eval-li (displace expr nexpr) env)
+			      	;(:UNKNOWN (MYFUN 1 2) (A B C))
 
-		(map-eval-LI-progn (rest expr) env))))
-																								;
-																								;
-																								;
-																								;
-																								;
-																								;																																																																																																																								
-(defun make-env-eval-LI (nbArgs listArgs)
-  (make_env_rec listArgs 0 (make-array (+ nbArgs 1))))
+			    )
+			)
+		)
+	)
+)	
 
-(defun make_env_rec (listArgs pos envGenerated)
-	(when listArgs
-		(setf (aref envGenerated pos) (car listArgs))
-		(make_env_rec (cdr listArgs) (+ pos 1) envGenerated))
-	envGenerated)
-																								;
-																								;
-																								;
-																								;
-																								;
-																								;																																																																																																																								
-(defun displace (cell1 cell2)
-	(setf (car cell2) (car cell1)
-		(cdr cell2) (car cell1))
-	cell2)
+; expr = ((:VAR . 1) (:VAR . 2)) 
+(defun map-eval-li (expr env)
+	(if (atom expr)
+	    nil
+	  	(cons
+	  		; (first '((:VAR . 1) (:VAR . 2)))
+			(eval-li (first expr) env) ; (:VAR . 1)
+			(map-eval-li (rest expr) env) ;(:VAR . 2)
+	    )
+	)
+)
+																																																																																																																																																
+(defun map-eval-li-progn (expr env)
+	(car 
+		(last 
+			;(car (last '((:CALL + (:LIT . 1) (:LIT . 2)) (:CALL * (:LIT . 1) (:LIT . 6))) ) )
+			; -> (:CALL * (:LIT . 1) (:LIT . 6))
+			(map-eval-li expr env)
+		)
+	)
+)
+																							
+;args ; args = ((:LIT . 3))
+;env ;
+;(make-array (+ 1 1)) -> #(NIL NIL)
+;1 
+(defun make-env-eval-li (args env nenv index) 
+	(if	(null args) ; ((:LIT . 3))
+		nenv ;  #(NIL NIL)
+		(progn
+			(setf (aref nenv index) (car args)) ; 1 = (:LIT . 3)
+			(make-env-eval-li (cdr args) env nenv (+ 1 index))
+		)
+	)
+)	
+																																																																																																																																																
+(defun displace (l ln)
+	(RPLACA l (CAR ln))
+	(RPLACD l (CDR ln))
+    l
+)
 
 
-		;;TEST eval-LI
-
-(load "../02-Generation_Langage_Intermediaire/LISP_to_LI.lisp")
-
-;Make_env
-(setf env (make-array 14))
-(setf (aref env 0) 'A )
-(setf (aref env 1) 'B )
-(setf (aref env 2) 'C )
-(setf (aref env 3) 'D )
-(setf (aref env 4) 'E )
-(setf (aref env 5) 'F )
-(setf (aref env 6) 'G )
-(setf (aref env 7) 'H )
-(setf (aref env 8) 'I )
-(setf (aref env 9) 'J )
-(setf (aref env 10) 'K )
-(setf (aref env 11) 'L )
-(setf (aref env 12) 'M )
-(setf (aref env 13) 'N )
-
-;Trace
-(trace eval-LI)
-(trace make-env-eval-LI)
-(trace second)
-
-;Cas Lit _ Valid
-;(eval-LI (LISP2LI 1 env) env)
-
-;Cas Var _ Valid
-;(eval-LI (LISP2LI 'g env) env)
-
-;Cas Set-Var _ Valid
-;(eval-LI (LISP2LI '(setf g 8) env) env)
-
-;Cas If _ Valid
-;(eval-LI (LISP2LI '(IF (EQ 1 2) 3 7) env) env) 
-
-;Cas CALL _ Valid
-;(eval-LI (LISP2LI '(EQ 1 1) env) env)
-
-;Cas MCALL 
-(set-defun 'looc '(+ x 1))
-(eval-LI (LISP2LI '(looc 4) env) env)
-
-(eval-LI '(:MCALL + ((:VAR . 0) (:LIT . 1))) #(3))
-;(eval-LI '(:CALL + ((:VAR . 0) (:LIT . 1))) #(3))
-;30. Trace: (EVAL-LI '(:CALL + ((:VAR . 0) (:LIT . 1))) '#(3))
-;31. Trace: (EVAL-LI '(:VAR . 0) '#(3))
-;31. Trace: EVAL-LI ==> 3
-;31. Trace: (EVAL-LI '(:LIT . 1) '#(3))
-;31. Trace: EVAL-LI ==> 1
-;30. Trace: EVAL-LI ==> 4
-;4
-
-;Cas PROGN
-
-;Cas UNKNOWN
+(defun set-defun (symb lambda)
+	(setf 
+		(get symb :defun) 
+		lambda
+	)
+)
 
 
+(defun get-defun (symb)
+	(get symb :defun)
+)
+
+(trace displace make-env-eval-li map-eval-li-progn map-eval-li eval-li)
