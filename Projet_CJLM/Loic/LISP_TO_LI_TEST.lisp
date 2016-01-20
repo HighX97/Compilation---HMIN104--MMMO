@@ -44,3 +44,16 @@
 ;in   : (lisp_to_li '(setf ua x) env_lisp_to_li)
 ;out  : (:SET_VAR (2 . 21) (:VAR . 24))
 ;==========================
+
+;==========================
+;       CALL
+;in   : (lisp_to_li '(< 1 2) env_lisp_to_li)
+;out  : (:CALL < (:LIT . 1) (:LIT . 2))
+;==========================
+
+;==========================
+;       IF
+;in 	:	(lisp_to_li '(if (< 1 2) 1 2) env_lisp_to_li)
+;out  : (:IF (:CALL < (:LIT . 1) (:LIT . 2)) (:LIT . 1) (:LIT . 2))
+;==========================
+

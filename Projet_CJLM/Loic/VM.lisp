@@ -72,7 +72,7 @@
 ;=============================================================================================================
 (setq liste_registre '(R0 R1 R2 SP BP FP PC))
 (setq liste_drapeau '(FLT FEQ FGT FNIL))
-(setq mem_size_default 50)
+(setq mem_size_default 100)
 
 ;======================================================  
 (defun is_register_? (registre)
@@ -136,25 +136,19 @@
 	(if (null size)
 		(setf size mem_size_default))
   (vm_init_memory vm size)
-  	;(setf (get vm :debCode) (- size (* (floor (/ size 3)) 2)));depend de size 
-  	;(setf (get vm :adrCode) (get vm :debCode));adresse pour charger dans le code
-  	;(setf (get vm :ON) 0);interrupteur de la VM  on / off
-    ;(setf (get vm :memory_size) size)
     (vm_set_register vm 'R0 nil)
     (vm_set_register vm 'R1 nil)
     (vm_set_register vm 'R2 nil)
     (vm_set_register vm 'SP 10);Plafond pile
     (vm_set_register vm 'BP 10);Plancher pile
     (vm_set_register vm 'FP 10);Pointeur de cadre
-    (vm_set_register vm 'PC 10);Compteur ordinal
+    (vm_set_register vm 'PC 0);Compteur ordinal
     (vm_set_flag_OFF vm 'FLT);drapeau <
     (vm_set_flag_OFF vm 'FEQ);drapeau =
     (vm_set_flag_OFF vm 'FGT);drapeau >
     (vm_set_flag_OFF vm 'FNIL);drapeau test
-    ;(vm_set_register vm 'CO (- size (* (floor (/ size 3)) 2)))
   	(vm_init_hashTab_etq_resolu vm) ;table pour les ref en avance
     (vm_init_hashTab_etq_non_resolu vm)) ;table pour les ref en avance
-  	;(setf (get vm 'TSR) (make-hash-table))
 ;;(trace vm_init)
 ;======================================================  
 
@@ -225,7 +219,7 @@
 
 ;======================================================  
 (defun vm_init_hashTab_etq_resolu (vm)
-  (setf (get vm :hashTab_etq_resolu) (make-hash-table)))
+  (setf (get vm :hashTab_etq_resolu) (make-hash-table :test 'equal)))
 ;;(trace vm_init_hashTab_etq)
 ;======================================================  
 
@@ -532,11 +526,14 @@
 ;Peut-on décclaré deux fois la même étiquette ? 
 ; (LABEL <label>)   = déclaration d’étiquette
 (defun vm_label (vm label)
+  (vm_set_hashTab_etq_resolu vm label (vm_get_register vm 'PC)))
+
+(defun vm_label_old (vm label)
   (vm_set_hashTab_etq_resolu vm label (vm_get_register vm 'SP))
   (if (vm_get_hashTab_etq_non_resolu_val vm label)
     (vm_move vm (vm_get_hashTab_etq_resolu_val vm label) 'PC)))
 
-(defun vm_label_old (vm label)
+(defun vm_label_old_old (vm label)
   (vm_set_hashTab_etq_resolu vm label (vm_get_register vm 'SP)))
 (trace vm_label) 
 ;======================================================
@@ -544,11 +541,15 @@
 ;====================================================== 
 ; (JMP <label>)     = saut inconditionnel à une étiquette ou une adresse
 (defun vm_jmp (vm label)
+  (print label)
   (if (integerp label)
     (vm_move vm label 'PC)
-    (if (vm_get_hashTab_etq_resolu_val vm label)
-      (vm_move vm (vm_get_hashTab_etq_resolu_val vm label) 'PC)
-      (vm_set_hashTab_etq_non_resolu vm label (vm_get_register vm 'SP)))))
+    (progn
+      (print '(vm_get_hashTab_etq_resolu_val vm label))
+      (print (vm_get_hashTab_etq_resolu_val vm label))
+      (if (vm_get_hashTab_etq_resolu_val vm label)
+      (progn  (vm_move vm (vm_get_hashTab_etq_resolu_val vm label) 'PC)
+      (vm_set_hashTab_etq_non_resolu vm label (vm_get_register vm 'SP)))))))
 
 (defun vm_jmp_old (vm label)
   (if (integerp label)
@@ -575,7 +576,8 @@
 ;====================================================== 
 
 (defun vm_test_constante (src)
-  (and (eq (car src) ':LIT) (integerp (cdr src))))
+  (if (not (atom src))
+    (and (eq (car src) ':LIT) (integerp (cdr src)))))
 (trace vm_test_constante) 
 ;====================================================== 
 ; (CMP <src1> <src2>) = comparaison
@@ -852,6 +854,141 @@
           (vm_halt vm)
           (setf asm rest))))))))
 (trace vm_read_asm)
+
+(defun vm_new_read_asm (vm asm)
+  (print "first read")
+  (vm_new_read_asm_first_read vm asm)
+  (loop 
+    while (> (length asm) (vm_get_register vm 'PC))
+    do
+    (progn (let ((inst (getListElt asm (vm_get_register vm 'PC))))
+      (let ((fun (car inst)) 
+      (args (cdr inst)))
+      (print inst)
+      (print "second read")
+      (print (vm_get_register vm 'PC))
+    (cond
+      ((eq fun 'LOAD)
+        (progn
+          (vm_load vm (first args) (second args))
+          (vm_incr vm 'PC)))
+      ((eq fun 'STORE)
+        (progn
+          (vm_store vm (first args) (second args))
+          (vm_incr vm 'PC)))
+      ((eq fun 'MOVE)
+        (progn
+          (vm_move vm (first args) (second args))
+          (vm_incr vm 'PC)))
+      ((eq fun 'ADD)
+        (progn
+          (vm_add vm (first args) (second args))
+          (vm_incr vm 'PC)))
+      ((eq fun 'SUB)
+        (progn
+          (vm_sub vm (first args) (second args))
+          (vm_incr vm 'PC)))
+      ((eq fun 'MUL)
+        (progn
+          (vm_mul vm (first args) (second args))
+          (vm_incr vm 'PC)))
+      ((eq fun 'DIV)
+        (progn
+          (vm_div vm (first args) (second args))
+          (vm_incr vm 'PC)))
+      ((eq fun 'INCR)
+        (progn
+          (vm_incr vm (first args))
+          (vm_incr vm 'PC)))
+      ((eq fun 'DECR)
+        (progn
+          (vm_decr vm (first args))
+          (vm_incr vm 'PC)))
+      ((eq fun 'PUSH)
+        (progn
+          (vm_push vm (first args))
+          (vm_incr vm 'PC)))
+      ((eq fun 'POP)
+        (progn
+          (vm_pop vm (first args))
+          (vm_incr vm 'PC)))
+      ((eq fun 'LABEL)
+        (progn
+          (vm_label vm (first args))
+          (vm_incr vm 'PC)))
+      ((eq fun 'JMP)
+        (progn
+          (vm_jmp vm (first args))
+          (vm_incr vm 'PC)))
+      ((eq fun 'JSR)
+        (progn
+          (vm_jsr vm (first args))
+          (vm_incr vm 'PC)))
+      ((eq fun 'RTN)
+        (progn
+          (vm_rtn vm)
+          (vm_incr vm 'PC)))
+      ((eq fun 'CMP)
+        (progn
+          (vm_cmp vm (first args) (second args))
+          (vm_incr vm 'PC)))
+      ((eq fun 'JGT)
+        (progn
+          (vm_jgt vm (first args))))
+      ((eq fun 'JGE)
+        (progn
+          (vm_jge vm (first args))))
+      ((eq fun 'JLT)
+        (progn
+          (vm_jlt vm (first args))))
+      ((eq fun 'JLE)
+        (progn
+          (vm_jle vm (first args))))
+      ((eq fun 'JEQ)
+        (progn
+          (vm_jeq vm (first args))))
+      ((eq fun 'JNE)
+        (progn
+          (vm_jne vm (first args))))
+      ((eq fun 'TEST)
+        (progn
+          (vm_test vm (first args))
+          (vm_incr vm 'PC)))
+      ((eq fun 'JTRUE)
+        (progn
+          (vm_jtrue vm (first args))
+          (vm_incr vm 'PC)))
+      ((eq fun 'JNIL)
+        (progn
+          (vm_jnil vm (first args))
+          (vm_incr vm 'PC)))
+      ((eq fun 'NOP)
+        (progn
+          (vm_nop vm)
+          (vm_incr vm 'PC)))
+      ((eq fun 'HALT)
+        (progn
+          (vm_halt vm)
+          (vm_incr vm 'PC)))))))))
+
+(defun vm_new_read_asm_first_read (vm asm)
+  (loop 
+    while (> (length asm) (vm_get_register vm 'PC))
+    do
+    (progn (let ((inst (getListElt asm (vm_get_register vm 'PC))))
+      (let ((fun (car inst)) 
+      (args (cdr inst)))
+      (print "first read")
+      (print inst)
+      (print (vm_get_register vm 'PC))
+    (if (eq fun 'LABEL)
+        (progn
+          (vm_label vm (first args))))
+          (vm_incr vm 'PC)))))
+  (vm_move vm 0 'PC))
+
+(trace vm_new_read_asm)
+(defun getListElt (l i) (if (atom l) -1 (if (eq i 0) (car l) (getListElt (cdr l) (- i 1)))))
 ;======================================================
 
 ;Run 
