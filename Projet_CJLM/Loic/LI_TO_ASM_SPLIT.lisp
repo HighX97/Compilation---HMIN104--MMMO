@@ -21,39 +21,39 @@
 
 ;==========================
 (defun LI_TO_ASM (expr nbArgs) 
-  	(ecase (car expr)
-            (:LIT
+ (ecase (car expr)
+  (:LIT
                   (LI_TO_ASM_const expr));
-            (:VAR 
+  (:VAR 
                   (LI_TO_ASM_var expr nbArgs));
-            (:SET_VAR 
-                  (LI_TO_ASM_set_var expr nbArgs));
-            (:IF 
+  (:SET_VAR 
+                  (LI_TO_ASM_set_var (cdr expr) nbArgs));
+  (:IF 
                   (LI_TO_ASM_if (cdr expr) nbArgs));TODO
-            (:CALL 
+  (:CALL 
                   (LI_TO_ASM_call (cdr expr) nbArgs));
-            (:MCALL 
+  (:MCALL 
                   (LI_TO_ASM_mcall (cdr expr) nbArgs));TODO
-            (:PROGN 
-                  (LI_TO_ASM_progn expr nbArgs));
-            (:LET 
+  (:PROGN 
+                  (LI_TO_ASM_progn (cdr expr) nbArgs));
+  (:LET 
                   (LI_TO_ASM_let (cdr expr) nbArgs));
-            (:WHILE 
+  (:WHILE 
                   (LI_TO_ASM_while (cdr expr) nbArgs));TODO
-            (:LCLOSURE 
-                  (LI_TO_ASM_lclosure expr))
-            (:SET_FUN 
-                  (LI_TO_ASM_set_fun expr))
-            (:APPLY 
-                  (LI_TO_ASM_apply expr))
-            (:CVAR 
-                  (LI_TO_ASM_cvar expr))
-            (:SET_CVAR 
-                  (LI_TO_ASM_set_cvar expr))
-            (:LCALL 
-                  (LI_TO_ASM_lcall expr))
-            (:UNKNOWN 
-                  (LI_TO_ASM_unknown expr))))
+  (:LCLOSURE 
+    (LI_TO_ASM_lclosure expr))
+  (:SET_FUN 
+    (LI_TO_ASM_set_fun expr))
+  (:APPLY 
+    (LI_TO_ASM_apply expr))
+  (:CVAR 
+    (LI_TO_ASM_cvar expr))
+  (:SET_CVAR 
+    (LI_TO_ASM_set_cvar expr))
+  (:LCALL 
+    (LI_TO_ASM_lcall expr))
+  (:UNKNOWN 
+    (LI_TO_ASM_unknown expr))))
 (trace LI_TO_ASM)
 ;==========================
 
@@ -80,7 +80,7 @@
 (defun LI_TO_ASM_var  (expr nbArgs)
   (if (> (cdr expr) nbArgs)
   	(warn "")
-  	(let ((decalage (- nbArgs (cdr expr))))
+  	(let ((decalage (- (+ nbArgs 1) (cdr expr))))
   		(list
   			(list 'MOVE decalage 'R2)
   			(list 'MOVE 'FP 'R1)
@@ -103,32 +103,96 @@
   id_label)
 
 ;(:IF (:LIT . T) (:LIT . 1) (:LIT . 2))
+;(:IF (:CALL < (:LIT . 1) (:LIT . 2)) (:LIT . 1) :LIT . 2)
 ;(:IF (:CALL < (:VAR . 24) (:VAR . 25)) (:VAR . 24) :VAR . 25)
 ;(:IF (:CALL NOT (:CALL EQ (:VAR . 24) (:VAR . 25))) (:VAR . 24) :VAR . 25)
 ;(:IF (:CALL OR (:CALL EQ (:VAR . 24) (:VAR . 25)) (:CALL EQ (:VAR . 25) (:VAR . 24))) (:VAR . 24) :VAR . 25)
+
 (defun LI_TO_ASM_if  (expr nbArgs)
   (setf id_label_if (get_id_label))
   (append 
     (list
-    (list 'LABEL (concatenate 'string "IF" (write-to-string id_label_if))))
-    (if (eq (first (first expr)) ':call)
-      (if (or (eq (second (first expr)) '<) 
-              (eq (second (first expr)) '<=) 
-              (eq (second (first expr)) '=) 
-              (eq (second (first expr)) 'eq) 
-              (eq (second (first expr)) 'eql) 
-              (eq (second (first expr)) '>=) 
-              (eq (second (first expr)) '>)
-              (eq (second (first expr)) '/=))
+      ;FI
+      (list 'LABEL (concatenate 'string "FI" (write-to-string id_label_if))))
+      ;ELSE
+      (LI_TO_ASM (third expr) nbArgs)
+      (list (list 'PUSH 'R0))
+      (list (list 'LABEL (concatenate 'string "ELSE" (write-to-string id_label_if))))
+      ;IF
+      (LI_TO_ASM (second expr) nbArgs)
+      (list (list 'PUSH 'R0))
+      (list (list 'LABEL (concatenate 'string "IF" (write-to-string id_label_if))))
+      (if (eq (first (first expr)) ':call)
+        (if (or (eq (second (first expr)) '<) 
+          (eq (second (first expr)) '<=) 
+          (eq (second (first expr)) '=) 
+          (eq (second (first expr)) 'eq) 
+          (eq (second (first expr)) 'eql) 
+          (eq (second (first expr)) '>=) 
+          (eq (second (first expr)) '>)
+          (eq (second (first expr)) '/=))
         (append 
           ;(list 
           ;
           (LI_TO_ASM (third (first expr)) nbArgs)
           (list
-          (list 'PUSH 'R0))
+            (list 'PUSH 'R0))
           ;
           (append  (LI_TO_ASM (fourth (first expr)) nbArgs)
-          (list (list 'PUSH 'R0)
+            (list (list 'PUSH 'R0)
+          ;
+          (list 'MOVE 'SP 'R0)
+          (list 'LOAD 'R0 'R0)
+          (list 'MOVE 'SP 'R1)
+          (list 'SUB 1 'R1)
+          (list 'LOAD 'R1 'R1)
+          ;
+          (list 'CMP 'R0 'R1 )
+          (cond
+            ((eq (second (first expr)) '<)
+              ;
+              (list 'JGE (concatenate 'string "ELSE" (write-to-string id_label_if))))
+              ;
+              ((eq (second (first expr)) '<=)
+              ;
+              (list 'JGT (concatenate 'string "ELSE" (write-to-string id_label_if))))
+              ((or (eq (second (first expr)) '=) (eq (second (first expr)) 'eql) (eq (second (first expr)) 'eq))
+              ;
+              (list 'JNE (concatenate 'string "ELSE" (write-to-string id_label_if))))
+              ((eq (second (first expr)) '>=)
+              ;
+              (list 'JLT (concatenate 'string "ELSE" (write-to-string id_label_if))))
+              ((eq (second (first expr)) '>)
+              ;
+              (list 'JLE (concatenate 'string "ELSE" (write-to-string id_label_if))))
+              ((eq (second (first expr)) '/=)
+              ;
+              (list 'JEQ (concatenate 'string "ELSE" (write-to-string id_label_if)))))
+          (list 'LOAD 'PC 'R0))))))))
+
+(defun LI_TO_ASM_if_old  (expr nbArgs)
+  (setf id_label_if (get_id_label))
+  (append 
+    (list
+      (list 'LABEL (concatenate 'string "IF" (write-to-string id_label_if))))
+    (if (eq (first (first expr)) ':call)
+      (if (or (eq (second (first expr)) '<) 
+        (eq (second (first expr)) '<=) 
+        (eq (second (first expr)) '=) 
+        (eq (second (first expr)) 'eq) 
+        (eq (second (first expr)) 'eql) 
+        (eq (second (first expr)) '>=) 
+        (eq (second (first expr)) '>)
+        (eq (second (first expr)) '/=))
+      (append 
+          ;(list 
+          ;
+          (LI_TO_ASM (third (first expr)) nbArgs)
+          (list
+            (list 'PUSH 'R0))
+          ;
+          (append  (LI_TO_ASM (fourth (first expr)) nbArgs)
+            (list (list 'PUSH 'R0)
           ;
           (list 'MOVE 'SP 'R0)
           (list 'SUB 1 'R0)
@@ -136,34 +200,41 @@
           (list 'SUB 2 'R1)
           ;
           (list 'CMP 'R0 'R1 )
-        (cond
-          ((eq (second (first expr)) '<)
+          (cond
+            ((eq (second (first expr)) '<)
               ;
               (list 'JLT (concatenate 'string "ELSE" (write-to-string id_label_if))))
               ;
-          ((eq (second (first expr)) '<=)
+              ((eq (second (first expr)) '<=)
               ;
               (list 'JLE (concatenate 'string "ELSE" (write-to-string id_label_if))))
-          ((or (eq (second (first expr)) '=) (eq (second (first expr)) 'eql) (eq (second (first expr)) 'eq))
+              ((or (eq (second (first expr)) '=) (eq (second (first expr)) 'eql) (eq (second (first expr)) 'eq))
               ;
               (list 'JEQ (concatenate 'string "ELSE" (write-to-string id_label_if))))
-         ((eq (second (first expr)) '>=)
+              ((eq (second (first expr)) '>=)
               ;
               (list 'JGE (concatenate 'string "ELSE" (write-to-string id_label_if))))
-          ((eq (second (first expr)) '>)
+              ((eq (second (first expr)) '>)
               ;
               (list 'JGT (concatenate 'string "ELSE" (write-to-string id_label_if))))
-          ((eq (second (first expr)) '/=)
+              ((eq (second (first expr)) '/=)
               ;
               (list 'JNE (concatenate 'string "ELSE" (write-to-string id_label_if))))))
-          (append (LI_TO_ASM (second expr) nbArgs)
-          (list (list 'JMP (concatenate 'string "FI" (write-to-string id_label_if)))
-          (list 'LABEL (concatenate 'string "ELSE" (write-to-string id_label_if))))
-          (append (LI_TO_ASM (third expr) nbArgs)
-            (list
-          (list 'LABEL (concatenate 'string "FI" (write-to-string id_label_if))))))))))))
+(append (LI_TO_ASM (second expr) nbArgs)
+  (list (list 'JMP (concatenate 'string "FI" (write-to-string id_label_if)))
+    (list 'LABEL (concatenate 'string "ELSE" (write-to-string id_label_if))))
+  (append (LI_TO_ASM (third expr) nbArgs)
+    (list
+      (list 'LABEL (concatenate 'string "FI" (write-to-string id_label_if))))))))))))
 
-(defun LI_TO_ASM_if_old  (expr nbArgs)
+(defun displayAsm (asm)
+  (if (atom asm)
+    (print "end")
+    (progn
+      (print (car asm))
+      (displayAsm (cdr asm)))))
+
+(defun LI_TO_ASM_if_old_old  (expr nbArgs)
   (list
     (list 'LABEL 'IF)
     (list 'TEST (LI_TO_ASM (second expr) nbArgs))
@@ -180,15 +251,15 @@
 ;(:PROGN (:LIT . 1) (:LIT . 2) (:LIT . 3))
 
 (defun LI_TO_ASM_progn  (expr nbArgs)
-  (MAP_LI_TO_ASM_PROGN (cdr expr) nbArgs))
+  (MAP_LI_TO_ASM_PROGN expr nbArgs))
 (trace LI_TO_ASM_progn)
 ;==========================
 
 ;==========================                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
 (defun MAP_LI_TO_ASM_PROGN (expr nbArgs)
   (if (atom  expr) 
-      NIL 
-      (list* (LI_TO_ASM (first expr) nbArgs)
+    NIL 
+    (append (LI_TO_ASM (first expr) nbArgs)
       (MAP_LI_TO_ASM_PROGN (rest expr) nbArgs))))
 (trace MAP_LI_TO_ASM_PROGN)
 ;==========================
@@ -196,15 +267,15 @@
 ;==========================
 ;(:SET_VAR 0 (:LIT . 1))
 (defun LI_TO_ASM_set_var (expr nbArgs)
-  (if (> (second expr) nbArgs)
+  (if (> (first expr) nbArgs)
   	(warn "")
-  	(let ((decalage (- nbArgs (second expr))))
+  	(let ((decalage (- (+ nbArgs 1) (first expr))))
   		(list
-  		(list 'MOVE (third expr) ''R0)
-  		(list 'MOVE decalage ''R2)
-		(list 'MOVE ''FP ''R1)
-		(list 'SUB ''R2 ''R1)
-  		(list 'STORE ''R0 ''R1)))))
+        (list 'MOVE (second expr) 'R0)
+        (list 'MOVE decalage 'R2)
+        (list 'MOVE 'FP 'R1)
+        (list 'SUB 'R2 'R1)
+        (list 'STORE 'R0 'R1)))))
 ;(trace LI_TO_ASM_set_var)
 ;==========================
 
@@ -219,13 +290,13 @@
     (LI_TO_ASM_defun (cdr expr) nbArgs)
     ;Push function name
     (append (list (list 'MOVE (list* :call (first expr)) 'R0)
-    (list 'PUSH 'R0))
+      (list 'PUSH 'R0))
     ;Push args
     (MAP_LI_TO_ASM_CALL (cdr expr))
     ;Push nb_args
     (list (list 'MOVE (length (cdr expr)) 'R0)
-    (list 'PUSH 'R0)
-    (list 'MOVE 'SP 'FP)))))
+      (list 'PUSH 'R0)
+      (list 'MOVE 'SP 'FP)))))
 (trace LI_TO_ASM_call)
 
 (defun MAP_LI_TO_ASM_CALL (expr)
@@ -262,18 +333,18 @@
   (let (
     (fun (car expr))
     (args (cdr expr)))
-    (setf l (list 
-      (list 'JMP fun)))
-      (loop while (> nbArgs 0) do
-        (setf l (append l 
-          (list (list 'MOVE 'FP 'R0)
+  (setf l (list 
+    (list 'JMP fun)))
+  (loop while (> nbArgs 0) do
+    (setf l (append l 
+      (list (list 'MOVE 'FP 'R0)
         (list 'SUB nbArgs 'R0)
         (list 'MOVE (car args) 'R1)
         (list 'STORE 'R1 'R0))))
-        (progn 
-          (setf args (cdr args))
-          (setf nbArgs (- nbArgs 1))))
-      l))
+    (progn 
+      (setf args (cdr args))
+      (setf nbArgs (- nbArgs 1))))
+  l))
 ;(trace LI_TO_ASM_mcall)
 ;==========================
 
@@ -287,7 +358,7 @@
     (setf l nil)
     (loop for x in (cadr expr)
       do
-        (setf l (append l (LI_TO_ASM x nbArgs))))
+      (setf l (append l (LI_TO_ASM x nbArgs))))
     l))
 (trace LI_TO_ASM_let)
 ;==========================
@@ -301,25 +372,25 @@
   (setf id_label_if (get_id_label))
   (append 
     (list
-    (list 'LABEL (concatenate 'string "WHILE" (write-to-string id_label_if))))
+      (list 'LABEL (concatenate 'string "WHILE" (write-to-string id_label_if))))
     (if (eq (first (first expr)) ':call)
       (if (or (eq (second (first expr)) '<) 
-              (eq (second (first expr)) '<=) 
-              (eq (second (first expr)) '=) 
-              (eq (second (first expr)) 'eq) 
-              (eq (second (first expr)) 'eql) 
-              (eq (second (first expr)) '>=) 
-              (eq (second (first expr)) '>)
-              (eq (second (first expr)) '/=))
-        (append 
+        (eq (second (first expr)) '<=) 
+        (eq (second (first expr)) '=) 
+        (eq (second (first expr)) 'eq) 
+        (eq (second (first expr)) 'eql) 
+        (eq (second (first expr)) '>=) 
+        (eq (second (first expr)) '>)
+        (eq (second (first expr)) '/=))
+      (append 
           ;(list 
           ;
           (LI_TO_ASM (third (first expr)) nbArgs)
           (list
-          (list 'PUSH 'R0))
+            (list 'PUSH 'R0))
           ;
           (append  (LI_TO_ASM (fourth (first expr)) nbArgs)
-          (list (list 'PUSH 'R0)
+            (list (list 'PUSH 'R0)
           ;
           (list 'MOVE 'SP 'R0)
           (list 'SUB 1 'R0)
@@ -327,32 +398,32 @@
           (list 'SUB 2 'R1)
           ;
           (list 'CMP 'R0 'R1 )
-        (cond
-          ((eq (second (first expr)) '<)
+          (cond
+            ((eq (second (first expr)) '<)
               ;
               (list 'JLT (concatenate 'string "CWHILE" (write-to-string id_label_if))))
               ;
-          ((eq (second (first expr)) '<=)
+              ((eq (second (first expr)) '<=)
               ;
               (list 'JLE (concatenate 'string "CWHILE" (write-to-string id_label_if))))
-          ((or (eq (second (first expr)) '=) (eq (second (first expr)) 'eql) (eq (second (first expr)) 'eq)
+              ((or (eq (second (first expr)) '=) (eq (second (first expr)) 'eql) (eq (second (first expr)) 'eq)
               ;
               (list 'JEQ (concatenate 'string "CWHILE" (write-to-string id_label_if)))))
-         ((eq (second (first expr)) '>=)
+              ((eq (second (first expr)) '>=)
               ;
               (list 'JGE (concatenate 'string "CWHILE" (write-to-string id_label_if))))
-          ((eq (second (first expr)) '>)
+              ((eq (second (first expr)) '>)
               ;
               (list 'JGT (concatenate 'string "CWHILE" (write-to-string id_label_if))))
-          ((eq (second (first expr)) '/=)
+              ((eq (second (first expr)) '/=)
               ;
               (list 'JNE (concatenate 'string "CWHILE" (write-to-string id_label_if)))))
           (list 'JMP (concatenate 'string "FWHILE" (write-to-string id_label_if)))
           (list 'LABEL (concatenate 'string "CWHILE" (write-to-string id_label_if))))
-          (append (LI_TO_ASM (second expr) nbArgs)
-            (list
-              (list 'JMP (concatenate 'string "CWHILE" (write-to-string id_label_if)))
-              (list 'LABEL (concatenate 'string "FWHILE" (write-to-string id_label_if)))))))))))
+(append (LI_TO_ASM (second expr) nbArgs)
+  (list
+    (list 'JMP (concatenate 'string "CWHILE" (write-to-string id_label_if)))
+    (list 'LABEL (concatenate 'string "FWHILE" (write-to-string id_label_if)))))))))))
 (trace LI_TO_ASM_while)
 ;==========================
 ;==========================

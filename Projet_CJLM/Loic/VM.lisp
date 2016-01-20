@@ -135,7 +135,7 @@
 (defun vm_init (vm &optional size)
 	(if (null size)
 		(setf size mem_size_default))
-    (vm_init_memory vm size)
+  (vm_init_memory vm size)
   	;(setf (get vm :debCode) (- size (* (floor (/ size 3)) 2)));depend de size 
   	;(setf (get vm :adrCode) (get vm :debCode));adresse pour charger dans le code
   	;(setf (get vm :ON) 0);interrupteur de la VM  on / off
@@ -337,7 +337,7 @@
         (if (or (< (- (vm_get_memory_size vm) 1) src) (> (vm_get_register vm 'BP) src))
           (warn "ERR : <src> l'adresse mémoire @~s est hors limite [~s , ~s]" src (vm_get_register vm 'BP) (- (vm_get_memory_size vm) 1))
           (vm_set_register vm dest (svref (vm_get_memory vm) src)))))))
-          
+
 
 (defun vm_load_old (vm src dest)
   (if (not (is_register_? dest))
@@ -349,16 +349,16 @@
           (warn (concatenate 'string "ERR : <src> l'adresse mémoire @" (write-to-string src) " est hors limites [0 , " (write-to-string (- (get vm :memory_size) 1)) "]"))
           (let ((getSrc
             (svref (get vm :memory) (vm_get_register src)))) 
-            (if (not getSrc)
-              (warn "ERR : <src> l'emplacement mémoire est vide")
-              (vm_set_register  vm dest getSrc))))
+          (if (not getSrc)
+            (warn "ERR : <src> l'emplacement mémoire est vide")
+            (vm_set_register  vm dest getSrc))))
         (if (< (- (get vm :memory_size) 1) src)
           (warn (concatenate 'string "ERR : <src> l'adresse mémoire @" (write-to-string src) " est hors limites [0 , " (write-to-string (- (get vm :memory_size) 1)) "]"))
           (let ((getSrc
             (svref (get vm :memory) src))) 
-            (if (not getSrc)
-              (warn "ERR : <src> l'emplacement mémoire est vide")
-              (vm_set_register  vm dest getSrc))))))))
+          (if (not getSrc)
+            (warn "ERR : <src> l'emplacement mémoire est vide")
+            (vm_set_register  vm dest getSrc))))))))
 ;(trace vm_load) 
 ;======================================================  
 
@@ -377,18 +377,18 @@
             (warn "ERR : <dest> l'adresse mémoire @~s est hors limite [~s , ~s]" dest (vm_get_register vm 'BP) (- (vm_get_memory_size vm) 1))
             (setf (aref (vm_get_memory vm) dest) (vm_get_register vm src)))))))
 
-  (defun vm_store_old (vm src dest)
-    (if (not (is_register_? src))
-      (warn "ERR : <src> doit être un registre")
-      (if (not (or (constantp dest) (is_register_? dest)))
-        (warn "ERR : <dest> doit être un registre ou une adresse mémoire (int)")
-        (if (is_register_? dest)
-          (setf (aref (get vm :memory) (vm_get_register vm dest)) (vm_get_register vm src))
-          (if (< (- (get vm :memory_size) 1) dest)
-            (warn (concatenate 'string "ERR : <dest> l'adresse mémoire @" (write-to-string dest) " est hors limites [0 , " (write-to-string (- (get vm :memory_size) 1)) "]"))
-            (let ((oldV (vm_get_register vm src))
-              (getDest (svref (get vm :memory) dest)))
-              (setf (aref (get vm :memory) dest) (vm_get_register vm src))))))))
+(defun vm_store_old (vm src dest)
+  (if (not (is_register_? src))
+    (warn "ERR : <src> doit être un registre")
+    (if (not (or (constantp dest) (is_register_? dest)))
+      (warn "ERR : <dest> doit être un registre ou une adresse mémoire (int)")
+      (if (is_register_? dest)
+        (setf (aref (get vm :memory) (vm_get_register vm dest)) (vm_get_register vm src))
+        (if (< (- (get vm :memory_size) 1) dest)
+          (warn (concatenate 'string "ERR : <dest> l'adresse mémoire @" (write-to-string dest) " est hors limites [0 , " (write-to-string (- (get vm :memory_size) 1)) "]"))
+          (let ((oldV (vm_get_register vm src))
+            (getDest (svref (get vm :memory) dest)))
+          (setf (aref (get vm :memory) dest) (vm_get_register vm src))))))))
 ;(trace vm_store) 
 ;======================================================  
 
@@ -576,26 +576,34 @@
 
 (defun vm_test_constante (src)
   (and (eq (car src) ':LIT) (integerp (cdr src))))
+(trace vm_test_constante) 
 ;====================================================== 
 ; (CMP <src1> <src2>) = comparaison
 ; (CMP R0 R1)
 ; (CMP R0 1)
 ; (CMP R0 (:lit . 1))
 (defun vm_cmp (vm src1 src2)
-  (if (and (is_register_? src1) (is_register_? src2))
-    (cond
-      ((< (vm_get_register vm src1) (vm_get_register vm src2))
-        (vm_set_flag_ON vm 'FLT)
-        (vm_set_flag_OFF vm 'FEQ)
-        (vm_set_flag_OFF vm 'FGT))
-      ((= (vm_get_register vm src1) (vm_get_register vm src2))
-        (vm_set_flag_OFF vm 'FLT)
-        (vm_set_flag_ON vm 'FEQ)
-        (vm_set_flag_OFF vm 'FGT))
-      ((> (vm_get_register vm src1) (vm_get_register vm src2))
-        (vm_set_flag_OFF vm 'FLT)
-        (vm_set_flag_OFF vm 'FEQ)
-        (vm_set_flag_ON vm 'FGT)))))    
+  (if (is_register_? src1)
+    (setf src1 (vm_get_register vm src1)))
+  (if (vm_test_constante src1)
+    (setf src1 (cdr src1)))
+  (if (is_register_? src2)
+    (setf src2 (vm_get_register vm src2)))
+  (if (vm_test_constante src2)
+    (setf src2 (cdr src2))) 
+  (cond
+    ((< src1 src2)
+      (vm_set_flag_ON vm 'FLT)
+      (vm_set_flag_OFF vm 'FEQ)
+      (vm_set_flag_OFF vm 'FGT))
+    ((= src1 src2)
+      (vm_set_flag_OFF vm 'FLT)
+      (vm_set_flag_ON vm 'FEQ)
+      (vm_set_flag_OFF vm 'FGT))
+    ((> src1 src2)
+      (vm_set_flag_OFF vm 'FLT)
+      (vm_set_flag_OFF vm 'FEQ)
+      (vm_set_flag_ON vm 'FGT))))    
 (trace vm_cmp) 
 
 (defun vm_cmp_old (vm src1 src2)
@@ -619,10 +627,10 @@
 ; (JGT <label>)     = saut si plus grand
 (defun vm_jgt (vm label)
   (if (and  (not (vm_get_flag vm 'FLT)) 
-            (not (vm_get_flag vm 'FEQ)) 
-            (vm_get_flag vm 'FGT))
-    (vm_jmp vm label)
-    (vm_incr vm 'PC)))
+    (not (vm_get_flag vm 'FEQ)) 
+    (vm_get_flag vm 'FGT))
+  (vm_jmp vm label)
+  (vm_incr vm 'PC)))
 (trace vm_jgt) 
 ;====================================================== 
 
@@ -630,10 +638,10 @@
 ; (JGE <label>)     = saut si plus grand ou égal
 (defun vm_jge (vm label)
   (if (and  (not (vm_get_flag vm 'FLT)) 
-            (or (vm_get_flag vm 'FEQ) 
-                (vm_get_flag vm 'FGT)))
-    (vm_jmp vm label)
-    (vm_incr vm 'PC)))
+    (or (vm_get_flag vm 'FEQ) 
+      (vm_get_flag vm 'FGT)))
+  (vm_jmp vm label)
+  (vm_incr vm 'PC)))
 (trace vm_jge) 
 ;====================================================== 
 
@@ -641,10 +649,10 @@
 ; (JLT <label>)     = saut si plus petit
 (defun vm_jlt (vm label)
   (if (and  (vm_get_flag vm 'FLT) 
-            (not (vm_get_flag vm 'FEQ)) 
-            (not (vm_get_flag vm 'FGT)))
-    (vm_jmp vm label)
-    (vm_incr vm 'PC)))
+    (not (vm_get_flag vm 'FEQ)) 
+    (not (vm_get_flag vm 'FGT)))
+  (vm_jmp vm label)
+  (vm_incr vm 'PC)))
 (trace vm_jlt) 
 ;====================================================== 
 
@@ -652,10 +660,10 @@
 ; (JLE <label>)     = saut si plus petit ou égal
 (defun vm_jle (vm label)
   (if (and  (or (vm_get_flag vm 'FLT) 
-                (vm_get_flag vm 'FEQ)) 
-            (not (vm_get_flag vm 'FGT)))
-    (vm_jmp vm label)
-    (vm_incr vm 'PC)))
+    (vm_get_flag vm 'FEQ)) 
+  (not (vm_get_flag vm 'FGT)))
+  (vm_jmp vm label)
+  (vm_incr vm 'PC)))
 (trace vm_jle) 
 ;====================================================== 
 
@@ -663,10 +671,10 @@
 ; (JEQ <label>)     = saut si égal
 (defun vm_jeq (vm label)
   (if (and  (not (vm_get_flag vm 'FLT)) 
-            (vm_get_flag vm 'FEQ) 
-            (not (vm_get_flag vm 'FGT)))
-    (vm_jmp vm label)
-    (vm_incr vm 'PC)))
+    (vm_get_flag vm 'FEQ) 
+    (not (vm_get_flag vm 'FGT)))
+  (vm_jmp vm label)
+  (vm_incr vm 'PC)))
 (trace vm_jeq) 
 ;====================================================== 
 
@@ -674,10 +682,10 @@
 ; (JNE <label>)     = saut si différent
 (defun vm_jne (vm label)
   (if (and  (vm_get_flag vm 'FLT) 
-            (not (vm_get_flag vm 'FEQ)) 
-            (vm_get_flag vm 'FGT))
-    (vm_jmp vm label)
-    (vm_incr vm 'PC)))
+    (not (vm_get_flag vm 'FEQ)) 
+    (vm_get_flag vm 'FGT))
+  (vm_jmp vm label)
+  (vm_incr vm 'PC)))
 (trace vm_jne) 
 ;====================================================== 
 
@@ -851,14 +859,14 @@
   (loop 
     while (<= (vm_get_register vm 'BP) (vm_get_register vm 'PC))
     do
-      (progn (print (concatenate 'string "PC : "(write-to-string (vm_get_register vm 'PC))))
-        (vm_load vm 'PC 'R2)
-        (print (vm_get_register vm 'R2))
-        (vm_decr vm 'PC)
-        (if (not (atom (vm_get_register vm 'R2)))
-         (if (eq (car (vm_get_register vm 'R2)) ':call)
-          (progn 
-            (print "Cas call" )
+    (progn (print (concatenate 'string "PC : "(write-to-string (vm_get_register vm 'PC))))
+      (vm_load vm 'PC 'R2)
+      (print (vm_get_register vm 'R2))
+      (vm_decr vm 'PC)
+      (if (not (atom (vm_get_register vm 'R2)))
+       (if (eq (car (vm_get_register vm 'R2)) ':call)
+        (progn 
+          (print "Cas call" )
             (vm_load vm 'FP 'R1);nbArgs -> R1
             (let ((i (vm_get_register vm 'R1)) (l nil))
               (loop while (> i 0) do
@@ -868,8 +876,8 @@
                   (setf l (append l (list (cdr (vm_get_register vm 'R0)))))
                   (print l)
                   (setf i (- i 1))
-                ))
+                  ))
               (vm_move vm (apply (cdr (vm_get_register vm 'R2)) l) 'R0)
-            )))))))
+              )))))))
 
 ;(apply #'+ '(1 2))
