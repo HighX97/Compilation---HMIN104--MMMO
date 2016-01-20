@@ -71,7 +71,7 @@
 				
 				((eq 'quote fun) 
 					
-					(cons :const (first args)
+					(cons :lit (first args)
 					)
 				) 
 				 
@@ -126,6 +126,7 @@
 )    
 
 
+
 (defun set-defun (symb lambda)
   (setf (get symb :defun) lambda))
 
@@ -156,6 +157,7 @@
 
 (defun fibo(n) (if (<= n 2) 1 (+ (fibo (- n 1)) (fibo (- n 2)))))
 (defun factorielle(n) (if (<= n 0) 1 (* n (factorielle (- 1 n)))))
-(defun facto(n) (if (= n 0) 1 2)) 
-(trace displace make-env-eval-li map-eval-li-progn map-eval-li eval-li)
+(defun facto(n) (if (= n 0) 1 2))
+
+
 (trace newenv l2lilet MAPLISP2LI get-defun set-defun LISP2LI)-
