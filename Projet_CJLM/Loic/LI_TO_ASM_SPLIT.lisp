@@ -412,7 +412,8 @@
     (MAP_LI_TO_ASM_MCALL args 0)
     (list
       (list 'MOVE 'SP 'FP)
-      (list 'JSR fun)))))
+      (list 'JSR fun)
+      (list 'RTN)))))
 
 (defun MAP_LI_TO_ASM_MCALL (expr nbArgs)
   (if (atom expr)

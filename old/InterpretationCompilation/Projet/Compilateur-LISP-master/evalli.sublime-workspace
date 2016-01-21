@@ -1,0 +1,599 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"LI",
+				"LI_TO_ASM"
+			],
+			[
+				"s",
+				"src1"
+			],
+			[
+				"vm_st",
+				"vm_state_memory"
+			],
+			[
+				"co",
+				"corpsF"
+			],
+			[
+				"li",
+				"LI_TO_ASM"
+			],
+			[
+				"e",
+				"expr"
+			],
+			[
+				"vm_get_hashTab_etq_n",
+				"vm_get_hashTab_etq_non_resolu_val"
+			],
+			[
+				"vm_se",
+				"vm_set_hashTab_etq_non_resolu"
+			],
+			[
+				"vm_get_hashTab_etq_",
+				"vm_get_hashTab_etq_resolu_val"
+			],
+			[
+				"vm_init_hashTab_etq_",
+				"vm_init_hashTab_etq_non_resolu"
+			],
+			[
+				"vm_",
+				"vm_move"
+			],
+			[
+				"eq",
+				"eql"
+			],
+			[
+				"t",
+				"third"
+			],
+			[
+				"id_l",
+				"id_label_if"
+			],
+			[
+				"p",
+				"progn"
+			],
+			[
+				"pr",
+				"print"
+			],
+			[
+				"Li",
+				"LI_TO_ASM_var"
+			],
+			[
+				"con",
+				"concatenate"
+			],
+			[
+				"vm_l",
+				"vm_load"
+			],
+			[
+				"vm_ge",
+				"vm_get_register"
+			],
+			[
+				"memo",
+				"memory_size"
+			],
+			[
+				"le",
+				"let	let"
+			],
+			[
+				"env",
+				"env_lisp_to_li_args"
+			],
+			[
+				"ser",
+				"search_multi_env"
+			],
+			[
+				"EVAL_LI_l",
+				"EVAL_LI_lambda"
+			],
+			[
+				"make_",
+				"MAKE_ENV_EVAL_LI"
+			],
+			[
+				"po",
+				"progn"
+			],
+			[
+				"vm_jg",
+				"vm_jgt"
+			],
+			[
+				"se",
+				"second"
+			],
+			[
+				"Lis",
+				"LISP_TO_LI"
+			],
+			[
+				"E",
+				"EVAL_LI"
+			],
+			[
+				"map",
+				"MAP_EVAL_LI_PROGN"
+			],
+			[
+				"M",
+				"MAP_EVAL_LI"
+			],
+			[
+				"EVAL_LI_set",
+				"EVAL_LI_set_cvar"
+			],
+			[
+				"EVAL_LI_lc",
+				"EVAL_LI_lclosure"
+			],
+			[
+				"EVAL_LI_",
+				"EVAL_LI_const"
+			],
+			[
+				"F",
+				"FNIL"
+			],
+			[
+				"vm_set_f",
+				"vm_set_flag_ON"
+			],
+			[
+				"sr",
+				"src2"
+			],
+			[
+				"src",
+				"src1"
+			],
+			[
+				"inte",
+				"integerp"
+			],
+			[
+				"vm_j",
+				"vm_jmp"
+			],
+			[
+				"C",
+				"CO"
+			],
+			[
+				"la",
+				"label"
+			],
+			[
+				"vm",
+				"vm_move"
+			],
+			[
+				"va",
+				"valeur"
+			],
+			[
+				"vm_g",
+				"vm_get_register"
+			],
+			[
+				"ii",
+				"II"
+			],
+			[
+				"Musicie",
+				"Musicien01"
+			],
+			[
+				"a",
+				"artistes"
+			],
+			[
+				"de",
+				"deref"
+			],
+			[
+				"DROP",
+				"drop"
+			],
+			[
+				"tag",
+				"target"
+			],
+			[
+				"Text_V",
+				"Text_Values_Nom"
+			],
+			[
+				"idj",
+				"idJ"
+			]
+		]
+	},
+	"buffers":
+	[
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 292.0,
+		"history":
+		[
+			"import urllib2,os,hashlib; h = '2915d1851351e5ee549c20394736b442' + '8bc59f460fa1548d1514676163dafc88'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); os.makedirs( ipp ) if not os.path.exists(ipp) else None; urllib2.install_opener( urllib2.build_opener( urllib2.ProxyHandler()) ); by = urllib2.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); open( os.path.join( ipp, pf), 'wb' ).write(by) if dh == h else None; print('Error validating download (got %s instead of %s), please try manual install' % (dh, h) if dh != h else 'Please restart Sublime Text to finish installation') "
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/home/lowx/Bureau/Compilation---HMIN104--MMMO/Projet_CJLM/Loic/VM.lisp",
+		"/home/lowx/Bureau/Compilation---HMIN104--MMMO/Projet_CJLM/Loic/all.lisp",
+		"/home/lowx/Bureau/Compilation---HMIN104--MMMO/Projet_CJLM/Loic/evalmam.lisp",
+		"/home/lowx/Bureau/Compilation---HMIN104--MMMO/Projet_CJLM/Loic/LI_TO_ASM_SPLIT.lisp",
+		"/home/lowx/Bureau/Compilation---HMIN104--MMMO/Projet_CJLM/Loic/VM_TEST.lisp",
+		"/home/lowx/Bureau/Compilation---HMIN104--MMMO/Projet_CJLM/Loic/LI_TO_ASM_TEST.lisp",
+		"/home/lowx/Bureau/Compilation---HMIN104--MMMO/Projet_CJLM/Loic/LISP_TO_LI_SPLIT.lisp",
+		"/home/lowx/Bureau/Compilation---HMIN104--MMMO/Projet_CJLM/Loic/LISP_TO_LI_TEST.lisp",
+		"/home/lowx/Bureau/Compilation---HMIN104--MMMO/Projet_CJLM/Loic/EVAL_LI_SPLIT.lisp",
+		"/home/lowx/Bureau/Compilation---HMIN104--MMMO/Projet_CJLM/Loic/EVAL_LI_TEST.lisp",
+		"/home/lowx/Bureau/Compilation---HMIN104--MMMO/Examen_Compilation_Mars_2015.lisp",
+		"/home/lowx/Bureau/Compilation---HMIN104--MMMO/Projet_CJLM/Mariam/evalmam.lisp",
+		"/home/lowx/Bureau/Compilation---HMIN104--MMMO/Projet_CJLM/Loic/LISP_TO_LI.lisp",
+		"/home/lowx/Bureau/Compilation---HMIN104--MMMO/Projet_CJLM/Loic/EVAL_LI.lisp",
+		"/home/lowx/Bureau/Compilation---HMIN104--MMMO/FromIkbal/Compilatio23/LiToAsm.lisp",
+		"/home/lowx/Bureau/Compilation---HMIN104--MMMO/old/InterpretationCompilation/Projet/Compilateur-LISP-master/makevm.lisp",
+		"/home/lowx/Bureau/Compilation---HMIN104--MMMO/old/InterpretationCompilation/Projet/Compilateur-LISP-master/litoasm.lisp",
+		"/home/lowx/Bureau/Compilation---HMIN104--MMMO/Projet_CJLM/Loic/VM_LOAD_STORE_MOVE_.lisp",
+		"/home/lowx/Bureau/todoList.js",
+		"/home/lowx/Bureau/TodoList.html",
+		"/home/lowx/git/PresentationDonneesWeb/loic/Mini-Projet/Model/Data/Languedoc_Roussillon.json",
+		"/home/lowx/git/PresentationDonneesWeb/loic/Mini-Projet/Model/Server/node2mongod.js",
+		"/home/lowx/Documents/Perso/Logiciel/Server/node-v5.1.0-linux-x64/README.md",
+		"/home/lowx/Documents/Professionnel/Etude/Master_AIGLE/M1/Reseaux_et_communication/2-Thread/TP03/Exo3/exo3_rdv.c",
+		"/home/lowx/Documents/Professionnel/Etude/Master_AIGLE/M1/Reseaux_et_communication/2-Thread/TP03/Exo3/exo3_rdv_with_pthread_cond_signal.c",
+		"/home/lowx/Documents/Professionnel/Etude/Master_AIGLE/M1/Reseaux_et_communication/2-Thread/TP03/Exo4/exo4_traitement_synchronise.c",
+		"/home/lowx/Documents/Professionnel/Etude/Master_AIGLE/M1/Reseaux_et_communication/2-Thread/TP03/Exo4/exo4_traitement_synchronise_nverrous_withtab.c",
+		"/home/lowx/Documents/Professionnel/Etude/Master_AIGLE/M1/Reseaux_et_communication/2-Thread/TP_Note_Thread/TP_Note_Thread_Loic_Ortole.c",
+		"/home/lowx/Documents/Perso/CompteGmail",
+		"/home/lowx/Documents/Professionnel/Etude/Master_AIGLE/M1/Base_de_donnees_avancees/4-Entrepot/queries.sql",
+		"/home/lowx/.config/sublime-text-3/Packages/User/Preferences.sublime-settings",
+		"/home/lowx/Documents/Professionnel/Etude/Master_AIGLE/M1/Compilation/02-Generation Langage Intermidiaire/TP02-.lisp",
+		"/tmp/inserts-all_music.js",
+		"/home/lowx/Documents/Professionnel/Etude/Master_AIGLE/M1/Base_de_donnees_avancees/4-Mini-Projet/Inserts.sql",
+		"/home/lowx/Documents/Professionnel/Etude/Master_AIGLE/M1/Base_de_donnees_avancees/4-Mini-Projet/Queries.sql",
+		"/home/lowx/Documents/Professionnel/Etude/Master_AIGLE/M1/Base_de_donnees_avancees/4-Mini-Projet/Mini-Projet-00.sql",
+		"/home/lowx/Documents/Professionnel/Etude/Master_AIGLE/M1/Base_de_donnees_avancees/4-Mini-Projet/Mini-Projet.sql",
+		"/home/lowx/Documents/Professionnel/Etude/Master AIGLE/M1/Réseaux et communication/2-Thread/exoThread-2.c",
+		"/home/lowx/Documents/Professionnel/Etude/Master AIGLE/M1/Réseaux et communication/2-Thread/exoThread.c",
+		"/home/lowx/Documents/Professionnel/Etude/Master AIGLE/M1/Base de données avancées/4-Mini-Projet/Mini-Projet.sql",
+		"/home/lowx/Documents/Professionnel/Etude/Master AIGLE/M1/Présentation Données Web/3-XML-Relationnal/TP/Node_Presse.sql",
+		"/home/lowx/Documents/Professionnel/Etude/Master AIGLE/M1/Présentation Données Web/3-XML-Relationnal/TP/Monet_Presse.sql",
+		"/home/lowx/Documents/Professionnel/Etude/Master AIGLE/M1/Présentation Données Web/3-XML-Relationnal/TP/VERTICAL_EDGE_PRESSE.sql",
+		"/home/lowx/Documents/Professionnel/Etude/Master AIGLE/M1/Présentation Données Web/3-XML-Relationnal/TP/batiment.xml",
+		"/home/lowx/Documents/Professionnel/Etude/Master AIGLE/M1/Présentation Données Web/3-XML-Relationnal/TP/Presse_WithNum.xml",
+		"/home/lowx/Documents/Professionnel/Etude/Master AIGLE/M1/Présentation Données Web/3-XML-Relationnal/TP/Presse_WithNum-Begin-End.xml",
+		"/home/lowx/Documents/Professionnel/Etude/Master AIGLE/M1/Présentation Données Web/3-XML-Relationnal/TP/EDGE_PRESSE.sql",
+		"/home/lowx/Documents/Professionnel/Etude/Master AIGLE/M1/Présentation Données Web/3-XML-Relationnal/TP/node_presse.java",
+		"/home/lowx/Documents/Professionnel/Etude/Master AIGLE/M1/Présentation Données Web/3-XML-Relationnal/TP/try.java",
+		"/home/lowx/Documents/Professionnel/Etude/Master AIGLE/M1/Présentation Données Web/3-XML-Relationnal/TP/Presse-Begin-End.xml",
+		"/home/lowx/Bureau/-Desktop-/insert TPPartie3.sql"
+	],
+	"find":
+	{
+		"height": 23.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			") ",
+			"SET-VAR",
+			"scr2",
+			"src1",
+			"fun",
+			"VM_GET_HASHTAB_ETQ_RESOLU_NON_VAL",
+			"vm_set_hashTab_etq_non_resolu",
+			"hashTab_etq",
+			"_hashTab_etq",
+			"hashTab_etq",
+			"pc",
+			"vm_jeq",
+			"vm_cmp",
+			"(",
+			" ",
+			"ELSE",
+			"'R0 'R1",
+			"sub",
+			"MAP_LI_TO_ASM_PROGN",
+			"pc",
+			"rtn",
+			";",
+			"src",
+			"env_eval_li",
+			";",
+			" (",
+			"   ; ",
+			";",
+			"EVAL_LI_set_var",
+			"(trace",
+			"(vm_read_asm vm rest)",
+			"env_lisp_to_li",
+			"(setf",
+			"env_lisp_to_li)",
+			"(lisp_to_li",
+			"env_lisp_to_li_varLocales",
+			"env_lisp_to_li_args",
+			"env_lisp_to_li",
+			"(aref",
+			"eval_li",
+			"var",
+			"VAR",
+			"args",
+			"expr",
+			"lisp_to_li",
+			"env",
+			"(second args)",
+			";",
+			"--> ",
+			"'(",
+			"(setf",
+			"env",
+			"'",
+			"(move (:lit . <expr>) R0)",
+			"EVAL_LI",
+			"eval-LI",
+			"-",
+			"PROGN",
+			"LISP_TO_LI",
+			"src1 src2",
+			"vm_set_flag",
+			"FLT FEQ FGT",
+			"registre",
+			"register",
+			"vm_get_register",
+			"register",
+			"vm_get_register",
+			"register",
+			"registe",
+			"vm_get_register",
+			"register",
+			"vm_get_register",
+			"register",
+			"trace",
+			"ERR : <dest> doit être une adresse mémoire (int)",
+			"CO",
+			"'CO",
+			"CO",
+			"? ",
+			"vm_get_hashTab_etq_val",
+			"vm_move",
+			"vm_get_register",
+			"vm_set_hashTab_etq",
+			"Co",
+			"CO",
+			"  )",
+			";",
+			")",
+			"move",
+			"err 2",
+			"store",
+			"ERR : <dest> doit être un registre",
+			"set-register",
+			"get-register",
+			"get-re",
+			"vm_set-register ",
+			"vm_set_register",
+			"vm_set-register",
+			";",
+			"set-register",
+			"EVAL_LI",
+			"LISP2LI",
+			">",
+			"\\",
+			"/",
+			"*",
+			"/",
+			"*",
+			"-",
+			"+",
+			"-",
+			"+",
+			"pourTache",
+			"structPourTache",
+			"varibalePourTache",
+			"libelle",
+			"libelle\"",
+			"libelle",
+			"libelleCommuneSousQuartier",
+			"libelle",
+			"ref_Instrumental_instrus_T",
+			"INTRUMENTAL_INSTRUS",
+			"ref_Instrumental_instrus_T",
+			"INTRUMENTAL_INSTRUS",
+			"Groupe_artiste",
+			"Groupe_artiste ",
+			"Chanteur ",
+			"Musicien "
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"SET_VAR",
+			";(trace",
+			"LI_TO_ASM",
+			"_",
+			"EVAL_LI",
+			"'PC",
+			"vm_set_register ",
+			"vm_get_register",
+			"vm_set_register",
+			"LI_TO_ASM",
+			"EVAL_LI",
+			"LISP_TO_LI",
+			"\\|",
+			"/|",
+			"*/*",
+			"",
+			"/*",
+			"",
+			"--",
+			"",
+			"-+",
+			"",
+			"Groupe_artiste_  ",
+			"Chanteur_ ",
+			"Musicien_ ",
+			"Dj_ ",
+			"Remix_ ",
+			"Morceau_ ",
+			"Instrumental_ ",
+			"Vinstrument_ ",
+			"Pinstrument_ ",
+			"Album_ ",
+			"Groupe_artiste_ ",
+			"Groupe_artiste_",
+			" "
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 22.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "evalli.sublime-project",
+	"replace":
+	{
+		"height": 42.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 236.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

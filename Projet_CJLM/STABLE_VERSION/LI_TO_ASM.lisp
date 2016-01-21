@@ -418,12 +418,36 @@
     (fun (car expr))
     (args (cdr expr)))
   (append
+    (MAP_LI_TO_ASM_MCALL args nbArgs)
+    (list
+      (list 'PUSH nbArgs)
+      (list 'MOVE 'SP 'FP)
+      (list 'PUSH 'SP)
+      (list 'PUSH 'FP)
+      (list 'JSR fun)
+      (list 'RTN)))))
+
+(defun LI_TO_ASM_mcall_old (expr nbArgs)
+  (let (
+    (fun (car expr))
+    (args (cdr expr)))
+  (append
     (MAP_LI_TO_ASM_MCALL args 0)
     (list
       (list 'MOVE 'SP 'FP)
-      (list 'JSR fun)))))
+      (list 'PUSH 'SP)
+      (list 'PUSH 'FP)
+      (list 'JSR fun)
+      (list 'RTN)))))
 
 (defun MAP_LI_TO_ASM_MCALL (expr nbArgs)
+  (if (atom expr)
+    nil
+    (append
+      (LI_TO_ASM (car expr) nbArgs)
+      (MAP_LI_TO_ASM_MCALL (cdr expr) nbArgs))))
+
+(defun MAP_LI_TO_ASM_MCALL_old (expr nbArgs)
   (if (atom expr)
     (list (list 'PUSH nbArgs))
     (append

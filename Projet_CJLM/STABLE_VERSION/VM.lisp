@@ -157,6 +157,31 @@
 
 ;======================================================  
 (defun vm_state (vm)
+  (progn (print "=====Registres=====")
+    (print "===Registres généraux===")
+    (print (list 'RO (vm_get_register vm 'R0)))
+    (print (list 'R1 (vm_get_register vm 'R1)))
+    (print (list 'R2 (vm_get_register vm 'R2)))
+    (print "===Registres dédiés===")
+    (print (list 'SP (vm_get_register vm 'SP)))
+    (print (list 'BP (vm_get_register vm 'BP)))
+    (print (list 'FP (vm_get_register vm 'FP)))
+    (print (list 'PC (vm_get_register vm 'PC)))
+    (print "=====Drapeaux=====")
+    (print (list 'FLT (vm_get_flag vm 'FLT)))
+    (print (list 'FEQ (vm_get_flag vm 'FEQ)))
+    (print (list 'FGT (vm_get_flag vm 'FGT)))
+    (print (list 'FNIL (vm_get_flag vm 'FNIL)))
+    (print "=====Memory=====")
+    (print (list 'memory (vm_state_memory vm)))
+    (print "=====HashTab_etq=====")
+    (print (list 'hashTab_etq (vm_state_hashTab_etq_resolu vm)))
+    (print (list 'hashTab_etq (vm_state_hashTab_etq_non_resolu vm)))))
+;;(trace vm_state) 
+;====================================================== 
+
+;======================================================  
+(defun vm_state_old (vm)
   (and (print "=====Registres=====")
     (print "===Registres généraux===")
     (print (concatenate 'string "RO : " (write-to-string (vm_get_register vm 'R0))))
@@ -214,8 +239,7 @@
 
 ;======================================================  
 (defun vm_state_memory (vm)
-  (and 
-    (print "memory : ")
+  (list 'memory
     (vm_get_memory vm)))
 ;;(trace vm_state_memory)
 ;======================================================  
@@ -252,9 +276,7 @@
 
 ;======================================================  
 (defun vm_state_hashTab_etq_resolu (vm)
-  (and 
-    (print "hashTab_etq :")
-    (vm_get_hashTab_etq_resolu vm)))
+  (list 'hashTab_etq (vm_get_hashTab_etq_resolu vm)))
 ;;(trace vm_state_hashTab_etq)
 ;======================================================
 
@@ -284,9 +306,7 @@
 
 ;======================================================  
 (defun vm_state_hashTab_etq_non_resolu (vm)
-  (and 
-    (print "hashTab_etq :")
-    (vm_get_hashTab_etq_non_resolu vm)))
+  (list 'hashTab_etq : (vm_get_hashTab_etq_non_resolu vm)))
 ;;(trace vm_state_hashTab_etq)
 ;======================================================
 
@@ -838,12 +858,7 @@
       (let ((fun (car (vm_get_register vm 'R2))) 
       (args (cdr (vm_get_register vm 'R2))))
     ;
-    (print "R2")
-    (print (vm_get_register vm 'R2))
-    (print "SP")
-    (print (vm_get_register vm 'SP))
-    (print "PC")
-    (print (vm_get_register vm 'PC))
+    (vm_state vm)
     (read)
     (cond
       ((eq fun 'LOAD)
