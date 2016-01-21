@@ -83,7 +83,8 @@
     (warn "")
     (let ((decalage (- (+ nbArgs 1) (cdr expr))))
       (list
-        (list 'LOAD (list '- 'FP decalage) 'R0)))))
+        (list 'LOAD (list '- 'FP decalage) 'R0)
+        (list 'PUSH 'R0)))))
 
 (defun LI_TO_ASM_var_old  (expr nbArgs)
   (if (> (cdr expr) nbArgs)
@@ -418,9 +419,8 @@
     (fun (car expr))
     (args (cdr expr)))
   (append
-    (MAP_LI_TO_ASM_MCALL args nbArgs)
+    (MAP_LI_TO_ASM_MCALL args nbArgs 0)
     (list
-      (list 'PUSH nbArgs)
       (list 'MOVE 'SP 'FP)
       (list 'PUSH 'SP)
       (list 'PUSH 'FP)
@@ -440,12 +440,14 @@
       (list 'JSR fun)
       (list 'RTN)))))
 
-(defun MAP_LI_TO_ASM_MCALL (expr nbArgs)
+(defun MAP_LI_TO_ASM_MCALL (expr nbArgs nbArgsCalc)
   (if (atom expr)
-    nil
+    (if (< nbArgs nbArgsCalc)
+      (list (list 'PUSH nbArgsCalc))
+      (list (list 'PUSH nbArgs)))
     (append
       (LI_TO_ASM (car expr) nbArgs)
-      (MAP_LI_TO_ASM_MCALL (cdr expr) nbArgs))))
+      (MAP_LI_TO_ASM_MCALL (cdr expr) nbArgs (+ 1 nbArgsCalc)))))
 
 (defun MAP_LI_TO_ASM_MCALL_old (expr nbArgs)
   (if (atom expr)

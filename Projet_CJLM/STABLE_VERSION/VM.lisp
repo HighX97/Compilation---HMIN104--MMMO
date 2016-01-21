@@ -860,7 +860,7 @@
   (vm_move vm 'PC 'R2)
   (print (list 'PC (vm_get_register vm 'R2)))
   (read)
-  (vm_chargeur vm (LI_TO_ASM (LISP2LI exprLisp nil) 0))
+  (vm_chargeur vm (LI_TO_ASM (LISP2LI exprLisp nil) 2))
   (vm_move vm 'R2 'PC)
   (print "~~~~~~EXEC~~~~~~")
   (loop
