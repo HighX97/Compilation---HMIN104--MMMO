@@ -73,7 +73,7 @@
 (require "LISP2LI.lisp")
 (require "LI_TO_ASM.lisp")
 
-(setq liste_registre '(R0 R1 R2 SP BP FP PC))
+(setq liste_registre '(R0 R1 R2 SP BP FP PC PCO))
 (setq liste_drapeau '(FLT FEQ FGT FNIL))
 (setq mem_size_default 200)
 
@@ -145,7 +145,8 @@
     (vm_set_register vm 'SP (floor (/ size 2)));Plafond pile
     (vm_set_register vm 'BP (floor (/ size 2)));Plancher pile
     (vm_set_register vm 'FP (floor (/ size 2)));Pointeur de cadre
-    (vm_set_register vm 'PC 0);Compteur ordinal
+    (vm_set_register vm 'PC 0);Compteur ordinal pour execution
+    (vm_set_register vm 'PCO 0);Compteur ordinal pour chargeur
     (vm_set_flag_OFF vm 'FLT);drapeau <
     (vm_set_flag_OFF vm 'FEQ);drapeau =
     (vm_set_flag_OFF vm 'FGT);drapeau >
@@ -167,6 +168,7 @@
     (print (list 'BP (vm_get_register vm 'BP)))
     (print (list 'FP (vm_get_register vm 'FP)))
     (print (list 'PC (vm_get_register vm 'PC)))
+    (print (list 'PCO (vm_get_register vm 'PCO)))
     (print "=====Drapeaux=====")
     (print (list 'FLT (vm_get_flag vm 'FLT)))
     (print (list 'FEQ (vm_get_flag vm 'FEQ)))
@@ -598,8 +600,8 @@
 ; (LABEL <label>)   = déclaration d’étiquette
 (defun vm_label (vm label)
   (if (atom label)
-    (vm_set_hashTab_etq_resolu vm label (vm_get_register vm 'PC))
-    (vm_set_hashTab_etq_resolu vm (car label) (vm_get_register vm 'PC))))
+    (vm_set_hashTab_etq_resolu vm label (vm_get_register vm 'PCO))
+    (vm_set_hashTab_etq_resolu vm (car label) (vm_get_register vm 'PCO))))
 
 (defun vm_label_old (vm label)
   (vm_set_hashTab_etq_resolu vm label (vm_get_register vm 'SP))
@@ -832,12 +834,13 @@
 ;====================================================== TO DO
 ; (HALT)        = arrêt
 (defun vm_halt (vm)
-  )
+  (vm_set_flag_ON 'vm 'FNIL))
 ;(trace vm_halt)
 ;======================================================  
 
 ;======================================================
-(defun vm_chargeur(vm asm)
+(defun vm_chargeur(vm exprLisp)
+  (let ((asm (LI_TO_ASM (LISP2LI exprLisp nil) 0)))
   (print "~~~~~~CHARGEUR~~~~~~")
   (loop 
     while (not (atom asm))
@@ -845,26 +848,29 @@
     (progn
       (print (car asm))
       (vm_move vm (car asm) 'R0)
-      (vm_store vm 'R0 'PC)
-      (vm_load vm 'PC 'R1)
+      (vm_store vm 'R0 'PCO)
+      (vm_load vm 'PCO 'R1)
       (if (eq (car (vm_get_register vm 'R1)) 'LABEL)
         (vm_label vm (cdr (vm_get_register vm 'R1))))
-    (vm_incr vm 'PC)
-    (setf asm (cdr asm)))))
+    (vm_incr vm 'PCO)
+    (setf asm (cdr asm))))))
   ;(vm_move vm '(HALT) 'R0)
   ;(vm_store vm 'R0 'PC))
 (trace vm_chargeur)
 
 (defun vm_exec (vm exprLisp)
   ;(vm_move vm 0 'PC)
-  (vm_move vm 'PC 'R2)
-  (print (list 'PC (vm_get_register vm 'R2)))
+  ;(vm_move vm 'PC 'R2)
+  (vm_move vm 'PCO 'PC)
+  (print (list 'PCO (vm_get_register vm 'PC)))
   (read)
-  (vm_chargeur vm (LI_TO_ASM (LISP2LI exprLisp nil) 2))
-  (vm_move vm 'R2 'PC)
+  ;(vm_chargeur vm (LI_TO_ASM (LISP2LI exprLisp nil) 0))
+  (vm_chargeur vm exprLisp)
+  ;(vm_move vm 'R2 'PC)
   (print "~~~~~~EXEC~~~~~~")
   (loop
-    while (vm_get_register vm 'R2)
+    ;while (vm_get_register vm 'R2)
+    while (not (vm_get_flag vm 'FNIL))
     do
      (progn
       (vm_load vm 'PC 'R2)

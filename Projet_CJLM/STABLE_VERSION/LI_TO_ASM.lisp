@@ -367,7 +367,8 @@
     (list 'MOVE (length (cdr expr)) 'R0)
     (list 'PUSH 'R0)
     (list 'MOVE 'SP 'FP)
-    (list 'APPLY (first expr) (length (cdr expr)))))))
+    (list 'APPLY (first expr) (length (cdr expr)))
+    (list 'HALT)))))
     ;(list 'RTN)))))
 
 (defun LI_TO_ASM_call_old  (expr nbArgs)
