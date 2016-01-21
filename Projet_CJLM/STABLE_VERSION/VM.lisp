@@ -597,7 +597,9 @@
 ;Peut-on décclaré deux fois la même étiquette ? 
 ; (LABEL <label>)   = déclaration d’étiquette
 (defun vm_label (vm label)
-  (vm_set_hashTab_etq_resolu vm label (vm_get_register vm 'PC)))
+  (if (atom label)
+    (vm_set_hashTab_etq_resolu vm label (vm_get_register vm 'PC))
+    (vm_set_hashTab_etq_resolu vm (car label) (vm_get_register vm 'PC))))
 
 (defun vm_label_old (vm label)
   (vm_set_hashTab_etq_resolu vm label (vm_get_register vm 'SP))
@@ -613,6 +615,7 @@
 ; (JMP <label>)     = saut inconditionnel à une étiquette ou une adresse
 (defun vm_jmp (vm label)
   (print label)
+  (read)
   (if (integerp label)
     (vm_move vm label 'PC)
     (progn
@@ -632,8 +635,10 @@
 ;====================================================== 
 ; (JSR <label>)     = saut avec retour
 (defun vm_jsr (vm label)
-  (and (vm_push vm 'PC)
-    (vm_jmp vm label)))
+  (print (list 'label label))
+  (read)
+  (vm_push vm 'PC)
+  (vm_jmp vm label))
 (trace vm_jsr) 
 ;====================================================== 
 
@@ -803,9 +808,13 @@
     (progn 
       (vm_load vm (- (vm_get_register vm 'FP) i) 'R0)
       (print (vm_get_register vm 'R0))
-      (setf l (append l (list (cdr (vm_get_register vm 'R0)))))
+      (if (atom (vm_get_register vm 'R0))
+      (setf l (append l (list (vm_get_register vm 'R0))))  
+      (setf l (append l (list (cdr (vm_get_register vm 'R0))))))
       (print l)
       (setf i (- i 1))))
+  (print "~~~~~ apply ~~~~~")
+  (print l)
   (if (and (not (atom l))
     (not (eq nil (car l))))
     (vm_move vm (apply fun l) 'R0)))
@@ -838,7 +847,8 @@
       (vm_move vm (car asm) 'R0)
       (vm_store vm 'R0 'PC)
       (vm_load vm 'PC 'R1)
-      (print (vm_get_register vm 'R1))
+      (if (eq (car (vm_get_register vm 'R1)) 'LABEL)
+        (vm_label vm (cdr (vm_get_register vm 'R1))))
     (vm_incr vm 'PC)
     (setf asm (cdr asm)))))
   ;(vm_move vm '(HALT) 'R0)
@@ -846,10 +856,13 @@
 (trace vm_chargeur)
 
 (defun vm_exec (vm exprLisp)
-  (print "~~~~~~EXEC~~~~~~")
+  ;(vm_move vm 0 'PC)
+  (vm_move vm 'PC 'R2)
+  (print (list 'PC (vm_get_register vm 'R2)))
+  (read)
   (vm_chargeur vm (LI_TO_ASM (LISP2LI exprLisp nil) 0))
-  (vm_move vm 0 'PC)
-  (vm_load vm 'PC 'R2)
+  (vm_move vm 'R2 'PC)
+  (print "~~~~~~EXEC~~~~~~")
   (loop
     while (vm_get_register vm 'R2)
     do
@@ -859,6 +872,7 @@
       (args (cdr (vm_get_register vm 'R2))))
     ;
     (vm_state vm)
+    (print (vm_get_register vm 'R2))
     (read)
     (cond
       ((eq fun 'LOAD)
