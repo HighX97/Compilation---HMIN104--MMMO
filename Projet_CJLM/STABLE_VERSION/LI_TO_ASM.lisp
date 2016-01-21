@@ -143,10 +143,9 @@
           ;VAR1
           (list
           (list 'MOVE 'SP 'R0)
-          (list 'SUB 1 'R0)
           ;VAR2
           (list 'MOVE 'SP 'R1)
-          (list 'SUB 2 'R1)
+          (list 'SUB 1 'R1)
           ;
           (list 'CMP 'R0 'R1 )
           (cond
@@ -367,8 +366,8 @@
     (list 'MOVE (length (cdr expr)) 'R0)
     (list 'PUSH 'R0)
     (list 'MOVE 'SP 'FP)
-    (list 'APPLY (first expr) (length (cdr expr)))
-    (list 'HALT)))))
+    (list 'APPLY (first expr) (length (cdr expr)))))))
+    ;(list 'HALT)))))
     ;(list 'RTN)))))
 
 (defun LI_TO_ASM_call_old  (expr nbArgs)

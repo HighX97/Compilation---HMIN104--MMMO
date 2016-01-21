@@ -853,7 +853,10 @@
       (if (eq (car (vm_get_register vm 'R1)) 'LABEL)
         (vm_label vm (cdr (vm_get_register vm 'R1))))
     (vm_incr vm 'PCO)
-    (setf asm (cdr asm))))))
+    (setf asm (cdr asm))))
+  (vm_move vm '(HALT) 'R0)
+  (vm_store vm 'R0 'PCO)
+  (vm_incr vm 'PCO)))
   ;(vm_move vm '(HALT) 'R0)
   ;(vm_store vm 'R0 'PC))
 (trace vm_chargeur)
@@ -863,6 +866,7 @@
   ;(vm_move vm 'PC 'R2)
   (vm_move vm 'PCO 'PC)
   (print (list 'PCO (vm_get_register vm 'PC)))
+  (vm_set_flag_OFF vm 'FNIL)
   (read)
   ;(vm_chargeur vm (LI_TO_ASM (LISP2LI exprLisp nil) 0))
   (vm_chargeur vm exprLisp)
@@ -981,7 +985,8 @@
       ((eq fun 'HALT)
         (progn
           (vm_halt vm)
-          (vm_incr vm 'PC))))))))
+          (vm_incr vm 'PC)))))))
+  (print (list "Le resulta de " exprLisp "est :" (vm_get_register vm 'R0))))
 (trace vm_exec)
 
 ;Chargeur
