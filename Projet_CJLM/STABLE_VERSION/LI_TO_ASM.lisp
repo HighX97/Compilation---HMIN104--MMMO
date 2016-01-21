@@ -142,10 +142,11 @@
           ; (list (list 'PUSH 'R0)
           ;VAR1
           (list
-          (list 'MOVE 'SP 'R0)
-          ;VAR2
           (list 'MOVE 'SP 'R1)
+          (list 'LOAD 'R1 'R0)
+          ;VAR2
           (list 'SUB 1 'R1)
+          (list 'LOAD 'R1 'R1)
           ;
           (list 'CMP 'R0 'R1 )
           (cond
@@ -360,13 +361,15 @@
     (LI_TO_ASM_defun (cdr expr) nbArgs)
     ;Push args
     (append
-      (MAP_LI_TO_ASM_CALL (cdr expr) nbArgs)
+      (MAP_LI_TO_ASM_MCALL (cdr expr)  nbArgs 0)
     ;Push nb_args
     (list 
-    (list 'MOVE (length (cdr expr)) 'R0)
-    (list 'PUSH 'R0)
+    ;(list 'MOVE (length (cdr expr)) 'R0)
+    ;(list 'PUSH 'R0)
     (list 'MOVE 'SP 'FP)
-    (list 'APPLY (first expr) (length (cdr expr)))))))
+    (list 'APPLY (first expr) (length (cdr expr)))
+    ;On pousse le rslt
+    (list 'PUSH 'R0)))))
     ;(list 'HALT)))))
     ;(list 'RTN)))))
 
@@ -392,6 +395,7 @@
       (MAP_LI_TO_ASM_CALL (cdr expr) nbArgs))))
 (trace MAP_LI_TO_ASM_CALL)
 
+
 (defun MAP_LI_TO_ASM_CALL_old (expr)
   (if (not (atom expr))
     (list*
@@ -411,7 +415,8 @@
     (corpsF (fourth (second expr))))
   (append
     (list (list 'LABEL fun))
-    (LI_TO_ASM corpsF nbArgs))))
+    (LI_TO_ASM corpsF nbArgs)
+    (list (list 'RTN)))))
 (trace LI_TO_ASM_defun)
 
 (defun LI_TO_ASM_mcall (expr nbArgs)

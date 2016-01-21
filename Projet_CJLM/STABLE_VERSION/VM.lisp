@@ -599,9 +599,10 @@
 ;Peut-on décclaré deux fois la même étiquette ? 
 ; (LABEL <label>)   = déclaration d’étiquette
 (defun vm_label (vm label)
-  (if (atom label)
-    (vm_set_hashTab_etq_resolu vm label (vm_get_register vm 'PCO))
-    (vm_set_hashTab_etq_resolu vm (car label) (vm_get_register vm 'PCO))))
+  (if (consp label)
+    (setf label (car label)))
+  (if (not (vm_get_hashTab_etq_resolu_val vm label))
+   (vm_set_hashTab_etq_resolu vm label (vm_get_register vm 'PCO))))
 
 (defun vm_label_old (vm label)
   (vm_set_hashTab_etq_resolu vm label (vm_get_register vm 'SP))
@@ -669,6 +670,7 @@
 ; (CMP R0 1)
 ; (CMP R0 (:lit . 1))
 (defun vm_cmp (vm src1 src2)
+  (print (list 'vm_cmp src1 src2))
   (if (is_register_? src1)
     (setf src1 (vm_get_register vm src1)))
   (if (vm_test_constante src1)
@@ -676,7 +678,9 @@
   (if (is_register_? src2)
     (setf src2 (vm_get_register vm src2)))
   (if (vm_test_constante src2)
-    (setf src2 (cdr src2))) 
+    (setf src2 (cdr src2)))
+  (print (list 'vm_cmp src1 src2))
+  (read) 
   (cond
     ((< src1 src2)
       (vm_set_flag_ON vm 'FLT)
